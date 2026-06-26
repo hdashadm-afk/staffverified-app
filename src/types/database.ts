@@ -1,0 +1,139 @@
+export type UserRole = 'owner' | 'assistant' | 'ops_officer' | 'ceo' | 'cfo'
+export type PermitStatus = 'pending' | 'submitted' | 'overdue' | 'acknowledged'
+export type PayrollStatus = 'draft' | 'review' | 'completed'
+export type Agency = 'SSS' | 'PhilHealth' | 'HDMF' | 'BIR' | 'DOE' | 'DOLE' | 'Other'
+
+export interface Organization {
+  id: string
+  name: string
+  slug: string
+  connected_systems: string[]
+  ot_multiplier: number
+  nsd_rate: number
+  holiday_regular_multiplier: number
+  holiday_special_multiplier: number
+  created_at: string
+}
+
+export interface Station {
+  id: string
+  org_id: string
+  name: string
+  address: string | null
+  created_at: string
+}
+
+export interface UserProfile {
+  id: string
+  org_id: string
+  role: UserRole
+  full_name: string
+  email: string
+  created_at: string
+}
+
+export interface Employee {
+  id: string
+  org_id: string
+  station_id: string | null
+  full_name: string
+  position: string | null
+  daily_rate: number
+  has_sil: boolean
+  coop_saving_amount: number
+  is_active: boolean
+  date_hired: string | null
+  created_at: string
+}
+
+export interface DTREntry {
+  id: string
+  org_id: string
+  employee_id: string
+  station_id: string | null
+  work_date: string
+  time_in: string | null
+  time_out: string | null
+  regular_hours: number
+  overtime_hours: number
+  night_shift_hours: number
+  late_minutes: number
+  undertime_minutes: number
+  is_holiday_regular: boolean
+  is_holiday_special: boolean
+  notes: string | null
+  entered_by: string | null
+  created_at: string
+}
+
+export interface PayrollRun {
+  id: string
+  org_id: string
+  station_id: string | null
+  cutoff_start: string
+  cutoff_end: string
+  status: PayrollStatus
+  notes: string | null
+  prepared_by: string | null
+  created_at: string
+  completed_at: string | null
+}
+
+export interface Payslip {
+  id: string
+  org_id: string
+  payroll_run_id: string
+  employee_id: string
+  basic_pay: number
+  holiday_pay: number
+  sil_pay: number
+  overtime_pay: number
+  late_undertime_deduction: number
+  night_shift_diff: number
+  allowances: number
+  add_back: number
+  add_back_reason: string | null
+  total_earnings: number
+  sss_contribution: number
+  philhealth_contribution: number
+  hdmf_contribution: number
+  uniform_deduction: number
+  coop_saving: number
+  gas_shortage: number
+  gas_shortage_note: string | null
+  sss_loan: number
+  pagibig_loan: number
+  total_deductions: number
+  net_pay: number
+  variance_amount: number
+  variance_reason: string | null
+  created_at: string
+}
+
+export interface Permit {
+  id: string
+  org_id: string
+  station_id: string | null
+  permit_type: string
+  agency: string
+  description: string | null
+  status: PermitStatus
+  due_date: string
+  submitted_at: string | null
+  submitted_by: string | null
+  proof_file_path: string | null
+  notes: string | null
+  parent_permit_id: string | null
+  is_recurring: boolean
+  recurrence_rule: string | null
+  created_at: string
+}
+
+export interface ReminderRule {
+  id: string
+  org_id: string
+  permit_id: string | null
+  days_before: number
+  notify_role: string
+  created_at: string
+}
