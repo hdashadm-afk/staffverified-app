@@ -1,8 +1,39 @@
-export default function EmployeesPage() {
+import { createClient } from '@/lib/supabase/server'
+import EmployeeList from '@/components/employees/EmployeeList'
+import NewEmployeeButton from '@/components/employees/NewEmployeeButton'
+
+export default async function EmployeesPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('org_id, role')
+    .eq('id', user!.id)
+    .single()
+
+  const { data: employees } = await supabase
+    .from('employees')
+    .select('*, stations(name)')
+    .eq('org_id', profile!.org_id)
+    .order('full_name')
+
+  const { data: stations } = await supabase
+    .from('stations')
+    .select('id, name')
+    .eq('org_id', profile!.org_id)
+
   return (
     <div>
-      <h1 className="text-xl font-semibold text-gray-900 mb-1">Employees</h1>
-      <p className="text-sm text-gray-500">Employee records coming next.</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">Employees</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Staff records for all stations</p>
+        </div>
+        <NewEmployeeButton orgId={profile!.org_id} stations={stations ?? []} />
+      </div>
+
+      <EmployeeList employees={(employees ?? []) as any} orgId={profile!.org_id} stations={stations ?? []} />
     </div>
   )
 }
