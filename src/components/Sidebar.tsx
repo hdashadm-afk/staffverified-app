@@ -9,6 +9,8 @@ import {
   Banknote,
   FileCheck,
   FileWarning,
+  Fuel,
+  RefreshCw,
   LogOut,
 } from 'lucide-react'
 
@@ -17,7 +19,9 @@ const NAV = [
   { href: '/dtr', label: 'DTR', icon: CalendarDays },
   { href: '/employees', label: 'Employees', icon: Users },
   { href: '/payroll', label: 'Payroll', icon: Banknote },
+  { href: '/remittance', label: 'Remittance', icon: RefreshCw },
   { href: '/nte', label: 'NTE', icon: FileWarning },
+  { href: '/doe', label: 'DOE Report', icon: Fuel },
 ]
 
 export default function Sidebar({ profile }: { profile: any }) {
