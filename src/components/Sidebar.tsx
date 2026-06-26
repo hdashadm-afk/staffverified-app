@@ -4,11 +4,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  ClipboardList,
   Users,
   CalendarDays,
   Banknote,
   FileCheck,
+  FileWarning,
   LogOut,
 } from 'lucide-react'
 
@@ -17,6 +17,7 @@ const NAV = [
   { href: '/dtr', label: 'DTR', icon: CalendarDays },
   { href: '/employees', label: 'Employees', icon: Users },
   { href: '/payroll', label: 'Payroll', icon: Banknote },
+  { href: '/nte', label: 'NTE', icon: FileWarning },
 ]
 
 export default function Sidebar({ profile }: { profile: any }) {

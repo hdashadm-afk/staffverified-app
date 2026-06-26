@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { PayrollRun, Employee, Payslip, DTREntry } from '@/types/database'
 import { OrgRates, computeOvertimePay, computeNSD, computeHolidayPay, computeLateUndertimeDeduction } from '@/lib/payroll-math'
+import { computeAllContributions } from '@/lib/contribution-tables'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, Zap } from 'lucide-react'
@@ -87,9 +88,17 @@ export default function PayrollRunCard({
 
       const totalEarnings = basicPay + holidayPay + overtimePay + nsdPay - lateUndertime + emp.coop_saving_amount * 0 // add_back = 0 initially
 
-      // TODO: statutory deductions — SSS/PhilHealth/HDMF from lookup tables (pending sourcing)
-      // For now, zeros — will be filled when contribution tables are added
-      const totalDeductions = emp.coop_saving_amount
+      // Determine if this is the first cutoff of the month (SSS/PhilHealth deducted once per month)
+      const cutoffDay = new Date(run.cutoff_start).getDate()
+      const isFirstCutoff = cutoffDay <= 15
+
+      const contribs = computeAllContributions(basicPay + holidayPay, isFirstCutoff)
+
+      const totalDeductions =
+        contribs.sss_employee +
+        contribs.philhealth_employee +
+        contribs.hdmf_employee +
+        emp.coop_saving_amount
       const netPay = totalEarnings - totalDeductions
 
       await supabase.from('payslips').upsert({
@@ -105,9 +114,9 @@ export default function PayrollRunCard({
         allowances: 0,
         add_back: 0,
         total_earnings: Math.round(totalEarnings * 100) / 100,
-        sss_contribution: 0,
-        philhealth_contribution: 0,
-        hdmf_contribution: 0,
+        sss_contribution: contribs.sss_employee,
+        philhealth_contribution: contribs.philhealth_employee,
+        hdmf_contribution: contribs.hdmf_employee,
         uniform_deduction: 0,
         coop_saving: emp.coop_saving_amount,
         gas_shortage: 0,
@@ -186,6 +195,10 @@ export default function PayrollRunCard({
                     <th className="text-right py-2 font-medium">OT</th>
                     <th className="text-right py-2 font-medium">NSD</th>
                     <th className="text-right py-2 font-medium">Earnings</th>
+                    <th className="text-right py-2 font-medium">SSS</th>
+                    <th className="text-right py-2 font-medium">PhilHealth</th>
+                    <th className="text-right py-2 font-medium">HDMF</th>
+                    <th className="text-right py-2 font-medium">Coop</th>
                     <th className="text-right py-2 font-medium">Deductions</th>
                     <th className="text-right py-2 font-medium text-green-700">Net Pay</th>
                   </tr>
@@ -199,6 +212,10 @@ export default function PayrollRunCard({
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.overtime_pay.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.night_shift_diff.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums font-medium text-gray-800">₱{p.total_earnings.toLocaleString()}</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.sss_contribution.toLocaleString()}</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.philhealth_contribution.toLocaleString()}</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.hdmf_contribution.toLocaleString()}</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.coop_saving.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-red-600">-₱{p.total_deductions.toLocaleString()}</td>
                       <td className="py-2.5 pl-2 text-right tabular-nums font-semibold text-green-700">₱{p.net_pay.toLocaleString()}</td>
                     </tr>
@@ -206,7 +223,7 @@ export default function PayrollRunCard({
                 </tbody>
                 <tfoot>
                   <tr className="border-t border-gray-200 bg-gray-50 font-semibold">
-                    <td className="py-2.5 pr-4 text-gray-700" colSpan={7}>Total net pay</td>
+                    <td className="py-2.5 pr-4 text-gray-700" colSpan={11}>Total net pay</td>
                     <td className="py-2.5 pl-2 text-right tabular-nums text-green-700">
                       ₱{totalNetPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
