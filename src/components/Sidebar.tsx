@@ -11,10 +11,12 @@ import {
   FileWarning,
   Fuel,
   RefreshCw,
+  Clock,
   LogOut,
 } from 'lucide-react'
 
 const NAV = [
+  { href: '/hours', label: 'Hours Budget', icon: Clock },
   { href: '/permits', label: 'Compliance', icon: FileCheck },
   { href: '/dtr', label: 'DTR', icon: CalendarDays },
   { href: '/employees', label: 'Employees', icon: Users },
