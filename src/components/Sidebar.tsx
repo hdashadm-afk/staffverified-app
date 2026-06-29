@@ -15,18 +15,20 @@ import {
   LogOut,
 } from 'lucide-react'
 
-const NAV = [
-  { href: '/hours', label: 'Hours Budget', icon: Clock },
-  { href: '/permits', label: 'Compliance', icon: FileCheck },
-  { href: '/dtr', label: 'DTR', icon: CalendarDays },
-  { href: '/employees', label: 'Employees', icon: Users },
-  { href: '/payroll', label: 'Payroll', icon: Banknote },
-  { href: '/remittance', label: 'Remittance', icon: RefreshCw },
-  { href: '/nte', label: 'NTE', icon: FileWarning },
-  { href: '/doe', label: 'DOE Report', icon: Fuel },
+const ALL_NAV = [
+  { href: '/hours',      label: 'Hours Budget', icon: Clock,        roles: ['ceo','ops_officer','owner','assistant'] },
+  { href: '/permits',    label: 'Compliance',   icon: FileCheck,    roles: ['ceo','ops_officer','owner','assistant','tl'] },
+  { href: '/dtr',        label: 'DTR',          icon: CalendarDays, roles: ['ceo','ops_officer','owner','assistant','tl'] },
+  { href: '/employees',  label: 'Employees',    icon: Users,        roles: ['ceo','ops_officer','owner','assistant','tl'] },
+  { href: '/payroll',    label: 'Payroll',      icon: Banknote,     roles: ['ceo','ops_officer','owner','assistant'] },
+  { href: '/remittance', label: 'Remittance',   icon: RefreshCw,    roles: ['ceo','ops_officer','owner','assistant'] },
+  { href: '/nte',        label: 'NTE',          icon: FileWarning,  roles: ['ceo','ops_officer','owner','assistant'] },
+  { href: '/doe',        label: 'DOE Report',   icon: Fuel,         roles: ['ceo','ops_officer','owner','assistant'] },
 ]
 
 export default function Sidebar({ profile }: { profile: any }) {
+  const role: string = profile?.role ?? ''
+  const NAV = ALL_NAV.filter(item => item.roles.includes(role))
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
