@@ -10,14 +10,14 @@ alter table stations
 
 -- Seed Helium Fuels stations (8 locations: 7 stations + admin office)
 -- Run after migration 001 has created the org.
--- Replace budget values with actual targets before go-live.
+-- Weekly hour budgets: set to 200 per station by default — Best to update actual targets in-app.
 insert into stations (org_id, name, weekly_hours_budget, budget_warning_pct) values
-  ('00000000-0000-0000-0000-000000000001', 'Station 1', 200, 80),
-  ('00000000-0000-0000-0000-000000000001', 'Station 2', 200, 80),
-  ('00000000-0000-0000-0000-000000000001', 'Station 3', 200, 80),
-  ('00000000-0000-0000-0000-000000000001', 'Station 4', 200, 80),
-  ('00000000-0000-0000-0000-000000000001', 'Station 5', 200, 80),
-  ('00000000-0000-0000-0000-000000000001', 'Station 6', 200, 80),
-  ('00000000-0000-0000-0000-000000000001', 'Station 7', 200, 80),
-  ('00000000-0000-0000-0000-000000000001', 'Admin Office', 80, 80)
+  ('00000000-0000-0000-0000-000000000001', 'Helium San Juan (HSJ)',      200, 80),
+  ('00000000-0000-0000-0000-000000000001', 'Helium Bolingit (HB)',       200, 80),
+  ('00000000-0000-0000-0000-000000000001', 'Helium Tandoc (HT)',         200, 80),
+  ('00000000-0000-0000-0000-000000000001', 'Helium Camaley (HC)',        200, 80),
+  ('00000000-0000-0000-0000-000000000001', 'Helium Quibaol (HQ)',        200, 80),
+  ('00000000-0000-0000-0000-000000000001', 'Helium Domalandan (HD)',     200, 80),
+  ('00000000-0000-0000-0000-000000000001', 'Helium Bani (HBani)',        200, 80),
+  ('00000000-0000-0000-0000-000000000001', 'Admin Office',                80, 80)
 on conflict do nothing;
