@@ -1,8 +1,9 @@
-import { type NextRequest } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  return await updateSession(request)
+// Auth redirect is handled in (dashboard)/layout.tsx via supabase.auth.getUser()
+// Middleware just passes requests through — no Supabase client here (Edge Runtime incompatible)
+export function middleware(request: NextRequest) {
+  return NextResponse.next()
 }
 
 export const config = {
