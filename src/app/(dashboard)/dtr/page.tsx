@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import DTRView from '@/components/dtr/DTRView'
+import DailyAttendance from '@/components/dtr/DailyAttendance'
 
 export default async function DTRPage() {
   const supabase = await createClient()
@@ -45,22 +46,39 @@ export default async function DTRPage() {
     .gte('work_date', cutoffStart)
     .lte('work_date', cutoffEnd)
 
+  const isTL = profile!.role === 'tl'
+
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Daily Time Record</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Enter attendance for the current cutoff period</p>
+        <h1 className="text-xl font-semibold text-gray-900">
+          {isTL ? 'Daily Attendance' : 'Daily Time Record'}
+        </h1>
+        <p className="text-sm text-gray-500 mt-0.5">
+          {isTL
+            ? 'Mark who is in your station today — set time in / time out per team member'
+            : 'Enter attendance for the current cutoff period'}
+        </p>
       </div>
 
-      <DTRView
-        employees={employees ?? []}
-        stations={stations ?? []}
-        dtrEntries={dtrEntries ?? []}
-        orgId={profile!.org_id}
-        userId={profile!.id}
-        cutoffStart={cutoffStart}
-        cutoffEnd={cutoffEnd}
-      />
+      {isTL ? (
+        <DailyAttendance
+          employees={employees ?? []}
+          entries={dtrEntries ?? []}
+          orgId={profile!.org_id}
+          userId={profile!.id}
+        />
+      ) : (
+        <DTRView
+          employees={employees ?? []}
+          stations={stations ?? []}
+          dtrEntries={dtrEntries ?? []}
+          orgId={profile!.org_id}
+          userId={profile!.id}
+          cutoffStart={cutoffStart}
+          cutoffEnd={cutoffEnd}
+        />
+      )}
     </div>
   )
 }
