@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+
+const SUPABASE_URL = 'https://ttytducwrldmgdqskyym.supabase.co'
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0eXRkdWN3cmxkbWdkcXNreXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTQzNTYsImV4cCI6MjA5ODI3MDM1Nn0.rOkOMks7pRgA3pE0Hp_sORxwJlr_uLKyPptDpgnzJDs'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -18,13 +18,32 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    try {
+      const res = await fetch(
+        SUPABASE_URL + '/auth/v1/token?grant_type=password',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': ANON_KEY,
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      )
+      const data = await res.json()
 
-    if (error) {
-      setError(error.message)
+      if (!res.ok) {
+        setError(data.error_description ?? data.message ?? 'Login failed')
+        setLoading(false)
+        return
+      }
+
+      // Store session in cookie so server components can read it
+      document.cookie = `sb-ttytducwrldmgdqskyym-auth-token=${encodeURIComponent(JSON.stringify(data))}; path=/; max-age=3600; SameSite=Lax`
+      router.push('/hours')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Network error')
       setLoading(false)
-    } else {
-      router.push('/permits')
     }
   }
 
@@ -57,7 +76,7 @@ export default function LoginPage() {
               onChange={e => setPassword(e.target.value)}
               required
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
+              placeholder="..."
             />
           </div>
 
@@ -72,7 +91,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-50"
           >
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
       </div>
