@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 
 const URL = 'https://ttytducwrldmgdqskyym.supabase.co'
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0eXRkdWN3cmxkbWdkcXNreXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2OTQzNTYsImV4cCI6MjA5ODI3MDM1Nn0.rOkOMks7pRgA3pE0Hp_sORxwJlr_uLKyPptDpgnzJDs'
@@ -52,6 +54,22 @@ export async function GET() {
     out.lib_error = error ? error.message : null
   } catch (e) {
     out.lib_exception = String(e)
+  }
+
+  // Method C: replicate /hours EXACTLY — real getCurrentUser + real server client
+  try {
+    const user = await getCurrentUser()
+    out.C_user = user
+    const supabase = await createServerClient()
+    const { data: profile, error: pErr } = await supabase
+      .from('user_profiles')
+      .select('org_id, role')
+      .eq('id', user!.id)
+      .single()
+    out.C_profile = profile
+    out.C_profile_error = pErr ? pErr.message : null
+  } catch (e) {
+    out.C_exception = String(e)
   }
 
   return NextResponse.json(out)
