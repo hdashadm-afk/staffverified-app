@@ -10,7 +10,7 @@ function statusBadge(status: string, dueDate: string) {
   const overdue = status === 'pending' && new Date(dueDate) < new Date()
   if (overdue) return { label: 'Overdue', color: 'bg-red-100 text-red-700', icon: AlertCircle }
   if (status === 'submitted') return { label: 'Submitted', color: 'bg-green-100 text-green-700', icon: CheckCircle }
-  if (status === 'acknowledged') return { label: 'Acknowledged', color: 'bg-blue-100 text-blue-700', icon: CheckCircle }
+  if (status === 'acknowledged') return { label: 'Acknowledged', color: 'bg-red-100 text-red-700', icon: CheckCircle }
   return { label: 'Pending', color: 'bg-yellow-100 text-yellow-700', icon: Clock }
 }
 
@@ -103,7 +103,7 @@ export default function PermitCard({
                   onChange={e => setNotes(e.target.value)}
                   placeholder="e.g. reference number, portal screenshot note…"
                   rows={2}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
                 />
               </div>
               <button

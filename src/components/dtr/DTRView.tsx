@@ -100,7 +100,7 @@ export default function DTRView({
         <select
           value={selectedEmployee}
           onChange={e => setSelectedEmployee(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           {employees.map(e => (
             <option key={e.id} value={e.id}>{e.full_name}</option>
@@ -159,17 +159,17 @@ export default function DTRView({
 
       {/* Summary box */}
       {employee && (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm space-y-1">
-          <div className="font-medium text-blue-800 mb-2">Estimated earnings for this cutoff</div>
-          <div className="flex justify-between text-blue-700">
+        <div className="bg-red-50 border border-red-100 rounded-xl px-5 py-4 text-sm space-y-1">
+          <div className="font-medium text-red-800 mb-2">Estimated earnings for this cutoff</div>
+          <div className="flex justify-between text-red-700">
             <span>Basic pay ({totals.regular.toFixed(1)} reg hrs)</span>
             <span>₱{(hourly * totals.regular).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
-          <div className="flex justify-between text-blue-700">
+          <div className="flex justify-between text-red-700">
             <span>Overtime ({totals.ot.toFixed(1)} hrs)</span>
             <span>₱{(hourly * totals.ot).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
-          <div className="flex justify-between text-blue-700">
+          <div className="flex justify-between text-red-700">
             <span>NSD ({totals.nsd.toFixed(1)} hrs × 10%)</span>
             <span>₱{(hourly * totals.nsd * 0.1).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>

@@ -39,7 +39,7 @@ function VarianceBadge({ variance }: { variance: number }) {
 
 function AgencyBadge({ agency }: { agency: string }) {
   const colors: Record<string, string> = {
-    SSS: 'bg-blue-100 text-blue-700',
+    SSS: 'bg-amber-100 text-amber-700',
     PhilHealth: 'bg-green-100 text-green-700',
     HDMF: 'bg-purple-100 text-purple-700',
   }
@@ -149,7 +149,7 @@ export default function RemittanceList({
                   <td className="px-4 py-3">
                     <button
                       onClick={e => { e.stopPropagation(); startEdit(r) }}
-                      className="text-xs text-blue-600 hover:underline"
+                      className="text-xs text-red-600 hover:underline"
                     >
                       Update
                     </button>
@@ -168,7 +168,7 @@ export default function RemittanceList({
                             step="0.01"
                             value={editing[r.id]?.remitted ?? r.total_remitted}
                             onChange={e => setEditing(prev => ({ ...prev, [r.id]: { ...prev[r.id], remitted: e.target.value } }))}
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                           />
                         </div>
                         <div>
@@ -176,7 +176,7 @@ export default function RemittanceList({
                           <input
                             value={editing[r.id]?.ref ?? ''}
                             onChange={e => setEditing(prev => ({ ...prev, [r.id]: { ...prev[r.id], ref: e.target.value } }))}
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                             placeholder="e.g. SBR-2025-001234"
                           />
                         </div>
@@ -196,7 +196,7 @@ export default function RemittanceList({
                           <input
                             value={editing[r.id]?.notes ?? ''}
                             onChange={e => setEditing(prev => ({ ...prev, [r.id]: { ...prev[r.id], notes: e.target.value } }))}
-                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                             placeholder="Optional"
                           />
                         </div>
@@ -204,7 +204,7 @@ export default function RemittanceList({
                           <button
                             onClick={() => save(r)}
                             disabled={saving === r.id}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                            className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                           >
                             {saving === r.id ? 'Saving…' : 'Save'}
                           </button>

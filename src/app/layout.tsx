@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StaffVerified",
-  description: "HR & Admin for gas stations",
+  title: "StationVerified — Staff & Admin",
+  description: "Staff & Admin for gas stations",
 };
 
 export default function RootLayout({

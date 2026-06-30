@@ -44,7 +44,7 @@ export default function DTREntryRow({
   }
 
   return (
-    <tr className={`hover:bg-gray-50 transition-colors ${isWeekend ? 'bg-orange-50/30' : ''} ${editing ? 'bg-blue-50' : ''}`}>
+    <tr className={`hover:bg-gray-50 transition-colors ${isWeekend ? 'bg-orange-50/30' : ''} ${editing ? 'bg-red-50' : ''}`}>
       <td className="px-5 py-2.5 text-gray-700 tabular-nums">
         {d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
       </td>
@@ -59,7 +59,7 @@ export default function DTREntryRow({
               type="time"
               value={timeIn}
               onChange={e => setTimeIn(e.target.value)}
-              className="border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-28"
+              className="border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 w-28"
             />
           </td>
           <td className="px-4 py-2">
@@ -67,7 +67,7 @@ export default function DTREntryRow({
               type="time"
               value={timeOut}
               onChange={e => setTimeOut(e.target.value)}
-              className="border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-28"
+              className="border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 w-28"
             />
           </td>
           <td className="px-4 py-2 text-right text-gray-400 text-xs">

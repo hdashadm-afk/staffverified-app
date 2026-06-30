@@ -64,7 +64,7 @@ export default function NewEmployeeButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
+        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
         Add Employee
@@ -87,7 +87,7 @@ export default function NewEmployeeButton({
                   required
                   value={form.full_name}
                   onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   placeholder="Juan dela Cruz"
                 />
               </div>
@@ -98,7 +98,7 @@ export default function NewEmployeeButton({
                   <input
                     value={form.position}
                     onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="Cashier"
                   />
                 </div>
@@ -108,7 +108,7 @@ export default function NewEmployeeButton({
                     type="date"
                     value={form.date_hired}
                     onChange={e => setForm(f => ({ ...f, date_hired: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
               </div>
@@ -119,7 +119,7 @@ export default function NewEmployeeButton({
                   <select
                     value={form.station_id}
                     onChange={e => setForm(f => ({ ...f, station_id: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="">— not assigned —</option>
                     {stations.map(s => (
@@ -134,7 +134,7 @@ export default function NewEmployeeButton({
                 <select
                   value={form.employment_type}
                   onChange={e => setForm(f => ({ ...f, employment_type: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="regular">Regular</option>
                   <option value="probationary">Probationary</option>
@@ -151,7 +151,7 @@ export default function NewEmployeeButton({
                     required
                     value={form.daily_rate}
                     onChange={e => setForm(f => ({ ...f, daily_rate: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="600"
                   />
                 </div>
@@ -162,7 +162,7 @@ export default function NewEmployeeButton({
                     min="0"
                     value={form.coop_saving_amount}
                     onChange={e => setForm(f => ({ ...f, coop_saving_amount: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="0"
                   />
                 </div>
@@ -172,22 +172,22 @@ export default function NewEmployeeButton({
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">SSS No.</label>
                   <input value={form.sss_no} onChange={e => setForm(f => ({ ...f, sss_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">PhilHealth No.</label>
                   <input value={form.philhealth_no} onChange={e => setForm(f => ({ ...f, philhealth_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Pag-IBIG No.</label>
                   <input value={form.pagibig_no} onChange={e => setForm(f => ({ ...f, pagibig_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">TIN</label>
                   <input value={form.tin_no} onChange={e => setForm(f => ({ ...f, tin_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
                 </div>
               </div>
 
@@ -212,7 +212,7 @@ export default function NewEmployeeButton({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Add Employee'}
                 </button>

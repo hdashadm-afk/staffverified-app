@@ -67,12 +67,12 @@ export default function EmployeeRow({
     router.refresh()
   }
 
-  const fld = 'w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
+  const fld = 'w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500'
   const lbl = 'block text-[11px] font-medium text-gray-500 mb-1'
 
   if (editing) {
     return (
-      <tr className="bg-blue-50/60">
+      <tr className="bg-red-50/60">
         <td colSpan={8} className="px-5 py-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="col-span-2">
@@ -144,7 +144,7 @@ export default function EmployeeRow({
 
           <div className="flex gap-2 justify-end mt-4">
             <button onClick={() => setEditing(false)} className="border border-gray-200 text-gray-700 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50">Cancel</button>
-            <button onClick={save} disabled={saving} className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50">
+            <button onClick={save} disabled={saving} className="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50">
               <Check className="w-4 h-4" /> {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
@@ -162,7 +162,7 @@ export default function EmployeeRow({
         {(() => {
           const t = (employee as { employment_type?: string }).employment_type ?? 'regular'
           const styles: Record<string, string> = {
-            regular: 'bg-blue-50 text-blue-700',
+            regular: 'bg-red-50 text-red-700',
             probationary: 'bg-amber-50 text-amber-700',
             ojt: 'bg-purple-50 text-purple-700',
           }

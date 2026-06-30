@@ -93,7 +93,7 @@ export default function NTEForm({
       <div>
         <button
           onClick={() => setPreview(false)}
-          className="mb-4 text-sm text-blue-600 hover:underline"
+          className="mb-4 text-sm text-red-600 hover:underline"
         >
           ← Back to form
         </button>
@@ -113,7 +113,7 @@ export default function NTEForm({
             <label className="block text-xs font-medium text-gray-600 mb-1">Select employee</label>
             <select
               onChange={e => selectEmployee(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">— choose —</option>
               {employees.map(e => (
@@ -126,7 +126,7 @@ export default function NTEForm({
             <input
               value={form.employeePosition}
               onChange={e => setForm(f => ({ ...f, employeePosition: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               placeholder="Position"
             />
           </div>
@@ -144,7 +144,7 @@ export default function NTEForm({
               type="date"
               value={form.dateIssued}
               onChange={e => setForm(f => ({ ...f, dateIssued: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             />
           </div>
           <div>
@@ -153,7 +153,7 @@ export default function NTEForm({
               type="date"
               value={form.dateOfIncident}
               onChange={e => setForm(f => ({ ...f, dateOfIncident: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             />
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function NTEForm({
           <select
             value={form.violationCode}
             onChange={e => selectViolation(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="">— select violation —</option>
             {VIOLATIONS.map(v => (
@@ -178,7 +178,7 @@ export default function NTEForm({
             <input
               value={form.violationLabel}
               onChange={e => setForm(f => ({ ...f, violationLabel: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               placeholder="Describe the violation"
             />
           </div>
@@ -196,7 +196,7 @@ export default function NTEForm({
             <select
               value={form.offenseNumber}
               onChange={e => setForm(f => ({ ...f, offenseNumber: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="1st">1st Offense</option>
               <option value="2nd">2nd Offense</option>
@@ -211,7 +211,7 @@ export default function NTEForm({
               max={30}
               value={form.responseDeadlineDays}
               onChange={e => setForm(f => ({ ...f, responseDeadlineDays: parseInt(e.target.value) || 5 }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             />
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function NTEForm({
             value={form.incidentDescription}
             onChange={e => setForm(f => ({ ...f, incidentDescription: e.target.value }))}
             rows={5}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
             placeholder="Describe what happened, when, where, and what company rule or policy was violated…"
           />
         </div>
@@ -231,7 +231,7 @@ export default function NTEForm({
       <button
         onClick={() => setPreview(true)}
         disabled={!isReady}
-        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors disabled:opacity-40"
+        className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors disabled:opacity-40"
       >
         Preview & Print NTE
       </button>

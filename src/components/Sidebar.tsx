@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { canAccess } from '@/lib/access'
+import Logo from '@/components/Logo'
 import {
   Users,
   CalendarDays,
@@ -43,11 +44,22 @@ export default function Sidebar({ profile }: { profile: any }) {
 
   return (
     <aside className="w-56 bg-white border-r border-gray-100 flex flex-col min-h-screen">
-      {/* Brand */}
-      <div className="px-5 py-5 border-b border-gray-100">
-        <div className="font-bold text-gray-900 text-base tracking-tight">StaffVerified</div>
+      {/* Brand — StationVerified (platform) + client org */}
+      <div className="px-4 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-2.5">
+          <Logo size={34} />
+          <div className="leading-tight">
+            <div className="font-bold text-gray-900 text-[15px] tracking-tight">
+              Station<span className="text-red-600">Verified</span>
+            </div>
+            <div className="text-[10px] text-gray-400 -mt-0.5">Staff &amp; Admin</div>
+          </div>
+        </div>
         {profile?.organizations?.name && (
-          <div className="text-xs text-gray-400 mt-0.5 truncate">{profile.organizations.name}</div>
+          <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-2.5 py-1.5">
+            <span className="inline-block w-2 h-2 rounded-full bg-yellow-400" />
+            <span className="text-xs font-semibold text-white truncate">{profile.organizations.name}</span>
+          </div>
         )}
       </div>
 
@@ -61,7 +73,7 @@ export default function Sidebar({ profile }: { profile: any }) {
               href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 active
-                  ? 'bg-blue-50 text-blue-700'
+                  ? 'bg-red-50 text-red-700'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
