@@ -46,6 +46,7 @@ export default function EmployeeList({
                 <th className="text-left px-5 py-3 font-medium">Name</th>
                 <th className="text-left px-4 py-3 font-medium">Position</th>
                 <th className="text-left px-4 py-3 font-medium">Station</th>
+                <th className="text-left px-4 py-3 font-medium">Type</th>
                 <th className="text-right px-4 py-3 font-medium">Daily Rate</th>
                 <th className="text-left px-4 py-3 font-medium">SIL</th>
                 <th className="text-left px-4 py-3 font-medium">Status</th>

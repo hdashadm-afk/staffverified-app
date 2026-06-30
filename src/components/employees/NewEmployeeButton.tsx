@@ -23,6 +23,7 @@ export default function NewEmployeeButton({
     position: '',
     station_id: '',
     daily_rate: '',
+    employment_type: 'regular',
     has_sil: false,
     coop_saving_amount: '0',
     date_hired: '',
@@ -38,6 +39,7 @@ export default function NewEmployeeButton({
       position: form.position || null,
       station_id: form.station_id || null,
       daily_rate: parseFloat(form.daily_rate) || 0,
+      employment_type: form.employment_type,
       has_sil: form.has_sil,
       coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
       date_hired: form.date_hired || null,
@@ -46,7 +48,7 @@ export default function NewEmployeeButton({
 
     setSaving(false)
     setOpen(false)
-    setForm({ full_name: '', position: '', station_id: '', daily_rate: '', has_sil: false, coop_saving_amount: '0', date_hired: '' })
+    setForm({ full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular', has_sil: false, coop_saving_amount: '0', date_hired: '' })
     router.refresh()
   }
 
@@ -118,6 +120,19 @@ export default function NewEmployeeButton({
                   </select>
                 </div>
               )}
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Employment type</label>
+                <select
+                  value={form.employment_type}
+                  onChange={e => setForm(f => ({ ...f, employment_type: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="regular">Regular</option>
+                  <option value="probationary">Probationary</option>
+                  <option value="ojt">OJT</option>
+                </select>
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>

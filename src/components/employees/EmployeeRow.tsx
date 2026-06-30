@@ -23,6 +23,7 @@ export default function EmployeeRow({
     position: employee.position ?? '',
     station_id: employee.station_id ?? '',
     daily_rate: employee.daily_rate.toString(),
+    employment_type: (employee as { employment_type?: string }).employment_type ?? 'regular',
     has_sil: employee.has_sil,
     coop_saving_amount: employee.coop_saving_amount.toString(),
     is_active: employee.is_active,
@@ -37,6 +38,7 @@ export default function EmployeeRow({
         position: form.position || null,
         station_id: form.station_id || null,
         daily_rate: parseFloat(form.daily_rate) || 0,
+        employment_type: form.employment_type,
         has_sil: form.has_sil,
         coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
         is_active: form.is_active,
@@ -75,6 +77,17 @@ export default function EmployeeRow({
             {stations.map(s => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
+          </select>
+        </td>
+        <td className="px-4 py-3">
+          <select
+            value={form.employment_type}
+            onChange={e => setForm(f => ({ ...f, employment_type: e.target.value }))}
+            className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="regular">Regular</option>
+            <option value="probationary">Probationary</option>
+            <option value="ojt">OJT</option>
           </select>
         </td>
         <td className="px-4 py-3">
@@ -128,6 +141,18 @@ export default function EmployeeRow({
       <td className="px-5 py-3 font-medium text-gray-900">{employee.full_name}</td>
       <td className="px-4 py-3 text-gray-600">{employee.position ?? '—'}</td>
       <td className="px-4 py-3 text-gray-600">{employee.stations?.name ?? '—'}</td>
+      <td className="px-4 py-3">
+        {(() => {
+          const t = (employee as { employment_type?: string }).employment_type ?? 'regular'
+          const styles: Record<string, string> = {
+            regular: 'bg-blue-50 text-blue-700',
+            probationary: 'bg-amber-50 text-amber-700',
+            ojt: 'bg-purple-50 text-purple-700',
+          }
+          const label: Record<string, string> = { regular: 'Regular', probationary: 'Proba', ojt: 'OJT' }
+          return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles[t]}`}>{label[t]}</span>
+        })()}
+      </td>
       <td className="px-4 py-3 text-right text-gray-900">
         ₱{employee.daily_rate.toLocaleString()}
       </td>
