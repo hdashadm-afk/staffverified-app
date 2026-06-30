@@ -12,14 +12,16 @@ import {
   Fuel,
   RefreshCw,
   Clock,
+  LayoutDashboard,
   LogOut,
 } from 'lucide-react'
 
 const ALL_NAV = [
+  { href: '/dashboard',  label: 'Dashboard',    icon: LayoutDashboard, roles: ['ceo','ops_officer','owner','assistant'] },
   { href: '/hours',      label: 'Hours Budget', icon: Clock,        roles: ['ceo','ops_officer','owner','assistant'] },
-  { href: '/permits',    label: 'Compliance',   icon: FileCheck,    roles: ['ceo','ops_officer','owner','assistant','tl'] },
+  { href: '/permits',    label: 'Compliance',   icon: FileCheck,    roles: ['ceo','ops_officer','owner','assistant'] },
   { href: '/dtr',        label: 'DTR',          icon: CalendarDays, roles: ['ceo','ops_officer','owner','assistant','tl'] },
-  { href: '/employees',  label: 'Employees',    icon: Users,        roles: ['ceo','ops_officer','owner','assistant','tl'] },
+  { href: '/employees',  label: 'Employees',    icon: Users,        roles: ['ceo','ops_officer','owner','assistant'] },
   { href: '/payroll',    label: 'Payroll',      icon: Banknote,     roles: ['ceo','ops_officer','owner','assistant'] },
   { href: '/remittance', label: 'Remittance',   icon: RefreshCw,    roles: ['ceo','ops_officer','owner','assistant'] },
   { href: '/nte',        label: 'NTE',          icon: FileWarning,  roles: ['ceo','ops_officer','owner','assistant'] },

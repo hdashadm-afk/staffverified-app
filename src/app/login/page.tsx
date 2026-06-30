@@ -46,7 +46,7 @@ export default function LoginPage() {
         expires_at: data.expires_at,
       })
       document.cookie = `sv-token=${encodeURIComponent(token)}; path=/; max-age=2592000; SameSite=Lax`
-      window.location.href = '/hours'
+      window.location.href = '/'
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Network error')
       setLoading(false)
