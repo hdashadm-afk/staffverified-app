@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { canAccess } from '@/lib/access'
 import Logo from '@/components/Logo'
+import HeliumLogo from '@/components/HeliumLogo'
 import {
   Users,
   CalendarDays,
@@ -56,9 +57,9 @@ export default function Sidebar({ profile }: { profile: any }) {
           </div>
         </div>
         {profile?.organizations?.name && (
-          <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-2.5 py-1.5">
-            <span className="inline-block w-2 h-2 rounded-full bg-yellow-400" />
-            <span className="text-xs font-semibold text-white truncate">{profile.organizations.name}</span>
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 px-2.5 py-1.5">
+            <HeliumLogo size={22} />
+            <span className="text-xs font-semibold text-red-700 truncate">{profile.organizations.name}</span>
           </div>
         )}
       </div>
