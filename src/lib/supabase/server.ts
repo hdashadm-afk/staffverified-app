@@ -21,10 +21,19 @@ export async function createClient() {
     }
   }
 
-  // Pass the user JWT via the accessToken option. supabase-js uses this for the
-  // Authorization header on every request (and would otherwise override a
-  // global Authorization header with the anon key when there is no session).
+  // Inject the user JWT via a custom fetch so the Authorization header is sent
+  // on EVERY request. The library's own header/accessToken options proved
+  // unreliable in this version, so we force it here. PostgREST then sets
+  // auth.uid() from the JWT and RLS works.
+  const authFetch: typeof fetch = (input, init = {}) => {
+    const headers = new Headers(init.headers)
+    if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
+    headers.set('apikey', SUPABASE_ANON_KEY)
+    return fetch(input, { ...init, headers })
+  }
+
   return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    accessToken: async () => accessToken,
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: authFetch },
   })
 }
