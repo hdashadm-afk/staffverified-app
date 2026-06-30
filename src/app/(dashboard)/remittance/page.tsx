@@ -1,10 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import RemittanceList from '@/components/remittance/RemittanceList'
 import NewRemittanceButton from '@/components/remittance/NewRemittanceButton'
 
 export default async function RemittancePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('user_profiles')

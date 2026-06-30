@@ -38,9 +38,15 @@ export default function LoginPage() {
         return
       }
 
-      // Store session in cookie so server components can read it
-      document.cookie = `sb-ttytducwrldmgdqskyym-auth-token=${encodeURIComponent(JSON.stringify(data))}; path=/; max-age=3600; SameSite=Lax`
-      router.push('/hours')
+      // Store just the access + refresh tokens in a single small cookie.
+      // Server reads this and injects it as a Bearer token for RLS.
+      const token = JSON.stringify({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: data.expires_at,
+      })
+      document.cookie = `sv-token=${encodeURIComponent(token)}; path=/; max-age=2592000; SameSite=Lax`
+      window.location.href = '/hours'
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Network error')
       setLoading(false)

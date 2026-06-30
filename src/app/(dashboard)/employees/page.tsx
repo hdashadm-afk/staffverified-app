@@ -1,10 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import EmployeeList from '@/components/employees/EmployeeList'
 import NewEmployeeButton from '@/components/employees/NewEmployeeButton'
 
 export default async function EmployeesPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('user_profiles')

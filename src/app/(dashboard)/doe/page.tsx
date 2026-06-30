@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import DOEPumpPriceForm from '@/components/doe/DOEPumpPriceForm'
 
 export default async function DOEPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('user_profiles')

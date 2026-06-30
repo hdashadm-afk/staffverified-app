@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import HoursBudgetDashboard from '@/components/hours/HoursBudgetDashboard'
 
 // Get Monday of the week containing a given date
@@ -18,7 +20,8 @@ function weekEnd(start: string): string {
 
 export default async function HoursPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('user_profiles')
