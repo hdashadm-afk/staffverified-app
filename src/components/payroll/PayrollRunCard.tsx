@@ -88,9 +88,11 @@ export default function PayrollRunCard({
 
       const totalEarnings = basicPay + holidayPay + overtimePay + nsdPay - lateUndertime + emp.coop_saving_amount * 0 // add_back = 0 initially
 
-      // Determine if this is the first cutoff of the month (SSS/PhilHealth deducted once per month)
+      // Monthly contributions (SSS/PhilHealth/Pag-IBIG) are deducted once per month.
+      // Under weekly cutoffs (Thu–Wed), apply them on the FIRST cutoff of the month
+      // i.e. the one whose start date falls within the first 7 days.
       const cutoffDay = new Date(run.cutoff_start).getDate()
-      const isFirstCutoff = cutoffDay <= 15
+      const isFirstCutoff = cutoffDay <= 7
 
       const contribs = computeAllContributions(basicPay + holidayPay, isFirstCutoff)
 

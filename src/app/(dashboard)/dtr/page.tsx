@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import DTRView from '@/components/dtr/DTRView'
 import DailyAttendance from '@/components/dtr/DailyAttendance'
+import { currentCutoff, payday } from '@/lib/cutoff'
 
 export default async function DTRPage() {
   const supabase = await createClient()
@@ -27,17 +28,9 @@ export default async function DTRPage() {
     .select('id, name')
     .eq('org_id', profile!.org_id)
 
-  // Default: current cutoff period (1st–15th or 16th–end of month)
-  const today = new Date()
-  const day = today.getDate()
-  const year = today.getFullYear()
-  const month = today.getMonth()
-  const cutoffStart = day <= 15
-    ? new Date(year, month, 1).toISOString().split('T')[0]
-    : new Date(year, month, 16).toISOString().split('T')[0]
-  const cutoffEnd = day <= 15
-    ? new Date(year, month, 15).toISOString().split('T')[0]
-    : new Date(year, month + 1, 0).toISOString().split('T')[0]
+  // Weekly cutoff: Thursday -> Wednesday, payday Friday
+  const { start: cutoffStart, end: cutoffEnd } = currentCutoff()
+  const cutoffPayday = payday(cutoffEnd)
 
   const { data: dtrEntries } = await supabase
     .from('dtr_entries')
@@ -58,6 +51,10 @@ export default async function DTRPage() {
           {isTL
             ? 'Mark who is in your station today — set time in / time out per team member'
             : 'Enter attendance for the current cutoff period'}
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          Cutoff (Thu–Wed): <span className="font-medium text-gray-600">{cutoffStart} → {cutoffEnd}</span>
+          {' · '}Payday (Fri): <span className="font-medium text-gray-600">{cutoffPayday}</span>
         </p>
       </div>
 

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Plus, X } from 'lucide-react'
 import { Station } from '@/types/database'
+import { currentCutoff } from '@/lib/cutoff'
 
 export default function NewPayrollRunButton({
   orgId,
@@ -20,17 +21,8 @@ export default function NewPayrollRunButton({
   const router = useRouter()
   const supabase = createClient()
 
-  // Default to current cutoff
-  const today = new Date()
-  const day = today.getDate()
-  const y = today.getFullYear()
-  const m = today.getMonth()
-  const defaultStart = day <= 15
-    ? `${y}-${String(m + 1).padStart(2, '0')}-01`
-    : `${y}-${String(m + 1).padStart(2, '0')}-16`
-  const defaultEnd = day <= 15
-    ? `${y}-${String(m + 1).padStart(2, '0')}-15`
-    : new Date(y, m + 1, 0).toISOString().split('T')[0]
+  // Default to current weekly cutoff (Thu -> Wed, payday Fri)
+  const { start: defaultStart, end: defaultEnd } = currentCutoff()
 
   const [form, setForm] = useState({
     cutoff_start: defaultStart,

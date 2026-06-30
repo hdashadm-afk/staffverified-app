@@ -3,19 +3,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Clock, FileCheck, Banknote, RefreshCw, Users, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { cutoffStart as weekStart, cutoffEnd as weekEnd } from '@/lib/cutoff'
 
-function weekStart(date: Date): string {
-  const d = new Date(date)
-  const day = d.getDay()
-  const diff = day === 0 ? -6 : 1 - day
-  d.setDate(d.getDate() + diff)
-  return d.toISOString().split('T')[0]
-}
-function weekEnd(start: string): string {
-  const d = new Date(start + 'T00:00:00')
-  d.setDate(d.getDate() + 6)
-  return d.toISOString().split('T')[0]
-}
 const peso = (n: number) =>
   '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
