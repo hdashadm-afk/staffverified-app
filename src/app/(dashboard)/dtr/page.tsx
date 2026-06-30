@@ -12,7 +12,7 @@ export default async function DTRPage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('org_id, role, id')
+    .select('org_id, role, id, station_id')
     .eq('id', user!.id)
     .single()
 
@@ -40,6 +40,7 @@ export default async function DTRPage() {
     .lte('work_date', cutoffEnd)
 
   const isTL = profile!.role === 'tl'
+  const tlStation = (stations ?? []).find(s => s.id === profile!.station_id)
 
   return (
     <div>
@@ -49,7 +50,7 @@ export default async function DTRPage() {
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">
           {isTL
-            ? 'Mark who is in your station today — set time in / time out per team member'
+            ? `Mark who worked at ${tlStation?.name ?? 'your station'} today — attendants float, so add whoever showed up`
             : 'Enter attendance for the current cutoff period'}
         </p>
         <p className="text-xs text-gray-400 mt-1">
@@ -64,6 +65,8 @@ export default async function DTRPage() {
           entries={dtrEntries ?? []}
           orgId={profile!.org_id}
           userId={profile!.id}
+          stationId={profile!.station_id}
+          stationName={tlStation?.name ?? null}
         />
       ) : (
         <DTRView
