@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { canAccess } from '@/lib/access'
 import {
   Users,
   CalendarDays,
@@ -16,21 +17,21 @@ import {
   LogOut,
 } from 'lucide-react'
 
-const ALL_NAV = [
-  { href: '/dashboard',  label: 'Dashboard',    icon: LayoutDashboard, roles: ['ceo','ops_officer','owner','assistant'] },
-  { href: '/hours',      label: 'Hours Budget', icon: Clock,        roles: ['ceo','ops_officer','owner','assistant'] },
-  { href: '/permits',    label: 'Compliance',   icon: FileCheck,    roles: ['ceo','ops_officer','owner','assistant'] },
-  { href: '/dtr',        label: 'DTR',          icon: CalendarDays, roles: ['ceo','ops_officer','owner','assistant','tl'] },
-  { href: '/employees',  label: 'Employees',    icon: Users,        roles: ['ceo','ops_officer','owner','assistant'] },
-  { href: '/payroll',    label: 'Payroll',      icon: Banknote,     roles: ['ceo','ops_officer','owner','assistant'] },
-  { href: '/remittance', label: 'Remittance',   icon: RefreshCw,    roles: ['ceo','ops_officer','owner','assistant'] },
-  { href: '/nte',        label: 'NTE',          icon: FileWarning,  roles: ['ceo','ops_officer','owner','assistant'] },
-  { href: '/doe',        label: 'DOE Report',   icon: Fuel,         roles: ['ceo','ops_officer','owner','assistant'] },
+const NAV_META = [
+  { href: '/dashboard',  label: 'Dashboard',    icon: LayoutDashboard },
+  { href: '/hours',      label: 'Hours Budget', icon: Clock },
+  { href: '/permits',    label: 'Compliance',   icon: FileCheck },
+  { href: '/dtr',        label: 'DTR',          icon: CalendarDays },
+  { href: '/employees',  label: 'Employees',    icon: Users },
+  { href: '/payroll',    label: 'Payroll',      icon: Banknote },
+  { href: '/remittance', label: 'Remittance',   icon: RefreshCw },
+  { href: '/nte',        label: 'NTE',          icon: FileWarning },
+  { href: '/doe',        label: 'DOE Report',   icon: Fuel },
 ]
 
 export default function Sidebar({ profile }: { profile: any }) {
   const role: string = profile?.role ?? ''
-  const NAV = ALL_NAV.filter(item => item.roles.includes(role))
+  const NAV = NAV_META.filter(item => canAccess(item.href, role))
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()

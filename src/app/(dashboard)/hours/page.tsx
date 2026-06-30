@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { canAccess, landingFor } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import HoursBudgetDashboard from '@/components/hours/HoursBudgetDashboard'
 import { cutoffStart as weekStart, cutoffEnd as weekEnd } from '@/lib/cutoff'
@@ -14,6 +15,8 @@ export default async function HoursPage() {
     .select('org_id, role')
     .eq('id', user!.id)
     .single()
+
+  if (!canAccess('/hours', profile?.role)) redirect(landingFor(profile?.role))
 
   const { data: stations } = await supabase
     .from('stations')

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import DTRView from '@/components/dtr/DTRView'
 import DailyAttendance from '@/components/dtr/DailyAttendance'
 import { currentCutoff, payday } from '@/lib/cutoff'
+import { canAccess, landingFor } from '@/lib/access'
 
 export default async function DTRPage() {
   const supabase = await createClient()
@@ -15,6 +16,8 @@ export default async function DTRPage() {
     .select('org_id, role, id, station_id')
     .eq('id', user!.id)
     .single()
+
+  if (!canAccess('/dtr', profile?.role)) redirect(landingFor(profile?.role))
 
   const { data: employees } = await supabase
     .from('employees')

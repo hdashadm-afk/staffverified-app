@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { canAccess, landingFor } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import PermitList from '@/components/permits/PermitList'
 import NewPermitButton from '@/components/permits/NewPermitButton'
@@ -15,6 +16,8 @@ export default async function PermitsPage() {
     .select('org_id, role')
     .eq('id', user!.id)
     .single()
+
+  if (!canAccess('/permits', profile?.role)) redirect(landingFor(profile?.role))
 
   const { data: permits } = await supabase
     .from('permits')

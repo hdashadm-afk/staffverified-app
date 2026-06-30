@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { canAccess, landingFor } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import PayrollRunList from '@/components/payroll/PayrollRunList'
 import NewPayrollRunButton from '@/components/payroll/NewPayrollRunButton'
@@ -14,6 +15,8 @@ export default async function PayrollPage() {
     .select('org_id, role, id')
     .eq('id', user!.id)
     .single()
+
+  if (!canAccess('/payroll', profile?.role)) redirect(landingFor(profile?.role))
 
   const { data: runs } = await supabase
     .from('payroll_runs')

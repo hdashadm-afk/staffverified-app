@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { canAccess, landingFor } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import RemittanceList from '@/components/remittance/RemittanceList'
 import NewRemittanceButton from '@/components/remittance/NewRemittanceButton'
@@ -11,9 +12,11 @@ export default async function RemittancePage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('org_id, id')
+    .select('org_id, id, role')
     .eq('id', user!.id)
     .single()
+
+  if (!canAccess('/remittance', profile?.role)) redirect(landingFor(profile?.role))
 
   const { data: records } = await supabase
     .from('remittance_reconciliations')

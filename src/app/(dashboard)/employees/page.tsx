@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { canAccess, landingFor } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import EmployeeList from '@/components/employees/EmployeeList'
 import NewEmployeeButton from '@/components/employees/NewEmployeeButton'
@@ -14,6 +15,8 @@ export default async function EmployeesPage() {
     .select('org_id, role')
     .eq('id', user!.id)
     .single()
+
+  if (!canAccess('/employees', profile?.role)) redirect(landingFor(profile?.role))
 
   const { data: employees } = await supabase
     .from('employees')

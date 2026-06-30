@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { canAccess, landingFor } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import NTEForm from '@/components/nte/NTEForm'
 
@@ -10,9 +11,11 @@ export default async function NTEPage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('org_id, full_name')
+    .select('org_id, full_name, role')
     .eq('id', user!.id)
     .single()
+
+  if (!canAccess('/nte', profile?.role)) redirect(landingFor(profile?.role))
 
   const { data: employees } = await supabase
     .from('employees')

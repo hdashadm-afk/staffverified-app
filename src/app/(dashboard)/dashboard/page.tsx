@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Clock, FileCheck, Banknote, RefreshCw, Users, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { cutoffStart as weekStart, cutoffEnd as weekEnd } from '@/lib/cutoff'
+import { canAccess, landingFor } from '@/lib/access'
 
 const peso = (n: number) =>
   '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -19,7 +20,7 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
   if (!profile) redirect('/login')
-  if (profile.role === 'tl') redirect('/dtr')
+  if (!canAccess('/dashboard', profile.role)) redirect(landingFor(profile.role))
 
   const orgId = profile.org_id
   const ws = weekStart(new Date())

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { canAccess, landingFor } from '@/lib/access'
 import { redirect } from 'next/navigation'
 import DOEPumpPriceForm from '@/components/doe/DOEPumpPriceForm'
 
@@ -10,9 +11,11 @@ export default async function DOEPage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('org_id')
+    .select('org_id, role')
     .eq('id', user!.id)
     .single()
+
+  if (!canAccess('/doe', profile?.role)) redirect(landingFor(profile?.role))
 
   const { data: stations } = await supabase
     .from('stations')
