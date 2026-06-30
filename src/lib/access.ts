@@ -9,7 +9,7 @@ export const MODULE_ACCESS: Record<string, Role[]> = {
   '/permits':    ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/dtr':        ['ceo', 'ops_officer', 'owner', 'assistant', 'tl'],
   '/employees':  ['ceo', 'ops_officer', 'owner', 'assistant'],
-  '/payroll':    ['ceo', 'cfo', 'owner', 'assistant'],
+  '/payroll':    ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
   '/remittance': ['ceo', 'cfo', 'owner'],
   '/nte':        ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/doe':        ['ceo', 'ops_officer', 'owner', 'assistant'],
