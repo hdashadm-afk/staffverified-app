@@ -21,10 +21,10 @@ export async function createClient() {
     }
   }
 
+  // Pass the user JWT via the accessToken option. supabase-js uses this for the
+  // Authorization header on every request (and would otherwise override a
+  // global Authorization header with the anon key when there is no session).
   return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: accessToken
-      ? { headers: { Authorization: `Bearer ${accessToken}` } }
-      : {},
+    accessToken: async () => accessToken,
   })
 }
