@@ -27,6 +27,10 @@ export default function NewEmployeeButton({
     has_sil: false,
     coop_saving_amount: '0',
     date_hired: '',
+    sss_no: '',
+    philhealth_no: '',
+    pagibig_no: '',
+    tin_no: '',
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -43,12 +47,16 @@ export default function NewEmployeeButton({
       has_sil: form.has_sil,
       coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
       date_hired: form.date_hired || null,
+      sss_no: form.sss_no || null,
+      philhealth_no: form.philhealth_no || null,
+      pagibig_no: form.pagibig_no || null,
+      tin_no: form.tin_no || null,
       is_active: true,
     })
 
     setSaving(false)
     setOpen(false)
-    setForm({ full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular', has_sil: false, coop_saving_amount: '0', date_hired: '' })
+    setForm({ full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular', has_sil: false, coop_saving_amount: '0', date_hired: '', sss_no: '', philhealth_no: '', pagibig_no: '', tin_no: '' })
     router.refresh()
   }
 
@@ -157,6 +165,29 @@ export default function NewEmployeeButton({
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">SSS No.</label>
+                  <input value={form.sss_no} onChange={e => setForm(f => ({ ...f, sss_no: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">PhilHealth No.</label>
+                  <input value={form.philhealth_no} onChange={e => setForm(f => ({ ...f, philhealth_no: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Pag-IBIG No.</label>
+                  <input value={form.pagibig_no} onChange={e => setForm(f => ({ ...f, pagibig_no: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">TIN</label>
+                  <input value={form.tin_no} onChange={e => setForm(f => ({ ...f, tin_no: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
 

@@ -18,12 +18,25 @@ export default function EmployeeRow({
   const router = useRouter()
   const supabase = createClient()
 
+  const e = employee as Employee & {
+    employment_type?: string
+    date_hired?: string | null
+    sss_no?: string | null
+    philhealth_no?: string | null
+    pagibig_no?: string | null
+    tin_no?: string | null
+  }
   const [form, setForm] = useState({
     full_name: employee.full_name,
     position: employee.position ?? '',
     station_id: employee.station_id ?? '',
     daily_rate: employee.daily_rate.toString(),
-    employment_type: (employee as { employment_type?: string }).employment_type ?? 'regular',
+    employment_type: e.employment_type ?? 'regular',
+    date_hired: e.date_hired ?? '',
+    sss_no: e.sss_no ?? '',
+    philhealth_no: e.philhealth_no ?? '',
+    pagibig_no: e.pagibig_no ?? '',
+    tin_no: e.tin_no ?? '',
     has_sil: employee.has_sil,
     coop_saving_amount: employee.coop_saving_amount.toString(),
     is_active: employee.is_active,
@@ -39,6 +52,11 @@ export default function EmployeeRow({
         station_id: form.station_id || null,
         daily_rate: parseFloat(form.daily_rate) || 0,
         employment_type: form.employment_type,
+        date_hired: form.date_hired || null,
+        sss_no: form.sss_no || null,
+        philhealth_no: form.philhealth_no || null,
+        pagibig_no: form.pagibig_no || null,
+        tin_no: form.tin_no || null,
         has_sil: form.has_sil,
         coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
         is_active: form.is_active,
@@ -49,86 +67,85 @@ export default function EmployeeRow({
     router.refresh()
   }
 
+  const fld = 'w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
+  const lbl = 'block text-[11px] font-medium text-gray-500 mb-1'
+
   if (editing) {
     return (
-      <tr className="bg-blue-50">
-        <td className="px-5 py-3">
-          <input
-            value={form.full_name}
-            onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-            className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </td>
-        <td className="px-4 py-3">
-          <input
-            value={form.position}
-            onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
-            className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            placeholder="Position"
-          />
-        </td>
-        <td className="px-4 py-3">
-          <select
-            value={form.station_id}
-            onChange={e => setForm(f => ({ ...f, station_id: e.target.value }))}
-            className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">—</option>
-            {stations.map(s => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
-        </td>
-        <td className="px-4 py-3">
-          <select
-            value={form.employment_type}
-            onChange={e => setForm(f => ({ ...f, employment_type: e.target.value }))}
-            className="w-full border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="regular">Regular</option>
-            <option value="probationary">Probationary</option>
-            <option value="ojt">OJT</option>
-          </select>
-        </td>
-        <td className="px-4 py-3">
-          <input
-            type="number"
-            min="0"
-            value={form.daily_rate}
-            onChange={e => setForm(f => ({ ...f, daily_rate: e.target.value }))}
-            className="w-24 border border-gray-200 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </td>
-        <td className="px-4 py-3">
-          <input
-            type="checkbox"
-            checked={form.has_sil}
-            onChange={e => setForm(f => ({ ...f, has_sil: e.target.checked }))}
-            className="rounded"
-          />
-        </td>
-        <td className="px-4 py-3">
-          <select
-            value={form.is_active ? 'active' : 'inactive'}
-            onChange={e => setForm(f => ({ ...f, is_active: e.target.value === 'active' }))}
-            className="border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </td>
-        <td className="px-4 py-3">
-          <div className="flex gap-2 justify-end">
-            <button
-              onClick={save}
-              disabled={saving}
-              className="text-green-600 hover:text-green-700 disabled:opacity-50"
-              title="Save"
-            >
-              <Check className="w-4 h-4" />
-            </button>
-            <button onClick={() => setEditing(false)} className="text-gray-400 hover:text-gray-600" title="Cancel">
-              <X className="w-4 h-4" />
+      <tr className="bg-blue-50/60">
+        <td colSpan={8} className="px-5 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="col-span-2">
+              <label className={lbl}>Full name</label>
+              <input value={form.full_name} onChange={ev => setForm(f => ({ ...f, full_name: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Position</label>
+              <input value={form.position} onChange={ev => setForm(f => ({ ...f, position: ev.target.value }))} className={fld} placeholder="Attendant" />
+            </div>
+            <div>
+              <label className={lbl}>Station (home)</label>
+              <select value={form.station_id} onChange={ev => setForm(f => ({ ...f, station_id: ev.target.value }))} className={fld}>
+                <option value="">— roving / none —</option>
+                {stations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className={lbl}>Employment type</label>
+              <select value={form.employment_type} onChange={ev => setForm(f => ({ ...f, employment_type: ev.target.value }))} className={fld}>
+                <option value="regular">Regular</option>
+                <option value="probationary">Probationary</option>
+                <option value="ojt">OJT</option>
+              </select>
+            </div>
+            <div>
+              <label className={lbl}>Date hired</label>
+              <input type="date" value={form.date_hired ?? ''} onChange={ev => setForm(f => ({ ...f, date_hired: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Daily rate (₱)</label>
+              <input type="number" min="0" value={form.daily_rate} onChange={ev => setForm(f => ({ ...f, daily_rate: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Coop saving / cutoff (₱)</label>
+              <input type="number" min="0" value={form.coop_saving_amount} onChange={ev => setForm(f => ({ ...f, coop_saving_amount: ev.target.value }))} className={fld} />
+            </div>
+
+            <div>
+              <label className={lbl}>SSS No.</label>
+              <input value={form.sss_no} onChange={ev => setForm(f => ({ ...f, sss_no: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>PhilHealth No.</label>
+              <input value={form.philhealth_no} onChange={ev => setForm(f => ({ ...f, philhealth_no: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Pag-IBIG No.</label>
+              <input value={form.pagibig_no} onChange={ev => setForm(f => ({ ...f, pagibig_no: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>TIN</label>
+              <input value={form.tin_no} onChange={ev => setForm(f => ({ ...f, tin_no: ev.target.value }))} className={fld} />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input id={`sil-${employee.id}`} type="checkbox" checked={form.has_sil} onChange={ev => setForm(f => ({ ...f, has_sil: ev.target.checked }))} className="rounded" />
+              <label htmlFor={`sil-${employee.id}`} className="text-sm text-gray-700">SIL eligible</label>
+            </div>
+            <div>
+              <label className={lbl}>Status</label>
+              <select value={form.is_active ? 'active' : 'inactive'} onChange={ev => setForm(f => ({ ...f, is_active: ev.target.value === 'active' }))} className={fld}>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-end mt-4">
+            <button onClick={() => setEditing(false)} className="border border-gray-200 text-gray-700 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50">Cancel</button>
+            <button onClick={save} disabled={saving} className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50">
+              <Check className="w-4 h-4" /> {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </td>
