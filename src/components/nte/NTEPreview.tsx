@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { NTEData } from './NTEForm'
-import { Printer } from 'lucide-react'
+import { Printer, Save, CheckCircle2, AlertCircle } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-PH', {
@@ -17,10 +19,71 @@ function addDays(dateStr: string, days: number) {
   return d.toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
-export default function NTEPreview({ data }: { data: NTEData }) {
+export default function NTEPreview({ data, orgId }: { data: NTEData; orgId: string }) {
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  async function saveToRecord() {
+    if (!data.employeeId) return
+    setSaving(true)
+    setSaveError(null)
+
+    try {
+      // Lazy-load PDF libs — keeps initial bundle lean
+      const html2canvas = (await import('html2canvas')).default
+      const { jsPDF } = await import('jspdf')
+
+      // Capture the NTE document element
+      const el = document.getElementById('nte-document')
+      if (!el) throw new Error('Document element not found')
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true, logging: false })
+
+      // Build PDF from canvas image
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pageWidthMm = pdf.internal.pageSize.getWidth()
+      const imgHeightMm = (canvas.height / canvas.width) * pageWidthMm
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidthMm, imgHeightMm)
+      const blob = pdf.output('blob')
+
+      // Upload PDF to Supabase Storage
+      const supabase = createClient()
+      const storagePath = `${data.employeeId}/${data.dateIssued}-${Date.now()}.pdf`
+      const { data: upload, error: uploadError } = await supabase.storage
+        .from('nte-documents')
+        .upload(storagePath, blob, { contentType: 'application/pdf' })
+      if (uploadError) throw uploadError
+
+      // Insert disciplinary record
+      const { error: insertError } = await supabase.from('nte_records').insert({
+        org_id: orgId,
+        employee_id: data.employeeId,
+        date_issued: data.dateIssued,
+        incident_date: data.dateOfIncident,
+        violation:
+          data.violationCode !== 'Other'
+            ? `[${data.violationCode}] ${data.violationLabel}`
+            : data.violationLabel,
+        offense_number: data.offenseNumber,
+        description: data.incidentDescription,
+        issued_by: data.issuedBy,
+        pdf_url: upload.path,
+      })
+      if (insertError) throw insertError
+
+      setSaved(true)
+    } catch (err) {
+      console.error(err)
+      setSaveError('Save failed — please try again.')
+    }
+
+    setSaving(false)
+  }
+
   return (
     <div>
-      <div className="flex items-center gap-3 mb-5 no-print">
+      {/* Action bar */}
+      <div className="flex items-center gap-3 mb-5 flex-wrap no-print">
         <button
           onClick={() => window.print()}
           className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
@@ -28,7 +91,35 @@ export default function NTEPreview({ data }: { data: NTEData }) {
           <Printer className="w-4 h-4" />
           Print / Save as PDF
         </button>
-        <span className="text-xs text-gray-400">Use your browser's Print → Save as PDF to save a copy.</span>
+
+        {data.employeeId && !saved && (
+          <button
+            onClick={saveToRecord}
+            disabled={saving}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Saving…' : 'Save to Employee Record'}
+          </button>
+        )}
+
+        {saved && (
+          <span className="flex items-center gap-1.5 text-sm text-green-700 font-medium">
+            <CheckCircle2 className="w-4 h-4" />
+            Saved to {data.employeeName}&apos;s record
+          </span>
+        )}
+
+        {saveError && (
+          <span className="flex items-center gap-1.5 text-sm text-red-600">
+            <AlertCircle className="w-4 h-4" />
+            {saveError}
+          </span>
+        )}
+
+        {!data.employeeId && (
+          <span className="text-xs text-gray-400">Select an employee to enable record saving.</span>
+        )}
       </div>
 
       {/* NTE Document — styled for print */}
@@ -57,7 +148,7 @@ export default function NTEPreview({ data }: { data: NTEData }) {
           </p>
 
           <p className="mb-4">
-            Records show that you have committed the following violation of the Company's Code of Discipline:
+            Records show that you have committed the following violation of the Company&apos;s Code of Discipline:
           </p>
 
           <div className="border border-gray-300 rounded px-4 py-3 mb-4 bg-gray-50">
@@ -106,7 +197,7 @@ export default function NTEPreview({ data }: { data: NTEData }) {
 
         {/* Note at bottom */}
         <div className="mt-10 border-t border-gray-200 pt-4 text-xs text-gray-500 italic">
-          This document is issued pursuant to the Company's Code of Discipline and due process requirements under Philippine Labor Law (Labor Code, Book VI, Rule I, Section 2).
+          This document is issued pursuant to the Company&apos;s Code of Discipline and due process requirements under Philippine Labor Law (Labor Code, Book VI, Rule I, Section 2).
         </div>
       </div>
 

@@ -21,6 +21,7 @@ const VIOLATIONS = [
 ]
 
 export interface NTEData {
+  employeeId: string
   employeeName: string
   employeePosition: string
   orgName: string
@@ -38,15 +39,18 @@ export interface NTEData {
 export default function NTEForm({
   employees,
   orgName,
+  orgId,
   issuedBy,
 }: {
   employees: Pick<Employee, 'id' | 'full_name' | 'position'>[]
   orgName: string
+  orgId: string
   issuedBy: string
 }) {
   const today = new Date().toISOString().split('T')[0]
 
   const [form, setForm] = useState<NTEData>({
+    employeeId: '',
     employeeName: '',
     employeePosition: '',
     orgName,
@@ -68,6 +72,7 @@ export default function NTEForm({
     if (emp) {
       setForm(f => ({
         ...f,
+        employeeId: emp.id,
         employeeName: emp.full_name,
         employeePosition: emp.position ?? '',
       }))
@@ -97,7 +102,7 @@ export default function NTEForm({
         >
           ← Back to form
         </button>
-        <NTEPreview data={form} />
+        <NTEPreview data={form} orgId={orgId} />
       </div>
     )
   }

@@ -11,9 +11,10 @@ export const MODULE_ACCESS: Record<string, Role[]> = {
   '/employees':  ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/payroll':    ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
   '/remittance': ['ceo', 'cfo', 'owner'],
-  '/nte':        ['ceo', 'ops_officer', 'owner', 'assistant'],
-  '/doe':        ['ceo', 'ops_officer', 'owner', 'assistant'],
-  '/feedback':   ['owner', 'ceo'],
+  '/nte':           ['ceo', 'ops_officer', 'owner', 'assistant'],
+  '/doe':           ['ceo', 'ops_officer', 'owner', 'assistant'],
+  '/disciplinary':  ['ceo', 'ops_officer', 'owner', 'assistant'],
+  '/feedback':      ['owner', 'ceo'],
 }
 
 export function canAccess(path: string, role: string | null | undefined): boolean {

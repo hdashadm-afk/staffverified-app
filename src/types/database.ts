@@ -138,6 +138,25 @@ export interface ReminderRule {
   created_at: string
 }
 
+export interface NTERecord {
+  id: string
+  org_id: string
+  employee_id: string
+  date_issued: string
+  incident_date: string
+  violation: string
+  offense_number: string
+  description: string
+  issued_by: string
+  pdf_url: string | null
+  acknowledged: boolean
+  created_at: string
+}
+
+export interface NTERecordWithEmployee extends NTERecord {
+  employees: { full_name: string } | null
+}
+
 export type FeedbackSeverity = 'bug' | 'suggestion' | 'question'
 
 export interface FeedbackReport {

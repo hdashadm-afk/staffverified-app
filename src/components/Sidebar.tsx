@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  ShieldAlert,
 } from 'lucide-react'
 
 const NAV_META = [
@@ -28,9 +29,10 @@ const NAV_META = [
   { href: '/employees',  label: 'Employees',    icon: Users },
   { href: '/payroll',    label: 'Payroll',      icon: Banknote },
   { href: '/remittance', label: 'Remittance',   icon: RefreshCw },
-  { href: '/nte',        label: 'NTE',          icon: FileWarning },
-  { href: '/doe',        label: 'DOE Report',   icon: Fuel },
-  { href: '/feedback',   label: 'Feedback',     icon: MessageSquare },
+  { href: '/nte',           label: 'NTE',                icon: FileWarning },
+  { href: '/disciplinary',  label: 'Disciplinary',       icon: ShieldAlert },
+  { href: '/doe',           label: 'DOE Report',         icon: Fuel },
+  { href: '/feedback',      label: 'Feedback',           icon: MessageSquare },
 ]
 
 export default function Sidebar({ profile }: { profile: any }) {

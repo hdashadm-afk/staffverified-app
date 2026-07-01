@@ -39,6 +39,7 @@ export default async function NTEPage() {
       <NTEForm
         employees={employees ?? []}
         orgName={org?.name ?? ''}
+        orgId={profile!.org_id}
         issuedBy={profile?.full_name ?? ''}
       />
     </div>
