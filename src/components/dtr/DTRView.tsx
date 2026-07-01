@@ -6,7 +6,6 @@ import DTREntryRow from './DTREntryRow'
 import { computeRegularHours, computeOvertimeHours, computeNightShiftHours } from '@/lib/payroll-math'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 function generateDates(start: string, end: string): string[] {
   const dates: string[] = []
@@ -37,6 +36,8 @@ export default function DTRView({
   cutoffEnd: string
 }) {
   const [selectedEmployee, setSelectedEmployee] = useState<string>(employees[0]?.id ?? '')
+  const [localEntries, setLocalEntries] = useState<DTREntry[]>(dtrEntries)
+  const [editingDate, setEditingDate] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -44,7 +45,7 @@ export default function DTRView({
   const dates = generateDates(cutoffStart, cutoffEnd)
 
   const entryMap = Object.fromEntries(
-    dtrEntries
+    localEntries
       .filter(e => e.employee_id === selectedEmployee)
       .map(e => [e.work_date, e])
   )
@@ -57,6 +58,36 @@ export default function DTRView({
     const reg = computeRegularHours(timeIn, timeOut)
     const ot = computeOvertimeHours(timeIn, timeOut)
     const nsd = computeNightShiftHours(timeIn, timeOut)
+
+    // Optimistic update so totals reflect immediately without waiting for router.refresh()
+    setLocalEntries(prev => {
+      const idx = prev.findIndex(
+        e => e.employee_id === selectedEmployee && e.work_date === workDate
+      )
+      const base = idx >= 0 ? prev[idx] : ({} as DTREntry)
+      const updated: DTREntry = {
+        ...base,
+        id: base.id ?? '',
+        created_at: base.created_at ?? new Date().toISOString(),
+        org_id: orgId,
+        employee_id: selectedEmployee,
+        station_id: employee?.station_id ?? null,
+        work_date: workDate,
+        time_in: timeIn || null,
+        time_out: timeOut || null,
+        regular_hours: reg,
+        overtime_hours: ot,
+        night_shift_hours: nsd,
+        late_minutes: 0,
+        undertime_minutes: 0,
+        is_holiday_regular: flags.isHolidayRegular,
+        is_holiday_special: flags.isHolidaySpecial,
+        notes: flags.notes || null,
+        entered_by: userId,
+      }
+      if (idx >= 0) return prev.map((e, i) => (i === idx ? updated : e))
+      return [...prev, updated]
+    })
 
     await supabase.from('dtr_entries').upsert({
       org_id: orgId,
@@ -75,6 +106,10 @@ export default function DTRView({
       notes: flags.notes || null,
       entered_by: userId,
     }, { onConflict: 'employee_id,work_date' })
+
+    // Advance editing cursor to the next date row
+    const nextIdx = dates.indexOf(workDate) + 1
+    setEditingDate(nextIdx < dates.length ? dates[nextIdx] : null)
 
     router.refresh()
   }
@@ -99,7 +134,7 @@ export default function DTRView({
         <label className="text-sm font-medium text-gray-700">Employee:</label>
         <select
           value={selectedEmployee}
-          onChange={e => setSelectedEmployee(e.target.value)}
+          onChange={e => { setSelectedEmployee(e.target.value); setEditingDate(null) }}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           {employees.map(e => (
@@ -141,6 +176,8 @@ export default function DTRView({
                 key={date}
                 date={date}
                 entry={entryMap[date] ?? null}
+                isEditing={editingDate === date}
+                onStartEdit={() => setEditingDate(date)}
                 onSave={upsertEntry}
               />
             ))}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DTREntry } from '@/types/database'
 import { computeRegularHours, computeOvertimeHours, computeNightShiftHours } from '@/lib/payroll-math'
 import { Check, Pencil } from 'lucide-react'
@@ -10,17 +10,20 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function DTREntryRow({
   date,
   entry,
+  isEditing,
+  onStartEdit,
   onSave,
 }: {
   date: string
   entry: DTREntry | null
+  isEditing: boolean
+  onStartEdit: () => void
   onSave: (date: string, timeIn: string, timeOut: string, flags: {
     isHolidayRegular: boolean
     isHolidaySpecial: boolean
     notes: string
   }) => Promise<void>
 }) {
-  const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [timeIn, setTimeIn] = useState(entry?.time_in ?? '')
   const [timeOut, setTimeOut] = useState(entry?.time_out ?? '')
@@ -28,23 +31,34 @@ export default function DTREntryRow({
   const [isHolidaySpecial, setIsHolidaySpecial] = useState(entry?.is_holiday_special ?? false)
   const [notes, setNotes] = useState(entry?.notes ?? '')
 
+  // Sync inputs from the latest saved entry whenever this row enters edit mode
+  useEffect(() => {
+    if (isEditing) {
+      setTimeIn(entry?.time_in ?? '')
+      setTimeOut(entry?.time_out ?? '')
+      setIsHolidayRegular(entry?.is_holiday_regular ?? false)
+      setIsHolidaySpecial(entry?.is_holiday_special ?? false)
+      setNotes(entry?.notes ?? '')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing])
+
   const d = new Date(date + 'T00:00:00')
   const dayName = DAYS[d.getDay()]
   const isWeekend = d.getDay() === 0 || d.getDay() === 6
 
-  const regHrs = entry ? entry.regular_hours : 0
-  const otHrs = entry ? entry.overtime_hours : 0
-  const nsdHrs = entry ? entry.night_shift_hours : 0
+  const regHrs = entry?.regular_hours ?? 0
+  const otHrs = entry?.overtime_hours ?? 0
+  const nsdHrs = entry?.night_shift_hours ?? 0
 
   async function handleSave() {
     setSaving(true)
     await onSave(date, timeIn, timeOut, { isHolidayRegular, isHolidaySpecial, notes })
     setSaving(false)
-    setEditing(false)
   }
 
   return (
-    <tr className={`hover:bg-gray-50 transition-colors ${isWeekend ? 'bg-orange-50/30' : ''} ${editing ? 'bg-red-50' : ''}`}>
+    <tr className={`hover:bg-gray-50 transition-colors ${isWeekend ? 'bg-orange-50/30' : ''} ${isEditing ? 'bg-red-50' : ''}`}>
       <td className="px-5 py-2.5 text-gray-700 tabular-nums">
         {d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
       </td>
@@ -52,7 +66,7 @@ export default function DTREntryRow({
         {dayName}
       </td>
 
-      {editing ? (
+      {isEditing ? (
         <>
           <td className="px-4 py-2">
             <input
@@ -95,9 +109,11 @@ export default function DTREntryRow({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="text-green-600 hover:text-green-700 disabled:opacity-50"
+              title="Save and go to next row"
+              className="flex items-center gap-1 text-green-600 hover:text-green-700 disabled:opacity-50 font-medium text-xs"
             >
               <Check className="w-4 h-4" />
+              <span>{saving ? 'Saving…' : 'Save'}</span>
             </button>
           </td>
         </>
@@ -114,10 +130,12 @@ export default function DTREntryRow({
           </td>
           <td className="px-4 py-2.5 text-right">
             <button
-              onClick={() => setEditing(true)}
-              className="text-gray-300 hover:text-gray-600 transition-colors"
+              onClick={onStartEdit}
+              title="Edit this row"
+              className="flex items-center gap-1 text-gray-400 hover:text-gray-700 transition-colors text-xs"
             >
               <Pencil className="w-3.5 h-3.5" />
+              <span>Edit</span>
             </button>
           </td>
         </>
