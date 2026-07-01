@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { DTREntry } from '@/types/database'
 import { computeRegularHours, computeOvertimeHours, computeNightShiftHours } from '@/lib/payroll-math'
-import { Check, Pencil } from 'lucide-react'
+import { Check, Pencil, X } from 'lucide-react'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -73,6 +73,17 @@ export default function DTREntryRow({
     setEditing(false)
   }
 
+  // Close this row WITHOUT saving — revert inputs to the last saved values.
+  // Other rows left in edit mode are unaffected.
+  function cancelEdit() {
+    setTimeIn(entry?.time_in ?? '')
+    setTimeOut(entry?.time_out ?? '')
+    setIsHolidayRegular(entry?.is_holiday_regular ?? false)
+    setIsHolidaySpecial(entry?.is_holiday_special ?? false)
+    setNotes(entry?.notes ?? '')
+    setEditing(false)
+  }
+
   return (
     <tr className={`hover:bg-gray-50 transition-colors ${isWeekend ? 'bg-orange-50/30' : ''} ${editing ? 'bg-red-50' : ''}`}>
       <td className="px-5 py-2.5 text-gray-700 tabular-nums">
@@ -122,15 +133,26 @@ export default function DTREntryRow({
             </div>
           </td>
           <td className="px-4 py-2">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              title="Save and advance to next row"
-              className="flex items-center gap-1 text-green-600 hover:text-green-700 disabled:opacity-50 font-medium text-xs"
-            >
-              <Check className="w-4 h-4" />
-              <span>{saving ? 'Saving…' : 'Save'}</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                title="Save and advance to next row"
+                className="flex items-center gap-1 text-green-600 hover:text-green-700 disabled:opacity-50 font-medium text-xs"
+              >
+                <Check className="w-4 h-4" />
+                <span>{saving ? 'Saving…' : 'Save'}</span>
+              </button>
+              <button
+                onClick={cancelEdit}
+                disabled={saving}
+                title="Cancel — close without saving"
+                className="flex items-center gap-1 text-gray-400 hover:text-gray-700 disabled:opacity-50 text-xs"
+              >
+                <X className="w-4 h-4" />
+                <span>Cancel</span>
+              </button>
+            </div>
           </td>
         </>
       ) : (

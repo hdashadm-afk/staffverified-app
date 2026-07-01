@@ -40,6 +40,13 @@ export default function DOEPumpPriceForm({
   const [prices, setPrices] = useState<PriceGrid>({})
   const [preview, setPreview] = useState(false)
 
+  // Only these stations are required to SUBMIT the weekly DOE report — the
+  // printable PDF shows only them. Price entry below stays open to all stations.
+  const DOE_ORDER = ['San Juan', 'Quibaol', 'Domalandan']
+  const doeStations = stations
+    .filter(s => DOE_ORDER.some(n => s.name.includes(n)))
+    .sort((a, b) => DOE_ORDER.findIndex(n => a.name.includes(n)) - DOE_ORDER.findIndex(n => b.name.includes(n)))
+
   function setPrice(product: string, stationId: string, value: string) {
     setPrices(prev => ({
       ...prev,
@@ -89,7 +96,7 @@ export default function DOEPumpPriceForm({
             <thead>
               <tr className="bg-gray-100">
                 <th className="border border-gray-400 px-3 py-2 text-left font-bold">Product</th>
-                {stations.map(s => (
+                {doeStations.map(s => (
                   <th key={s.id} className="border border-gray-400 px-3 py-2 text-center font-bold">{s.name}</th>
                 ))}
               </tr>
@@ -98,7 +105,7 @@ export default function DOEPumpPriceForm({
               {PRODUCTS.map((product, i) => (
                 <tr key={product} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="border border-gray-400 px-3 py-2">{product}</td>
-                  {stations.map(s => (
+                  {doeStations.map(s => (
                     <td key={s.id} className="border border-gray-400 px-3 py-2 text-center">
                       {prices[product]?.[s.id]
                         ? `₱${parseFloat(prices[product][s.id]).toFixed(2)}`
