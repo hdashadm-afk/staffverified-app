@@ -10,20 +10,23 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export default function DTREntryRow({
   date,
   entry,
-  isEditing,
-  onStartEdit,
+  autoOpen,
+  onAutoOpened,
   onSave,
 }: {
   date: string
   entry: DTREntry | null
-  isEditing: boolean
-  onStartEdit: () => void
+  // Parent signals "open this row for editing" after the previous row was saved.
+  // The row consumes it once (calls onAutoOpened to clear it) so it fires exactly once.
+  autoOpen: boolean
+  onAutoOpened: () => void
   onSave: (date: string, timeIn: string, timeOut: string, flags: {
     isHolidayRegular: boolean
     isHolidaySpecial: boolean
     notes: string
   }) => Promise<void>
 }) {
+  const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [timeIn, setTimeIn] = useState(entry?.time_in ?? '')
   const [timeOut, setTimeOut] = useState(entry?.time_out ?? '')
@@ -31,17 +34,29 @@ export default function DTREntryRow({
   const [isHolidaySpecial, setIsHolidaySpecial] = useState(entry?.is_holiday_special ?? false)
   const [notes, setNotes] = useState(entry?.notes ?? '')
 
-  // Sync inputs from the latest saved entry whenever this row enters edit mode
+  // Auto-advance: parent sets autoOpen=true after saving the previous row.
+  // We enter edit mode, sync inputs from the latest entry, then tell parent we consumed the signal.
   useEffect(() => {
-    if (isEditing) {
+    if (autoOpen) {
       setTimeIn(entry?.time_in ?? '')
       setTimeOut(entry?.time_out ?? '')
       setIsHolidayRegular(entry?.is_holiday_regular ?? false)
       setIsHolidaySpecial(entry?.is_holiday_special ?? false)
       setNotes(entry?.notes ?? '')
+      setEditing(true)
+      onAutoOpened()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing])
+  }, [autoOpen])
+
+  function startEdit() {
+    setTimeIn(entry?.time_in ?? '')
+    setTimeOut(entry?.time_out ?? '')
+    setIsHolidayRegular(entry?.is_holiday_regular ?? false)
+    setIsHolidaySpecial(entry?.is_holiday_special ?? false)
+    setNotes(entry?.notes ?? '')
+    setEditing(true)
+  }
 
   const d = new Date(date + 'T00:00:00')
   const dayName = DAYS[d.getDay()]
@@ -55,10 +70,11 @@ export default function DTREntryRow({
     setSaving(true)
     await onSave(date, timeIn, timeOut, { isHolidayRegular, isHolidaySpecial, notes })
     setSaving(false)
+    setEditing(false)
   }
 
   return (
-    <tr className={`hover:bg-gray-50 transition-colors ${isWeekend ? 'bg-orange-50/30' : ''} ${isEditing ? 'bg-red-50' : ''}`}>
+    <tr className={`hover:bg-gray-50 transition-colors ${isWeekend ? 'bg-orange-50/30' : ''} ${editing ? 'bg-red-50' : ''}`}>
       <td className="px-5 py-2.5 text-gray-700 tabular-nums">
         {d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
       </td>
@@ -66,7 +82,7 @@ export default function DTREntryRow({
         {dayName}
       </td>
 
-      {isEditing ? (
+      {editing ? (
         <>
           <td className="px-4 py-2">
             <input
@@ -109,7 +125,7 @@ export default function DTREntryRow({
             <button
               onClick={handleSave}
               disabled={saving}
-              title="Save and go to next row"
+              title="Save and advance to next row"
               className="flex items-center gap-1 text-green-600 hover:text-green-700 disabled:opacity-50 font-medium text-xs"
             >
               <Check className="w-4 h-4" />
@@ -130,7 +146,7 @@ export default function DTREntryRow({
           </td>
           <td className="px-4 py-2.5 text-right">
             <button
-              onClick={onStartEdit}
+              onClick={startEdit}
               title="Edit this row"
               className="flex items-center gap-1 text-gray-400 hover:text-gray-700 transition-colors text-xs"
             >

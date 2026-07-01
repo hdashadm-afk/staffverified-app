@@ -37,7 +37,9 @@ export default function DTRView({
 }) {
   const [selectedEmployee, setSelectedEmployee] = useState<string>(employees[0]?.id ?? '')
   const [localEntries, setLocalEntries] = useState<DTREntry[]>(dtrEntries)
-  const [editingDate, setEditingDate] = useState<string | null>(null)
+  // One-shot signal: after saving date N, set this to date N+1 so that row auto-opens.
+  // The row consumes it immediately (calls onAutoOpened → clears back to null).
+  const [nextToOpen, setNextToOpen] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -107,9 +109,9 @@ export default function DTRView({
       entered_by: userId,
     }, { onConflict: 'employee_id,work_date' })
 
-    // Advance editing cursor to the next date row
+    // Signal the next date row to auto-open for editing
     const nextIdx = dates.indexOf(workDate) + 1
-    setEditingDate(nextIdx < dates.length ? dates[nextIdx] : null)
+    setNextToOpen(nextIdx < dates.length ? dates[nextIdx] : null)
 
     router.refresh()
   }
@@ -134,7 +136,7 @@ export default function DTRView({
         <label className="text-sm font-medium text-gray-700">Employee:</label>
         <select
           value={selectedEmployee}
-          onChange={e => { setSelectedEmployee(e.target.value); setEditingDate(null) }}
+          onChange={e => { setSelectedEmployee(e.target.value); setNextToOpen(null) }}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           {employees.map(e => (
@@ -176,8 +178,8 @@ export default function DTRView({
                 key={date}
                 date={date}
                 entry={entryMap[date] ?? null}
-                isEditing={editingDate === date}
-                onStartEdit={() => setEditingDate(date)}
+                autoOpen={nextToOpen === date}
+                onAutoOpened={() => setNextToOpen(null)}
                 onSave={upsertEntry}
               />
             ))}
