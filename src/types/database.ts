@@ -137,3 +137,20 @@ export interface ReminderRule {
   notify_role: string
   created_at: string
 }
+
+export type FeedbackSeverity = 'bug' | 'suggestion' | 'question'
+
+export interface FeedbackReport {
+  id: string
+  org_id: string
+  user_id: string | null
+  user_name: string
+  user_email: string
+  page_url: string
+  message: string
+  severity: FeedbackSeverity
+  is_resolved: boolean
+  resolved_by: string | null
+  resolved_at: string | null
+  created_at: string
+}

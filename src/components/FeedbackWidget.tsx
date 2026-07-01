@@ -1,0 +1,169 @@
+'use client'
+
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { MessageSquare, X, ChevronDown } from 'lucide-react'
+import type { FeedbackSeverity } from '@/types/database'
+
+const SEVERITY_OPTIONS: { value: FeedbackSeverity; label: string; color: string }[] = [
+  { value: 'bug',        label: 'Bug',        color: 'text-red-600' },
+  { value: 'suggestion', label: 'Suggestion', color: 'text-blue-600' },
+  { value: 'question',   label: 'Question',   color: 'text-amber-600' },
+]
+
+export default function FeedbackWidget({
+  userId,
+  userName,
+  userEmail,
+  orgId,
+}: {
+  userId: string
+  userName: string
+  userEmail: string
+  orgId: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [message, setMessage] = useState('')
+  const [severity, setSeverity] = useState<FeedbackSeverity>('bug')
+  const [saving, setSaving] = useState(false)
+  const [done, setDone] = useState(false)
+  const pathname = usePathname()
+  const supabase = createClient()
+
+  function openModal() {
+    setMessage('')
+    setSeverity('bug')
+    setDone(false)
+    setOpen(true)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!message.trim()) return
+    setSaving(true)
+
+    await supabase.from('feedback_reports').insert({
+      org_id: orgId,
+      user_id: userId,
+      user_name: userName,
+      user_email: userEmail,
+      page_url: window.location.href,
+      message: message.trim(),
+      severity,
+    })
+
+    setSaving(false)
+    setDone(true)
+  }
+
+  return (
+    <>
+      {/* Floating trigger */}
+      <button
+        onClick={openModal}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg transition-colors"
+      >
+        <MessageSquare className="w-4 h-4" />
+        Report Issue
+      </button>
+
+      {/* Modal */}
+      {open && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Report an Issue</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Goes directly to the owner</p>
+              </div>
+              <button
+                onClick={() => setOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {done ? (
+              <div className="px-6 py-10 text-center">
+                <div className="text-3xl mb-3">✅</div>
+                <p className="font-medium text-gray-800">Report submitted</p>
+                <p className="text-sm text-gray-500 mt-1">The owner will look into it.</p>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="mt-5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+                {/* Auto-filled context — read-only display */}
+                <div className="bg-gray-50 rounded-lg px-4 py-3 space-y-1 text-xs text-gray-500">
+                  <div className="flex justify-between gap-2">
+                    <span className="font-medium text-gray-600">From</span>
+                    <span className="truncate">{userName} ({userEmail})</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="font-medium text-gray-600">Page</span>
+                    <span className="truncate text-right">{pathname}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="font-medium text-gray-600">Time</span>
+                    <span>{new Date().toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                  </div>
+                </div>
+
+                {/* Severity */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Type</label>
+                  <div className="flex gap-2">
+                    {SEVERITY_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setSeverity(opt.value)}
+                        className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                          severity === opt.value
+                            ? 'border-red-500 bg-red-50 text-red-700'
+                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                    What happened? <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={message}
+                    onChange={e => setMessage(e.target.value)}
+                    required
+                    rows={4}
+                    placeholder="Describe the issue, what you expected, and what actually happened…"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={saving || !message.trim()}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Submitting…' : 'Submit Report'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}

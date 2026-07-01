@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
+import FeedbackWidget from '@/components/FeedbackWidget'
 
 export default async function DashboardLayout({
   children,
@@ -24,6 +25,14 @@ export default async function DashboardLayout({
       <main className="flex-1 p-6 overflow-auto">
         {children}
       </main>
+      {profile && (
+        <FeedbackWidget
+          userId={profile.id}
+          userName={profile.full_name}
+          userEmail={profile.email}
+          orgId={profile.org_id}
+        />
+      )}
     </div>
   )
 }
