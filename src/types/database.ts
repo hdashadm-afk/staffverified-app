@@ -126,6 +126,10 @@ export interface Permit {
   parent_permit_id: string | null
   is_recurring: boolean
   recurrence_rule: string | null
+  amount_due: number | null
+  amount_paid: number | null
+  resolved_at: string | null
+  resolved_by: string | null
   created_at: string
 }
 
@@ -136,6 +140,27 @@ export interface ReminderRule {
   days_before: number
   notify_role: string
   created_at: string
+}
+
+export interface CompliancePenaltyRate {
+  id: string
+  agency: string
+  rate_percent: number
+  rate_period: string
+  source_note: string | null
+  updated_at: string
+}
+
+export interface PermitHistoryEntry {
+  id: string
+  permit_id: string
+  org_id: string
+  from_status: string | null
+  to_status: string
+  amount_paid: number | null
+  notes: string | null
+  changed_by: string | null
+  changed_at: string
 }
 
 export interface NTERecord {

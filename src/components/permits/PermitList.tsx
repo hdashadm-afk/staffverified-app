@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Permit } from '@/types/database'
+import { Permit, CompliancePenaltyRate } from '@/types/database'
 import PermitCard from './PermitCard'
 
 const STATUS_TABS = ['all', 'pending', 'overdue', 'submitted'] as const
@@ -11,10 +11,12 @@ export default function PermitList({
   permits,
   orgId,
   userId,
+  penaltyRates,
 }: {
   permits: (Permit & { stations: { name: string } | null })[]
   orgId: string
   userId: string
+  penaltyRates: CompliancePenaltyRate[]
 }) {
   const [tab, setTab] = useState<Tab>('all')
 
@@ -57,7 +59,7 @@ export default function PermitList({
       ) : (
         <div className="space-y-2">
           {filtered.map(permit => (
-            <PermitCard key={permit.id} permit={permit} userId={userId} />
+            <PermitCard key={permit.id} permit={permit} userId={userId} penaltyRates={penaltyRates} />
           ))}
         </div>
       )}

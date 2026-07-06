@@ -45,6 +45,7 @@ export default function NewPermitButton({
     due_date: '',
     recurrence_rule: '',
     notes: '',
+    amount_due: '',
   })
 
   function applyPreset(preset: { label: string; agency: string }) {
@@ -65,12 +66,13 @@ export default function NewPermitButton({
       is_recurring: !!form.recurrence_rule,
       recurrence_rule: form.recurrence_rule || null,
       notes: form.notes || null,
+      amount_due: form.amount_due ? Number(form.amount_due) : null,
       status: 'pending',
     })
 
     setSaving(false)
     setOpen(false)
-    setForm({ permit_type: '', agency: '', description: '', station_id: '', due_date: '', recurrence_rule: '', notes: '' })
+    setForm({ permit_type: '', agency: '', description: '', station_id: '', due_date: '', recurrence_rule: '', notes: '', amount_due: '' })
     router.refresh()
   }
 
@@ -162,6 +164,17 @@ export default function NewPermitButton({
                   value={form.due_date}
                   onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Amount due (₱, optional)</label>
+                <input
+                  type="number"
+                  value={form.amount_due}
+                  onChange={e => setForm(f => ({ ...f, amount_due: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="e.g. 15000"
                 />
               </div>
 

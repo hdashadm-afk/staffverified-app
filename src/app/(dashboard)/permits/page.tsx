@@ -30,6 +30,10 @@ export default async function PermitsPage() {
     .select('id, name')
     .eq('org_id', profile!.org_id)
 
+  const { data: penaltyRates } = await supabase
+    .from('compliance_penalty_rates')
+    .select('*')
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -40,7 +44,12 @@ export default async function PermitsPage() {
         <NewPermitButton orgId={profile!.org_id} stations={stations ?? []} userId={user!.id} />
       </div>
 
-      <PermitList permits={(permits ?? []) as any} orgId={profile!.org_id} userId={user!.id} />
+      <PermitList
+        permits={(permits ?? []) as any}
+        orgId={profile!.org_id}
+        userId={user!.id}
+        penaltyRates={penaltyRates ?? []}
+      />
     </div>
   )
 }
