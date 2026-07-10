@@ -43,6 +43,11 @@ export interface Employee {
   coop_saving_amount: number
   is_active: boolean
   date_hired: string | null
+  employment_type: string
+  sss_no: string | null
+  philhealth_no: string | null
+  pagibig_no: string | null
+  tin_no: string | null
   created_at: string
 }
 
