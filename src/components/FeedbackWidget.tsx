@@ -1,10 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { MessageSquare, X, ChevronDown } from 'lucide-react'
+import { MessageSquare, X, ChevronDown, Paperclip, FileText } from 'lucide-react'
 import type { FeedbackSeverity } from '@/types/database'
+
+const MAX_ATTACHMENTS = 5
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024 // 10MB
 
 const SEVERITY_OPTIONS: { value: FeedbackSeverity; label: string; color: string }[] = [
   { value: 'bug',        label: 'Bug',        color: 'text-red-600' },
@@ -28,6 +31,9 @@ export default function FeedbackWidget({
   const [severity, setSeverity] = useState<FeedbackSeverity>('bug')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [files, setFiles] = useState<File[]>([])
+  const [attachError, setAttachError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const pathname = usePathname()
   const supabase = createClient()
 
@@ -35,7 +41,33 @@ export default function FeedbackWidget({
     setMessage('')
     setSeverity('bug')
     setDone(false)
+    setFiles([])
+    setAttachError('')
     setOpen(true)
+  }
+
+  function addFiles(picked: FileList | null) {
+    if (!picked || picked.length === 0) return
+    setAttachError('')
+    setFiles(prev => {
+      const next = [...prev]
+      for (const f of Array.from(picked)) {
+        if (f.size > MAX_ATTACHMENT_BYTES) {
+          setAttachError(`${f.name} is over 10MB and was skipped`)
+          continue
+        }
+        if (next.length >= MAX_ATTACHMENTS) {
+          setAttachError(`Only up to ${MAX_ATTACHMENTS} files can be attached`)
+          break
+        }
+        next.push(f)
+      }
+      return next
+    })
+  }
+
+  function removeFile(idx: number) {
+    setFiles(prev => prev.filter((_, i) => i !== idx))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -43,7 +75,20 @@ export default function FeedbackWidget({
     if (!message.trim()) return
     setSaving(true)
 
+    const reportId = crypto.randomUUID()
+    const attachmentPaths: string[] = []
+
+    for (const file of files) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+      const path = `${orgId}/${reportId}/${Date.now()}-${safeName}`
+      const { error } = await supabase.storage
+        .from('feedback-attachments')
+        .upload(path, file, { contentType: file.type || undefined })
+      if (!error) attachmentPaths.push(path)
+    }
+
     await supabase.from('feedback_reports').insert({
+      id: reportId,
       org_id: orgId,
       user_id: userId,
       user_name: userName,
@@ -51,6 +96,7 @@ export default function FeedbackWidget({
       page_url: window.location.href,
       message: message.trim(),
       severity,
+      attachment_paths: attachmentPaths,
     })
 
     setSaving(false)
@@ -150,6 +196,53 @@ export default function FeedbackWidget({
                     placeholder="Describe the issue, what you expected, and what actually happened…"
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
                   />
+                </div>
+
+                {/* Attachments */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                    Attachments <span className="text-gray-400 font-normal">(screenshots, files — optional)</span>
+                  </label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                    onChange={e => { addFiles(e.target.files); e.target.value = '' }}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={files.length >= MAX_ATTACHMENTS}
+                    className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <Paperclip className="w-3.5 h-3.5" />
+                    Attach file or image
+                  </button>
+                  {attachError && <p className="text-xs text-amber-600 mt-1.5">{attachError}</p>}
+                  {files.length > 0 && (
+                    <ul className="mt-2 space-y-1.5">
+                      {files.map((f, i) => (
+                        <li key={`${f.name}-${i}`} className="flex items-center gap-2 bg-gray-50 rounded-lg px-2.5 py-1.5 text-xs">
+                          {f.type.startsWith('image/') ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={URL.createObjectURL(f)} alt={f.name} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                          ) : (
+                            <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          )}
+                          <span className="flex-1 truncate text-gray-700">{f.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(i)}
+                            className="text-gray-400 hover:text-red-600 flex-shrink-0"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
                 <button

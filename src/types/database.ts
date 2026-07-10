@@ -171,5 +171,6 @@ export interface FeedbackReport {
   is_resolved: boolean
   resolved_by: string | null
   resolved_at: string | null
+  attachment_paths: string[]
   created_at: string
 }

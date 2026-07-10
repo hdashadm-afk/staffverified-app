@@ -4,7 +4,12 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { FeedbackReport } from '@/types/database'
-import { CheckCircle2, Circle, Bug, Lightbulb, HelpCircle } from 'lucide-react'
+import { CheckCircle2, Circle, Bug, Lightbulb, HelpCircle, Paperclip, Loader2 } from 'lucide-react'
+
+function attachmentName(path: string) {
+  const withoutPrefix = path.split('/').pop() ?? path
+  return withoutPrefix.replace(/^\d+-/, '')
+}
 
 const SEVERITY_META = {
   bug:        { label: 'Bug',        Icon: Bug,         badge: 'bg-red-50 text-red-700' },
@@ -15,8 +20,19 @@ const SEVERITY_META = {
 export default function FeedbackList({ reports }: { reports: FeedbackReport[] }) {
   const [toggling, setToggling] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'open' | 'resolved'>('open')
+  const [openingPath, setOpeningPath] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  async function openAttachment(path: string) {
+    setOpeningPath(path)
+    const { data, error } = await supabase.storage
+      .from('feedback-attachments')
+      .createSignedUrl(path, 60)
+    setOpeningPath(null)
+    if (error || !data) return
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+  }
 
   async function toggleResolved(report: FeedbackReport) {
     setToggling(report.id)
@@ -94,6 +110,25 @@ export default function FeedbackList({ reports }: { reports: FeedbackReport[] })
                     </span>
                   </div>
                   <p className="text-sm text-gray-800 leading-relaxed">{report.message}</p>
+                  {report.attachment_paths.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {report.attachment_paths.map(path => (
+                        <button
+                          key={path}
+                          type="button"
+                          onClick={() => openAttachment(path)}
+                          disabled={openingPath === path}
+                          title={attachmentName(path)}
+                          className="flex items-center gap-1 text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-2 py-1 max-w-[10rem] disabled:opacity-50"
+                        >
+                          {openingPath === path
+                            ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />
+                            : <Paperclip className="w-3 h-3 flex-shrink-0" />}
+                          <span className="truncate">{attachmentName(path)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-400">
                     <span>{report.user_name} · {report.user_email}</span>
                     <span className="truncate max-w-xs">{report.page_url}</span>
