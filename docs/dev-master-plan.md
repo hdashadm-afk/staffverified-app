@@ -47,6 +47,7 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 | Payroll calculations | ✅ | Gross computation (basic, OT, NSD, holiday pay) shared between DTR preview and payslip generation via `summarizeCutoffEarnings()`. |
 | PH statutory contributions | ✅ | SSS, PhilHealth, Pag-IBIG implemented with real 2025 bracket tables (`contribution-tables.ts`); monthly-salary conversion fixed to match actual weekly cutoffs (was `×2`, now `×52/12`). |
 | Payslips | ✅ | Full gross-to-net breakdown including BIR withholding tax. `sil_pay` field is back to unused/0 (leave sync reverted with the leave module). |
+| Off-cycle payroll runs | ✅ | New Payroll Run flow supports 13th Month Pay (auto-computed from year's basic pay, DOLE rule, ₱90k tax exemption), Bonus, and Adjustment (manual amount/reason per employee), alongside the existing Regular DTR-based run. |
 | Owner cockpit payroll views | 🟡 | Single-org dashboard exists; no cross-venture rollup because the app is single-tenant-per-org today — "multi-venture owner" concept isn't modeled at the data layer yet. |
 
 ## Tier 2 — near-term enhancements
@@ -75,8 +76,11 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
    scope for this app).
 4. ~~Schedule entry UI~~ — done.
 5. ~~Bank details field~~ — done.
-6. Self-service portal, industry intake, agentic workflows, off-cycle
-   payroll runs — deferred until higher-value gaps are closed.
+6. ~~Off-cycle payroll runs~~ — done.
+7. Self-service portal, industry intake, agentic workflows, cross-venture
+   owner cockpit — deferred; each is a bigger architectural lift (new
+   auth model, new data model, or multi-tenant support) than what's been
+   tackled so far and deserves its own scoping conversation first.
 
 ---
 
