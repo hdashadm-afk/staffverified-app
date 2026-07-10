@@ -1,9 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { DTREntry, Employee, Station } from '@/types/database'
+import { DTREntry, Employee, Schedule, Station } from '@/types/database'
 import DTREntryRow from './DTREntryRow'
-import { computeRegularHours, computeOvertimeHours, computeNightShiftHours } from '@/lib/payroll-math'
+import {
+  computeRegularHours,
+  computeOvertimeHours,
+  computeNightShiftHours,
+  computeLateMinutes,
+  computeUndertimeMinutes,
+  summarizeCutoffEarnings,
+  OrgRates,
+} from '@/lib/payroll-math'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -22,6 +30,8 @@ export default function DTRView({
   employees,
   stations,
   dtrEntries,
+  schedules,
+  orgRates,
   orgId,
   userId,
   cutoffStart,
@@ -30,6 +40,8 @@ export default function DTRView({
   employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'station_id'>[]
   stations: Pick<Station, 'id' | 'name'>[]
   dtrEntries: DTREntry[]
+  schedules: Pick<Schedule, 'employee_id' | 'work_date' | 'shift_start' | 'shift_end'>[]
+  orgRates?: OrgRates
   orgId: string
   userId: string
   cutoffStart: string
@@ -52,6 +64,12 @@ export default function DTRView({
       .map(e => [e.work_date, e])
   )
 
+  const scheduleMap = Object.fromEntries(
+    schedules
+      .filter(s => s.employee_id === selectedEmployee)
+      .map(s => [s.work_date, s])
+  )
+
   async function upsertEntry(workDate: string, timeIn: string, timeOut: string, flags: {
     isHolidayRegular: boolean
     isHolidaySpecial: boolean
@@ -60,6 +78,9 @@ export default function DTRView({
     const reg = computeRegularHours(timeIn, timeOut)
     const ot = computeOvertimeHours(timeIn, timeOut)
     const nsd = computeNightShiftHours(timeIn, timeOut)
+    const schedule = scheduleMap[workDate]
+    const late = computeLateMinutes(timeIn, schedule?.shift_start ?? null)
+    const undertime = computeUndertimeMinutes(timeOut, schedule?.shift_end ?? null)
 
     // Optimistic update so totals reflect immediately without waiting for router.refresh()
     setLocalEntries(prev => {
@@ -80,8 +101,8 @@ export default function DTRView({
         regular_hours: reg,
         overtime_hours: ot,
         night_shift_hours: nsd,
-        late_minutes: 0,
-        undertime_minutes: 0,
+        late_minutes: late,
+        undertime_minutes: undertime,
         is_holiday_regular: flags.isHolidayRegular,
         is_holiday_special: flags.isHolidaySpecial,
         notes: flags.notes || null,
@@ -101,8 +122,8 @@ export default function DTRView({
       regular_hours: reg,
       overtime_hours: ot,
       night_shift_hours: nsd,
-      late_minutes: 0,
-      undertime_minutes: 0,
+      late_minutes: late,
+      undertime_minutes: undertime,
       is_holiday_regular: flags.isHolidayRegular,
       is_holiday_special: flags.isHolidaySpecial,
       notes: flags.notes || null,
@@ -127,7 +148,11 @@ export default function DTRView({
   }, { regular: 0, ot: 0, nsd: 0 })
 
   const dailyRate = employee?.daily_rate ?? 0
-  const hourly = dailyRate / 8
+  const earnings = summarizeCutoffEarnings(
+    dates.map(d => entryMap[d]).filter((e): e is DTREntry => !!e),
+    dailyRate,
+    orgRates
+  )
 
   return (
     <div className="space-y-4">
@@ -202,15 +227,31 @@ export default function DTRView({
           <div className="font-medium text-red-800 mb-2">Estimated earnings for this cutoff</div>
           <div className="flex justify-between text-red-700">
             <span>Basic pay ({totals.regular.toFixed(1)} reg hrs)</span>
-            <span>₱{(hourly * totals.regular).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span>₱{earnings.basicPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
+          {earnings.holidayPay > 0 && (
+            <div className="flex justify-between text-red-700">
+              <span>Holiday pay</span>
+              <span>₱{earnings.holidayPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            </div>
+          )}
           <div className="flex justify-between text-red-700">
             <span>Overtime ({totals.ot.toFixed(1)} hrs)</span>
-            <span>₱{(hourly * totals.ot).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span>₱{earnings.overtimePay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
           <div className="flex justify-between text-red-700">
             <span>NSD ({totals.nsd.toFixed(1)} hrs × 10%)</span>
-            <span>₱{(hourly * totals.nsd * 0.1).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span>₱{earnings.nsdPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          </div>
+          {earnings.lateUndertimeDeduction > 0 && (
+            <div className="flex justify-between text-red-700">
+              <span>Late / undertime deduction</span>
+              <span>-₱{earnings.lateUndertimeDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-red-900 font-semibold border-t border-red-200 pt-1.5 mt-1.5">
+            <span>Total</span>
+            <span>₱{earnings.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
       )}

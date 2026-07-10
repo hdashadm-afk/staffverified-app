@@ -42,6 +42,19 @@ export default async function DTRPage() {
     .gte('work_date', cutoffStart)
     .lte('work_date', cutoffEnd)
 
+  const { data: schedules } = await supabase
+    .from('schedules')
+    .select('employee_id, work_date, shift_start, shift_end')
+    .eq('org_id', profile!.org_id)
+    .gte('work_date', cutoffStart)
+    .lte('work_date', cutoffEnd)
+
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('ot_multiplier, nsd_rate, holiday_regular_multiplier, holiday_special_multiplier')
+    .eq('id', profile!.org_id)
+    .single()
+
   const isTL = profile!.role === 'tl'
   const tlStation = (stations ?? []).find(s => s.id === profile!.station_id)
 
@@ -66,6 +79,7 @@ export default async function DTRPage() {
         <DailyAttendance
           employees={employees ?? []}
           entries={dtrEntries ?? []}
+          schedules={schedules ?? []}
           orgId={profile!.org_id}
           userId={profile!.id}
           stationId={profile!.station_id}
@@ -76,6 +90,8 @@ export default async function DTRPage() {
           employees={employees ?? []}
           stations={stations ?? []}
           dtrEntries={dtrEntries ?? []}
+          schedules={schedules ?? []}
+          orgRates={org ?? undefined}
           orgId={profile!.org_id}
           userId={profile!.id}
           cutoffStart={cutoffStart}

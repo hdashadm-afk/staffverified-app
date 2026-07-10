@@ -43,6 +43,11 @@ export interface Employee {
   coop_saving_amount: number
   is_active: boolean
   date_hired: string | null
+  employment_type: string
+  sss_no: string | null
+  philhealth_no: string | null
+  pagibig_no: string | null
+  tin_no: string | null
   created_at: string
 }
 
@@ -63,6 +68,17 @@ export interface DTREntry {
   is_holiday_special: boolean
   notes: string | null
   entered_by: string | null
+  created_at: string
+}
+
+export interface Schedule {
+  id: string
+  org_id: string
+  employee_id: string
+  station_id: string | null
+  work_date: string
+  shift_start: string | null
+  shift_end: string | null
   created_at: string
 }
 
@@ -171,5 +187,6 @@ export interface FeedbackReport {
   is_resolved: boolean
   resolved_by: string | null
   resolved_at: string | null
+  attachment_paths: string[]
   created_at: string
 }

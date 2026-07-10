@@ -163,8 +163,12 @@ export default function DTREntryRow({
           <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{otHrs > 0 ? otHrs.toFixed(1) : '—'}</td>
           <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{nsdHrs > 0 ? nsdHrs.toFixed(1) : '—'}</td>
           <td className="px-4 py-2.5">
-            {entry?.is_holiday_regular && <span className="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">Reg Hol</span>}
-            {entry?.is_holiday_special && <span className="text-xs bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded">Special</span>}
+            <div className="flex flex-wrap gap-1">
+              {entry?.is_holiday_regular && <span className="text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">Reg Hol</span>}
+              {entry?.is_holiday_special && <span className="text-xs bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded">Special</span>}
+              {!!entry?.late_minutes && <span className="text-xs bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded">Late {entry.late_minutes}m</span>}
+              {!!entry?.undertime_minutes && <span className="text-xs bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded">UT {entry.undertime_minutes}m</span>}
+            </div>
           </td>
           <td className="px-4 py-2.5 text-right">
             <button

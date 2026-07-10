@@ -18,25 +18,17 @@ export default function EmployeeRow({
   const router = useRouter()
   const supabase = createClient()
 
-  const e = employee as Employee & {
-    employment_type?: string
-    date_hired?: string | null
-    sss_no?: string | null
-    philhealth_no?: string | null
-    pagibig_no?: string | null
-    tin_no?: string | null
-  }
   const [form, setForm] = useState({
     full_name: employee.full_name,
     position: employee.position ?? '',
     station_id: employee.station_id ?? '',
     daily_rate: employee.daily_rate.toString(),
-    employment_type: e.employment_type ?? 'regular',
-    date_hired: e.date_hired ?? '',
-    sss_no: e.sss_no ?? '',
-    philhealth_no: e.philhealth_no ?? '',
-    pagibig_no: e.pagibig_no ?? '',
-    tin_no: e.tin_no ?? '',
+    employment_type: employee.employment_type,
+    date_hired: employee.date_hired ?? '',
+    sss_no: employee.sss_no ?? '',
+    philhealth_no: employee.philhealth_no ?? '',
+    pagibig_no: employee.pagibig_no ?? '',
+    tin_no: employee.tin_no ?? '',
     has_sil: employee.has_sil,
     coop_saving_amount: employee.coop_saving_amount.toString(),
     is_active: employee.is_active,
