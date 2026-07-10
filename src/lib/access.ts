@@ -14,6 +14,7 @@ export const MODULE_ACCESS: Record<string, Role[]> = {
   '/nte':           ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/doe':           ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/disciplinary':  ['ceo', 'ops_officer', 'owner', 'assistant'],
+  '/leave':         ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/feedback':      ['owner', 'ceo'],
 }
 

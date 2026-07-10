@@ -64,12 +64,40 @@ export default function PayrollRunCard({
       dtrByEmployee[d.employee_id].push(d as DTREntry)
     }
 
+    // Approved, paid leave that overlaps this cutoff — pays out via the
+    // existing sil_pay field (statutory SIL and any other company-paid
+    // leave share one payslip line since there's no per-type ledger yet).
+    const { data: leaveData } = await supabase
+      .from('leave_requests')
+      .select('employee_id, start_date, end_date, is_paid, status')
+      .eq('org_id', orgId)
+      .eq('status', 'approved')
+      .eq('is_paid', true)
+      .lte('start_date', run.cutoff_end)
+      .gte('end_date', run.cutoff_start)
+
+    const cutoffStartMs = new Date(run.cutoff_start).getTime()
+    const cutoffEndMs = new Date(run.cutoff_end).getTime()
+    const MS_PER_DAY = 24 * 60 * 60 * 1000
+    const leaveDaysByEmployee: Record<string, number> = {}
+    for (const l of leaveData ?? []) {
+      const overlapStart = Math.max(new Date(l.start_date).getTime(), cutoffStartMs)
+      const overlapEnd = Math.min(new Date(l.end_date).getTime(), cutoffEndMs)
+      const overlapDays = Math.round((overlapEnd - overlapStart) / MS_PER_DAY) + 1
+      if (overlapDays > 0) {
+        leaveDaysByEmployee[l.employee_id] = (leaveDaysByEmployee[l.employee_id] ?? 0) + overlapDays
+      }
+    }
+
     for (const emp of employees) {
       const entries = dtrByEmployee[emp.id] ?? []
       const dailyRate = emp.daily_rate
 
-      const { basicPay, holidayPay, overtimePay, nsdPay, lateUndertimeDeduction: lateUndertime, totalEarnings } =
+      const { basicPay, holidayPay, overtimePay, nsdPay, lateUndertimeDeduction: lateUndertime, totalEarnings: earningsFromDTR } =
         summarizeCutoffEarnings(entries, dailyRate, orgRates)
+
+      const leavePay = (leaveDaysByEmployee[emp.id] ?? 0) * dailyRate
+      const totalEarnings = earningsFromDTR + leavePay
 
       // Monthly contributions (SSS/PhilHealth/Pag-IBIG) are deducted once per month.
       // Under weekly cutoffs (Thu–Wed), apply them on the FIRST cutoff of the month
@@ -77,7 +105,7 @@ export default function PayrollRunCard({
       const cutoffDay = new Date(run.cutoff_start).getDate()
       const isFirstCutoff = cutoffDay <= 7
 
-      const contribs = computeAllContributions(basicPay + holidayPay, isFirstCutoff)
+      const contribs = computeAllContributions(basicPay + holidayPay + leavePay, isFirstCutoff)
 
       // Statutory contributions are pre-tax; coop savings and other
       // deductions below are post-tax and don't reduce taxable income.
@@ -99,7 +127,7 @@ export default function PayrollRunCard({
         employee_id: emp.id,
         basic_pay: Math.round(basicPay * 100) / 100,
         holiday_pay: Math.round(holidayPay * 100) / 100,
-        sil_pay: 0,
+        sil_pay: Math.round(leavePay * 100) / 100,
         overtime_pay: Math.round(overtimePay * 100) / 100,
         late_undertime_deduction: Math.round(lateUndertime * 100) / 100,
         night_shift_diff: Math.round(nsdPay * 100) / 100,
@@ -185,6 +213,7 @@ export default function PayrollRunCard({
                     <th className="text-left py-2 font-medium">Employee</th>
                     <th className="text-right py-2 font-medium">Basic</th>
                     <th className="text-right py-2 font-medium">Holiday</th>
+                    <th className="text-right py-2 font-medium">Leave</th>
                     <th className="text-right py-2 font-medium">OT</th>
                     <th className="text-right py-2 font-medium">NSD</th>
                     <th className="text-right py-2 font-medium">Earnings</th>
@@ -203,6 +232,7 @@ export default function PayrollRunCard({
                       <td className="py-2.5 pr-4 font-medium text-gray-800">{(p as any).employees?.full_name}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.basic_pay.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.holiday_pay.toLocaleString()}</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.sil_pay.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.overtime_pay.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.night_shift_diff.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums font-medium text-gray-800">₱{p.total_earnings.toLocaleString()}</td>
@@ -218,7 +248,7 @@ export default function PayrollRunCard({
                 </tbody>
                 <tfoot>
                   <tr className="border-t border-gray-200 bg-gray-50 font-semibold">
-                    <td className="py-2.5 pr-4 text-gray-700" colSpan={12}>Total net pay</td>
+                    <td className="py-2.5 pr-4 text-gray-700" colSpan={13}>Total net pay</td>
                     <td className="py-2.5 pl-2 text-right tabular-nums text-green-700">
                       ₱{totalNetPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>

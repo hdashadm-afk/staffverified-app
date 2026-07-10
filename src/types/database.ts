@@ -174,6 +174,30 @@ export interface NTERecordWithEmployee extends NTERecord {
   employees: { full_name: string } | null
 }
 
+export type LeaveType = 'sil' | 'vacation' | 'sick' | 'special' | 'other'
+export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
+
+export interface LeaveRequest {
+  id: string
+  org_id: string
+  employee_id: string
+  leave_type: LeaveType
+  start_date: string
+  end_date: string
+  days_requested: number
+  is_paid: boolean
+  reason: string | null
+  status: LeaveStatus
+  requested_by: string | null
+  approved_by: string | null
+  approved_at: string | null
+  created_at: string
+}
+
+export interface LeaveRequestWithEmployee extends LeaveRequest {
+  employees: { full_name: string; has_sil: boolean } | null
+}
+
 export type FeedbackSeverity = 'bug' | 'suggestion' | 'question'
 
 export interface FeedbackReport {
