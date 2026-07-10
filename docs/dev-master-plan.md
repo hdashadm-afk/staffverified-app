@@ -4,6 +4,23 @@ Working plan for closing the gap between the current codebase and the
 [KOS Phase 2 HR/Payroll checklist](#appendix-full-checklist) needed to be
 competitive with modern SMB HR/payroll platforms and Gusto Cofounder.
 
+## Where this fits in the KOS build sequence
+
+Per the KOS architecture work (tracked separately in Notion — Founder Space
++ build sequence docs): StaffVerified is locked in as the **HR + Payroll
+module under KOS**, step 2 in the build sequence. It keeps its own repo —
+no rename, no merge into a KOS monorepo.
+
+The other Ops Extension modules (Gas, Coffee, Hotel, Accounting, Marketing)
+are being validated cheaply first via manual tools (Excel file reports,
+logbooks) before any digital integration is built for them — an MVP
+pattern where the Owner's Space accepts Excel reports from each
+department's key person. **HR & Payroll skips that validation step
+entirely, because StaffVerified is already real, active code** — not a
+placeholder to prove out. That's the standard this repo needs to keep
+holding itself to: every fix and feature here should already be
+production-real, not throwaway validation.
+
 Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 
 ## Known bugs (fixed)
