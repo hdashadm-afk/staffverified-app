@@ -3,15 +3,23 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { computeRegularHours, computeOvertimeHours, computeNightShiftHours } from '@/lib/payroll-math'
+import {
+  computeRegularHours,
+  computeOvertimeHours,
+  computeNightShiftHours,
+  computeLateMinutes,
+  computeUndertimeMinutes,
+} from '@/lib/payroll-math'
 import { Check, Loader2, Search } from 'lucide-react'
 
 type Emp = { id: string; full_name: string; station_id: string | null; daily_rate: number }
 type Entry = { employee_id: string; work_date: string; time_in: string | null; time_out: string | null }
+type Sched = { employee_id: string; work_date: string; shift_start: string | null; shift_end: string | null }
 
 export default function DailyAttendance({
   employees,
   entries,
+  schedules,
   orgId,
   userId,
   stationId,
@@ -19,6 +27,7 @@ export default function DailyAttendance({
 }: {
   employees: Emp[]
   entries: Entry[]
+  schedules: Sched[]
   orgId: string
   userId: string
   stationId: string | null
@@ -37,6 +46,11 @@ export default function DailyAttendance({
   )
   const markedCount = Object.keys(dayEntries).length
 
+  // schedules for the selected date, keyed by employee
+  const daySchedules = Object.fromEntries(
+    schedules.filter(s => s.work_date === date).map(s => [s.employee_id, s])
+  )
+
   const [rows, setRows] = useState<Record<string, { in: string; out: string }>>({})
   const getRow = (id: string) =>
     rows[id] ?? { in: dayEntries[id]?.time_in ?? '', out: dayEntries[id]?.time_out ?? '' }
@@ -51,6 +65,9 @@ export default function DailyAttendance({
     const reg = computeRegularHours(r.in, r.out)
     const ot = computeOvertimeHours(r.in, r.out)
     const nsd = computeNightShiftHours(r.in, r.out)
+    const sched = daySchedules[emp.id]
+    const late = computeLateMinutes(r.in, sched?.shift_start ?? null)
+    const undertime = computeUndertimeMinutes(r.out, sched?.shift_end ?? null)
     await supabase.from('dtr_entries').upsert(
       {
         org_id: orgId,
@@ -62,8 +79,8 @@ export default function DailyAttendance({
         regular_hours: reg,
         overtime_hours: ot,
         night_shift_hours: nsd,
-        late_minutes: 0,
-        undertime_minutes: 0,
+        late_minutes: late,
+        undertime_minutes: undertime,
         entered_by: userId,
       },
       { onConflict: 'employee_id,work_date' }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { PayrollRun, Employee, Payslip, DTREntry } from '@/types/database'
-import { OrgRates, computeOvertimePay, computeNSD, computeHolidayPay, computeLateUndertimeDeduction } from '@/lib/payroll-math'
+import { OrgRates, summarizeCutoffEarnings } from '@/lib/payroll-math'
 import { computeAllContributions } from '@/lib/contribution-tables'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -67,26 +67,9 @@ export default function PayrollRunCard({
     for (const emp of employees) {
       const entries = dtrByEmployee[emp.id] ?? []
       const dailyRate = emp.daily_rate
-      const hourly = dailyRate / 8
 
-      let basicPay = 0
-      let holidayPay = 0
-      let overtimePay = 0
-      let nsdPay = 0
-      let lateUndertime = 0
-
-      for (const e of entries) {
-        if (e.is_holiday_regular || e.is_holiday_special) {
-          holidayPay += computeHolidayPay(dailyRate, e.is_holiday_regular, e.is_holiday_special, orgRates)
-        } else {
-          basicPay += hourly * e.regular_hours
-        }
-        overtimePay += computeOvertimePay(dailyRate, e.overtime_hours, orgRates)
-        nsdPay += computeNSD(dailyRate, e.night_shift_hours, orgRates)
-        lateUndertime += computeLateUndertimeDeduction(dailyRate, e.late_minutes, e.undertime_minutes)
-      }
-
-      const totalEarnings = basicPay + holidayPay + overtimePay + nsdPay - lateUndertime + emp.coop_saving_amount * 0 // add_back = 0 initially
+      const { basicPay, holidayPay, overtimePay, nsdPay, lateUndertimeDeduction: lateUndertime, totalEarnings } =
+        summarizeCutoffEarnings(entries, dailyRate, orgRates)
 
       // Monthly contributions (SSS/PhilHealth/Pag-IBIG) are deducted once per month.
       // Under weekly cutoffs (Thu–Wed), apply them on the FIRST cutoff of the month

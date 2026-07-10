@@ -66,6 +66,17 @@ export interface DTREntry {
   created_at: string
 }
 
+export interface Schedule {
+  id: string
+  org_id: string
+  employee_id: string
+  station_id: string | null
+  work_date: string
+  shift_start: string | null
+  shift_end: string | null
+  created_at: string
+}
+
 export interface PayrollRun {
   id: string
   org_id: string
