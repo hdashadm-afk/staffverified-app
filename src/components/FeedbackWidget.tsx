@@ -38,6 +38,7 @@ export default function FeedbackWidget({
   const [severity, setSeverity] = useState<FeedbackSeverity>('bug')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [attachError, setAttachError] = useState('')
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
@@ -62,6 +63,7 @@ export default function FeedbackWidget({
     setDone(false)
     setFiles([])
     setAttachError('')
+    setSubmitError('')
     setOpen(true)
   }
 
@@ -93,9 +95,11 @@ export default function FeedbackWidget({
     e.preventDefault()
     if (!message.trim()) return
     setSaving(true)
+    setSubmitError('')
 
     const reportId = crypto.randomUUID()
     const attachmentPaths: string[] = []
+    let failedUploads = 0
 
     for (const file of files) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -103,10 +107,11 @@ export default function FeedbackWidget({
       const { error } = await supabase.storage
         .from('feedback-attachments')
         .upload(path, file, { contentType: file.type || undefined })
-      if (!error) attachmentPaths.push(path)
+      if (error) failedUploads++
+      else attachmentPaths.push(path)
     }
 
-    await supabase.from('feedback_reports').insert({
+    const { error: insertError } = await supabase.from('feedback_reports').insert({
       id: reportId,
       org_id: orgId,
       user_id: userId,
@@ -119,6 +124,16 @@ export default function FeedbackWidget({
     })
 
     setSaving(false)
+
+    if (insertError) {
+      setSubmitError(insertError.message)
+      return
+    }
+
+    if (failedUploads > 0) {
+      setSubmitError(`Report submitted, but ${failedUploads} attachment(s) failed to upload.`)
+    }
+
     setDone(true)
   }
 
@@ -156,6 +171,9 @@ export default function FeedbackWidget({
                 <div className="text-3xl mb-3">✅</div>
                 <p className="font-medium text-gray-800">Report submitted</p>
                 <p className="text-sm text-gray-500 mt-1">The owner will look into it.</p>
+                {submitError && (
+                  <p className="text-xs text-amber-600 mt-2">{submitError}</p>
+                )}
                 <button
                   onClick={() => setOpen(false)}
                   className="mt-5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
@@ -269,6 +287,10 @@ export default function FeedbackWidget({
                     </ul>
                   )}
                 </div>
+
+                {submitError && !done && (
+                  <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{submitError}</p>
+                )}
 
                 <button
                   type="submit"

@@ -29,11 +29,15 @@ export default function DisciplinaryList({ records }: { records: NTERecordWithEm
 
   async function toggleAcknowledged(record: NTERecordWithEmployee) {
     setToggling(record.id)
-    await supabase
+    const { error } = await supabase
       .from('nte_records')
       .update({ acknowledged: !record.acknowledged })
       .eq('id', record.id)
     setToggling(null)
+    if (error) {
+      alert(`Could not update record: ${error.message}`)
+      return
+    }
     router.refresh()
   }
 

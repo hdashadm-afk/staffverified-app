@@ -41,6 +41,7 @@ export default function ScheduleView({
   const [drafts, setDrafts] = useState<Record<string, Draft>>({})
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const supabase = createClient()
 
   const anchor = new Date()
@@ -86,6 +87,7 @@ export default function ScheduleView({
   function setDraft(date: string, patch: Partial<Draft>) {
     setDrafts(prev => ({ ...prev, [date]: { ...(prev[date] ?? emptyDraft), ...patch } }))
     setSavedAt(false)
+    setSaveError(null)
   }
 
   function applyToAllWeekdays() {
@@ -106,6 +108,7 @@ export default function ScheduleView({
   async function saveWeek() {
     if (!employee) return
     setSaving(true)
+    setSaveError(null)
 
     const rows = dates
       .map(date => {
@@ -123,10 +126,16 @@ export default function ScheduleView({
       .filter((r): r is NonNullable<typeof r> => r !== null)
 
     if (rows.length > 0) {
-      await supabase.from('schedules').upsert(rows, { onConflict: 'employee_id,work_date' })
+      const { error } = await supabase.from('schedules').upsert(rows, { onConflict: 'employee_id,work_date' })
+      setSaving(false)
+      if (error) {
+        setSaveError(error.message)
+        return
+      }
+    } else {
+      setSaving(false)
     }
 
-    setSaving(false)
     setSavedAt(true)
   }
 
@@ -227,14 +236,17 @@ export default function ScheduleView({
         </table>
       </div>
 
-      <button
-        onClick={saveWeek}
-        disabled={saving || !employee || loading}
-        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
-      >
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-        {saving ? 'Saving…' : savedAt ? 'Saved' : 'Save Week'}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={saveWeek}
+          disabled={saving || !employee || loading}
+          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          {saving ? 'Saving…' : savedAt ? 'Saved' : 'Save Week'}
+        </button>
+        {saveError && <span className="text-xs text-red-600">{saveError}</span>}
+      </div>
     </div>
   )
 }

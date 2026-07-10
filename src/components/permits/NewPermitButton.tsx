@@ -34,6 +34,7 @@ export default function NewPermitButton({
 }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -54,8 +55,9 @@ export default function NewPermitButton({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError(null)
 
-    await supabase.from('permits').insert({
+    const { error: insertError } = await supabase.from('permits').insert({
       org_id: orgId,
       station_id: form.station_id || null,
       permit_type: form.permit_type,
@@ -69,6 +71,12 @@ export default function NewPermitButton({
     })
 
     setSaving(false)
+
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
+
     setOpen(false)
     setForm({ permit_type: '', agency: '', description: '', station_id: '', due_date: '', recurrence_rule: '', notes: '' })
     router.refresh()
@@ -77,7 +85,7 @@ export default function NewPermitButton({
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setError(null); setOpen(true) }}
         className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
@@ -188,6 +196,10 @@ export default function NewPermitButton({
                   placeholder="Optional details…"
                 />
               </div>
+
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <button

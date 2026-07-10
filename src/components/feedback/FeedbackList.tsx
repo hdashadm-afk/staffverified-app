@@ -36,7 +36,7 @@ export default function FeedbackList({ reports }: { reports: FeedbackReport[] })
 
   async function toggleResolved(report: FeedbackReport) {
     setToggling(report.id)
-    await supabase
+    const { error } = await supabase
       .from('feedback_reports')
       .update({
         is_resolved: !report.is_resolved,
@@ -44,6 +44,10 @@ export default function FeedbackList({ reports }: { reports: FeedbackReport[] })
       })
       .eq('id', report.id)
     setToggling(null)
+    if (error) {
+      alert(`Could not update report: ${error.message}`)
+      return
+    }
     router.refresh()
   }
 

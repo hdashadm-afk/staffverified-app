@@ -18,6 +18,7 @@ export default function NewRemittanceButton({
 }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -39,8 +40,9 @@ export default function NewRemittanceButton({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError(null)
 
-    await supabase.from('remittance_reconciliations').insert({
+    const { error: insertError } = await supabase.from('remittance_reconciliations').insert({
       org_id: orgId,
       agency: form.agency,
       period_start: form.period_start,
@@ -54,6 +56,12 @@ export default function NewRemittanceButton({
     })
 
     setSaving(false)
+
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
+
     setOpen(false)
     router.refresh()
   }
@@ -61,7 +69,7 @@ export default function NewRemittanceButton({
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setError(null); setOpen(true) }}
         className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
@@ -147,6 +155,10 @@ export default function NewRemittanceButton({
                     ))}
                   </select>
                 </div>
+              )}
+
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
               )}
 
               <div className="flex gap-3 pt-1">

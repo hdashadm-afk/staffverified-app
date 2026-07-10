@@ -15,6 +15,7 @@ export default function EmployeeRow({
 }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -40,7 +41,8 @@ export default function EmployeeRow({
 
   async function save() {
     setSaving(true)
-    await supabase
+    setError(null)
+    const { error: updateError } = await supabase
       .from('employees')
       .update({
         full_name: form.full_name,
@@ -63,6 +65,12 @@ export default function EmployeeRow({
       })
       .eq('id', employee.id)
     setSaving(false)
+
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
+
     setEditing(false)
     router.refresh()
   }
@@ -158,6 +166,10 @@ export default function EmployeeRow({
             </div>
           </div>
 
+          {error && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mt-3">{error}</p>
+          )}
+
           <div className="flex gap-2 justify-end mt-4">
             <button onClick={() => setEditing(false)} className="border border-gray-200 text-gray-700 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50">Cancel</button>
             <button onClick={save} disabled={saving} className="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50">
@@ -205,7 +217,7 @@ export default function EmployeeRow({
       </td>
       <td className="px-4 py-3 text-right">
         <button
-          onClick={() => setEditing(true)}
+          onClick={() => { setError(null); setEditing(true) }}
           className="text-gray-400 hover:text-gray-700 transition-colors"
           title="Edit"
         >

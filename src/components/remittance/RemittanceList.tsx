@@ -62,6 +62,7 @@ export default function RemittanceList({
   const [expanded, setExpanded] = useState<string | null>(null)
   const [editing, setEditing] = useState<Record<string, { remitted: string; ref: string; reason: string; notes: string }>>({})
   const [saving, setSaving] = useState<string | null>(null)
+  const [saveErrors, setSaveErrors] = useState<Record<string, string>>({})
   const router = useRouter()
   const supabase = createClient()
 
@@ -82,8 +83,9 @@ export default function RemittanceList({
     const e = editing[r.id]
     if (!e) return
     setSaving(r.id)
+    setSaveErrors(prev => ({ ...prev, [r.id]: '' }))
 
-    await supabase.from('remittance_reconciliations').update({
+    const { error } = await supabase.from('remittance_reconciliations').update({
       total_remitted: parseFloat(e.remitted) || 0,
       reference_number: e.ref || null,
       variance_reason: e.reason || null,
@@ -93,6 +95,12 @@ export default function RemittanceList({
     }).eq('id', r.id)
 
     setSaving(null)
+
+    if (error) {
+      setSaveErrors(prev => ({ ...prev, [r.id]: error.message }))
+      return
+    }
+
     setExpanded(null)
     router.refresh()
   }
@@ -208,6 +216,9 @@ export default function RemittanceList({
                           >
                             {saving === r.id ? 'Saving…' : 'Save'}
                           </button>
+                          {saveErrors[r.id] && (
+                            <span className="ml-3 text-xs text-red-600">{saveErrors[r.id]}</span>
+                          )}
                         </div>
                       </div>
                     </td>

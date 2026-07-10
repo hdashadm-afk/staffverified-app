@@ -38,6 +38,7 @@ export default function DailyAttendance({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [saving, setSaving] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<Record<string, boolean>>({})
+  const [rowErrors, setRowErrors] = useState<Record<string, string>>({})
   const [query, setQuery] = useState('')
 
   // entries already recorded at THIS station for the selected date
@@ -62,13 +63,14 @@ export default function DailyAttendance({
     if (!stationId) return
     const r = getRow(emp.id)
     setSaving(emp.id)
+    setRowErrors(prev => ({ ...prev, [emp.id]: '' }))
     const reg = computeRegularHours(r.in, r.out)
     const ot = computeOvertimeHours(r.in, r.out)
     const nsd = computeNightShiftHours(r.in, r.out)
     const sched = daySchedules[emp.id]
     const late = computeLateMinutes(r.in, sched?.shift_start ?? null)
     const undertime = computeUndertimeMinutes(r.out, sched?.shift_end ?? null)
-    await supabase.from('dtr_entries').upsert(
+    const { error } = await supabase.from('dtr_entries').upsert(
       {
         org_id: orgId,
         employee_id: emp.id,
@@ -86,6 +88,12 @@ export default function DailyAttendance({
       { onConflict: 'employee_id,work_date' }
     )
     setSaving(null)
+
+    if (error) {
+      setRowErrors(prev => ({ ...prev, [emp.id]: error.message }))
+      return
+    }
+
     setSavedAt(prev => ({ ...prev, [emp.id]: true }))
     setTimeout(() => setSavedAt(prev => ({ ...prev, [emp.id]: false })), 1500)
     router.refresh()
@@ -171,6 +179,9 @@ export default function DailyAttendance({
                         : savedAt[emp.id] ? <Check className="w-3 h-3" /> : null}
                       {savedAt[emp.id] ? 'Saved' : marked ? 'Update' : 'Save'}
                     </button>
+                    {rowErrors[emp.id] && (
+                      <div className="text-xs text-red-600 mt-1">{rowErrors[emp.id]}</div>
+                    )}
                   </td>
                 </tr>
               )

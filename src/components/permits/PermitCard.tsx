@@ -31,6 +31,7 @@ export default function PermitCard({
   const [expanded, setExpanded] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [notes, setNotes] = useState(permit.notes ?? '')
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -39,7 +40,8 @@ export default function PermitCard({
 
   async function markSubmitted() {
     setSubmitting(true)
-    await supabase
+    setError(null)
+    const { error: updateError } = await supabase
       .from('permits')
       .update({
         status: 'submitted',
@@ -49,6 +51,12 @@ export default function PermitCard({
       })
       .eq('id', permit.id)
     setSubmitting(false)
+
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
+
     router.refresh()
   }
 
@@ -113,6 +121,7 @@ export default function PermitCard({
               >
                 {submitting ? 'Marking…' : 'Mark as Submitted'}
               </button>
+              {error && <p className="text-xs text-red-600">{error}</p>}
             </div>
           )}
         </div>

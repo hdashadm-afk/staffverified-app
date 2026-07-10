@@ -15,6 +15,7 @@ export default function NewEmployeeButton({
 }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -40,8 +41,9 @@ export default function NewEmployeeButton({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError(null)
 
-    await supabase.from('employees').insert({
+    const { error: insertError } = await supabase.from('employees').insert({
       org_id: orgId,
       full_name: form.full_name,
       position: form.position || null,
@@ -63,6 +65,12 @@ export default function NewEmployeeButton({
     })
 
     setSaving(false)
+
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
+
     setOpen(false)
     setForm({
       full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular',
@@ -75,7 +83,7 @@ export default function NewEmployeeButton({
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setError(null); setOpen(true) }}
         className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
@@ -240,6 +248,10 @@ export default function NewEmployeeButton({
                 />
                 <span className="text-sm text-gray-700">Eligible for SIL (Service Incentive Leave)</span>
               </label>
+
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <button
