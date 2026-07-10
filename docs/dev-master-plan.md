@@ -26,10 +26,10 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 |---|---|---|
 | Employee records | ✅ | CRUD UI + save now working. Missing bank details field still. |
 | Time/attendance | ✅ | DTR + daily attendance (TL view) both work; regular/OT/NSD/holiday computed correctly; late/undertime now wired to `schedules` table (needs a schedule-entry UI to actually populate — see Tier 2). |
-| Leave / PTO | ⬜ | `has_sil` is just a boolean flag on the employee record. No request/approve flow, no balance tracking, nothing syncs into payroll. |
+| Leave / PTO | ⬜ | Out of scope for this app per owner direction — `has_sil` remains a flag only, no request/approve/balance module. (A working version was built and then intentionally reverted.) |
 | Payroll calculations | ✅ | Gross computation (basic, OT, NSD, holiday pay) shared between DTR preview and payslip generation via `summarizeCutoffEarnings()`. |
-| PH statutory contributions | 🟡 | SSS, PhilHealth, Pag-IBIG implemented with real 2025 bracket tables (`contribution-tables.ts`). **BIR withholding tax is completely missing** — net pay is not real net pay yet. **← next up.** |
-| Payslips | 🟡 | Generated with full earnings/deductions breakdown; incomplete until BIR tax is added. SIL pay always 0 (stubbed). |
+| PH statutory contributions | ✅ | SSS, PhilHealth, Pag-IBIG implemented with real 2025 bracket tables (`contribution-tables.ts`); monthly-salary conversion fixed to match actual weekly cutoffs (was `×2`, now `×52/12`). |
+| Payslips | ✅ | Full gross-to-net breakdown including BIR withholding tax. `sil_pay` field is back to unused/0 (leave sync reverted with the leave module). |
 | Owner cockpit payroll views | 🟡 | Single-org dashboard exists; no cross-venture rollup because the app is single-tenant-per-org today — "multi-venture owner" concept isn't modeled at the data layer yet. |
 
 ## Tier 2 — near-term enhancements
@@ -53,13 +53,11 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 ## Immediate priority order
 
 1. ~~Fix employee save~~ — done.
-2. **BIR withholding tax** — add a tax-table function alongside
-   `contribution-tables.ts`; add `withholding_tax` column to `payslips`;
-   wire into `PayrollRunCard` net pay. **← current focus.**
-3. **Leave/PTO module** — request/approve flow + balance tracking,
-   synced into payroll runs.
+2. ~~BIR withholding tax~~ — done.
+3. ~~Leave/PTO module~~ — built, then reverted per owner direction (out of
+   scope for this app).
 4. **Schedule entry UI** — so late/undertime tracking (already wired) has
-   real data to compare against.
+   real data to compare against. **← next up.**
 5. Self-service portal, industry intake, agentic workflows — deferred
    until Tier 1 is solid.
 
