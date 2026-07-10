@@ -4,8 +4,20 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Plus, X } from 'lucide-react'
-import { Station } from '@/types/database'
+import { PayrollRunType, Station } from '@/types/database'
 import { currentCutoff } from '@/lib/cutoff'
+
+const RUN_TYPE_OPTIONS: { value: PayrollRunType; label: string; hint: string }[] = [
+  { value: 'regular', label: 'Regular', hint: 'Generated from DTR for the cutoff below' },
+  { value: '13th_month', label: '13th Month Pay', hint: 'Auto-computed from basic pay earned in the year below' },
+  { value: 'bonus', label: 'Bonus', hint: 'Manual amount per employee' },
+  { value: 'adjustment', label: 'Adjustment', hint: 'Manual amount per employee' },
+]
+
+function currentYearRange(): { start: string; end: string } {
+  const year = new Date().getFullYear()
+  return { start: `${year}-01-01`, end: `${year}-12-31` }
+}
 
 export default function NewPayrollRunButton({
   orgId,
@@ -23,13 +35,26 @@ export default function NewPayrollRunButton({
 
   // Default to current weekly cutoff (Thu -> Wed, payday Fri)
   const { start: defaultStart, end: defaultEnd } = currentCutoff()
+  const today = new Date().toISOString().split('T')[0]
 
   const [form, setForm] = useState({
+    run_type: 'regular' as PayrollRunType,
     cutoff_start: defaultStart,
     cutoff_end: defaultEnd,
     station_id: '',
     notes: '',
   })
+
+  function setRunType(run_type: PayrollRunType) {
+    if (run_type === '13th_month') {
+      const { start, end } = currentYearRange()
+      setForm(f => ({ ...f, run_type, cutoff_start: start, cutoff_end: end }))
+    } else if (run_type === 'bonus' || run_type === 'adjustment') {
+      setForm(f => ({ ...f, run_type, cutoff_start: today, cutoff_end: today }))
+    } else {
+      setForm(f => ({ ...f, run_type, cutoff_start: defaultStart, cutoff_end: defaultEnd }))
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,6 +63,7 @@ export default function NewPayrollRunButton({
     await supabase.from('payroll_runs').insert({
       org_id: orgId,
       station_id: form.station_id || null,
+      run_type: form.run_type,
       cutoff_start: form.cutoff_start,
       cutoff_end: form.cutoff_end,
       notes: form.notes || null,
@@ -49,6 +75,9 @@ export default function NewPayrollRunButton({
     setOpen(false)
     router.refresh()
   }
+
+  const selectedType = RUN_TYPE_OPTIONS.find(o => o.value === form.run_type)!
+  const isOffCycle = form.run_type !== 'regular'
 
   return (
     <>
@@ -71,9 +100,25 @@ export default function NewPayrollRunButton({
             </div>
 
             <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Run type *</label>
+                <select
+                  value={form.run_type}
+                  onChange={e => setRunType(e.target.value as PayrollRunType)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  {RUN_TYPE_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">{selectedType.hint}</p>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Cutoff start *</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    {form.run_type === '13th_month' ? 'Year start *' : isOffCycle ? 'Date *' : 'Cutoff start *'}
+                  </label>
                   <input
                     type="date"
                     required
@@ -83,7 +128,9 @@ export default function NewPayrollRunButton({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Cutoff end *</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    {form.run_type === '13th_month' ? 'Year end *' : isOffCycle ? 'Date (end) *' : 'Cutoff end *'}
+                  </label>
                   <input
                     type="date"
                     required
