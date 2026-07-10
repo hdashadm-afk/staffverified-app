@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useId, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MessageSquare, X, ChevronDown, Paperclip, FileText } from 'lucide-react'
@@ -33,7 +33,7 @@ export default function FeedbackWidget({
   const [done, setDone] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [attachError, setAttachError] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputId = useId()
   const pathname = usePathname()
   const supabase = createClient()
 
@@ -111,7 +111,7 @@ export default function FeedbackWidget({
         className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg transition-colors"
       >
         <MessageSquare className="w-4 h-4" />
-        Report Issue
+        Kath
       </button>
 
       {/* Modal */}
@@ -121,8 +121,8 @@ export default function FeedbackWidget({
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Report an Issue</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Goes directly to the owner</p>
+                <h2 className="text-base font-semibold text-gray-900">Kath</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Report an issue — goes directly to the owner</p>
               </div>
               <button
                 onClick={() => setOpen(false)}
@@ -204,22 +204,23 @@ export default function FeedbackWidget({
                     Attachments <span className="text-gray-400 font-normal">(screenshots, files — optional)</span>
                   </label>
                   <input
-                    ref={fileInputRef}
+                    id={fileInputId}
                     type="file"
                     multiple
                     accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
                     onChange={e => { addFiles(e.target.files); e.target.value = '' }}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
                     disabled={files.length >= MAX_ATTACHMENTS}
-                    className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
+                    className="sr-only"
+                  />
+                  <label
+                    htmlFor={fileInputId}
+                    className={`flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-2 w-fit ${
+                      files.length >= MAX_ATTACHMENTS ? 'opacity-50 pointer-events-none' : 'cursor-pointer hover:bg-gray-50'
+                    }`}
                   >
                     <Paperclip className="w-3.5 h-3.5" />
                     Attach file or image
-                  </button>
+                  </label>
                   {attachError && <p className="text-xs text-amber-600 mt-1.5">{attachError}</p>}
                   {files.length > 0 && (
                     <ul className="mt-2 space-y-1.5">

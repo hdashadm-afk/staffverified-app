@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { PayrollRun, Employee, Payslip, DTREntry } from '@/types/database'
 import { OrgRates, summarizeCutoffEarnings } from '@/lib/payroll-math'
-import { computeAllContributions } from '@/lib/contribution-tables'
+import { computeAllContributions, computeWeeklyWithholdingTax } from '@/lib/contribution-tables'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, Zap } from 'lucide-react'
@@ -79,10 +79,17 @@ export default function PayrollRunCard({
 
       const contribs = computeAllContributions(basicPay + holidayPay, isFirstCutoff)
 
+      // Statutory contributions are pre-tax; coop savings and other
+      // deductions below are post-tax and don't reduce taxable income.
+      const taxableIncome =
+        totalEarnings - contribs.sss_employee - contribs.philhealth_employee - contribs.hdmf_employee
+      const withholdingTax = computeWeeklyWithholdingTax(Math.max(0, taxableIncome))
+
       const totalDeductions =
         contribs.sss_employee +
         contribs.philhealth_employee +
         contribs.hdmf_employee +
+        withholdingTax +
         emp.coop_saving_amount
       const netPay = totalEarnings - totalDeductions
 
@@ -102,6 +109,7 @@ export default function PayrollRunCard({
         sss_contribution: contribs.sss_employee,
         philhealth_contribution: contribs.philhealth_employee,
         hdmf_contribution: contribs.hdmf_employee,
+        withholding_tax: Math.round(withholdingTax * 100) / 100,
         uniform_deduction: 0,
         coop_saving: emp.coop_saving_amount,
         gas_shortage: 0,
@@ -183,6 +191,7 @@ export default function PayrollRunCard({
                     <th className="text-right py-2 font-medium">SSS</th>
                     <th className="text-right py-2 font-medium">PhilHealth</th>
                     <th className="text-right py-2 font-medium">HDMF</th>
+                    <th className="text-right py-2 font-medium">WTax</th>
                     <th className="text-right py-2 font-medium">Coop</th>
                     <th className="text-right py-2 font-medium">Deductions</th>
                     <th className="text-right py-2 font-medium text-green-700">Net Pay</th>
@@ -200,6 +209,7 @@ export default function PayrollRunCard({
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.sss_contribution.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.philhealth_contribution.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.hdmf_contribution.toLocaleString()}</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.withholding_tax.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.coop_saving.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-red-600">-₱{p.total_deductions.toLocaleString()}</td>
                       <td className="py-2.5 pl-2 text-right tabular-nums font-semibold text-green-700">₱{p.net_pay.toLocaleString()}</td>
@@ -208,7 +218,7 @@ export default function PayrollRunCard({
                 </tbody>
                 <tfoot>
                   <tr className="border-t border-gray-200 bg-gray-50 font-semibold">
-                    <td className="py-2.5 pr-4 text-gray-700" colSpan={11}>Total net pay</td>
+                    <td className="py-2.5 pr-4 text-gray-700" colSpan={12}>Total net pay</td>
                     <td className="py-2.5 pl-2 text-right tabular-nums text-green-700">
                       ₱{totalNetPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
