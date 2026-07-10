@@ -49,6 +49,7 @@ export default function PayrollRunCard({
   const [payslips, setPayslips] = useState<(Payslip & { employees: { full_name: string } })[]>([])
   const [loaded, setLoaded] = useState(false)
   const [offCycleDrafts, setOffCycleDrafts] = useState<Record<string, { amount: string; reason: string }>>({})
+  const [generateError, setGenerateError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -88,7 +89,7 @@ export default function PayrollRunCard({
       fields.sssEmployee + fields.philhealthEmployee + fields.hdmfEmployee + fields.withholdingTax + fields.coopSaving
     const netPay = fields.totalEarnings - totalDeductions
 
-    await supabase.from('payslips').upsert({
+    const { error } = await supabase.from('payslips').upsert({
       org_id: orgId,
       payroll_run_id: run.id,
       employee_id: emp.id,
@@ -115,18 +116,27 @@ export default function PayrollRunCard({
       net_pay: Math.round(netPay * 100) / 100,
       variance_amount: 0,
     }, { onConflict: 'payroll_run_id,employee_id' })
+
+    return error
   }
 
   async function generatePayslips() {
     setGenerating(true)
+    setGenerateError(null)
 
     // Load DTR entries for this cutoff
-    const { data: dtrData } = await supabase
+    const { data: dtrData, error: dtrError } = await supabase
       .from('dtr_entries')
       .select('*')
       .eq('org_id', orgId)
       .gte('work_date', run.cutoff_start)
       .lte('work_date', run.cutoff_end)
+
+    if (dtrError) {
+      setGenerating(false)
+      setGenerateError(dtrError.message)
+      return
+    }
 
     const dtrByEmployee: Record<string, DTREntry[]> = {}
     for (const d of dtrData ?? []) {
@@ -155,7 +165,7 @@ export default function PayrollRunCard({
         totalEarnings - contribs.sss_employee - contribs.philhealth_employee - contribs.hdmf_employee
       const withholdingTax = computeWeeklyWithholdingTax(Math.max(0, taxableIncome))
 
-      await upsertPayslip(emp, {
+      const upsertError = await upsertPayslip(emp, {
         basicPay, holidayPay, overtimePay, nsdPay, lateUndertime,
         allowances: 0,
         addBackReason: null,
@@ -166,6 +176,11 @@ export default function PayrollRunCard({
         withholdingTax,
         coopSaving: emp.coop_saving_amount,
       })
+      if (upsertError) {
+        setGenerating(false)
+        setGenerateError(`${emp.full_name}: ${upsertError.message}`)
+        return
+      }
     }
 
     await supabase.from('payroll_runs').update({ status: 'review' }).eq('id', run.id)
@@ -180,8 +195,9 @@ export default function PayrollRunCard({
   // Sourced from prior regular payslips' basic_pay within the run's date range.
   async function generateThirteenthMonth() {
     setGenerating(true)
+    setGenerateError(null)
 
-    const { data: yearRuns } = await supabase
+    const { data: yearRuns, error: yearRunsError } = await supabase
       .from('payroll_runs')
       .select('id')
       .eq('org_id', orgId)
@@ -190,14 +206,25 @@ export default function PayrollRunCard({
       .gte('cutoff_start', run.cutoff_start)
       .lte('cutoff_end', run.cutoff_end)
 
+    if (yearRunsError) {
+      setGenerating(false)
+      setGenerateError(yearRunsError.message)
+      return
+    }
+
     const runIds = (yearRuns ?? []).map(r => r.id)
     const basicPayByEmployee: Record<string, number> = {}
 
     if (runIds.length > 0) {
-      const { data: yearPayslips } = await supabase
+      const { data: yearPayslips, error: yearPayslipsError } = await supabase
         .from('payslips')
         .select('employee_id, basic_pay')
         .in('payroll_run_id', runIds)
+      if (yearPayslipsError) {
+        setGenerating(false)
+        setGenerateError(yearPayslipsError.message)
+        return
+      }
       for (const p of yearPayslips ?? []) {
         basicPayByEmployee[p.employee_id] = (basicPayByEmployee[p.employee_id] ?? 0) + p.basic_pay
       }
@@ -208,7 +235,7 @@ export default function PayrollRunCard({
       const thirteenthMonthPay = totalBasicForYear / 12
       const withholdingTax = computeThirteenthMonthTax(thirteenthMonthPay)
 
-      await upsertPayslip(emp, {
+      const upsertError = await upsertPayslip(emp, {
         basicPay: thirteenthMonthPay,
         holidayPay: 0, overtimePay: 0, nsdPay: 0, lateUndertime: 0,
         allowances: 0,
@@ -219,6 +246,11 @@ export default function PayrollRunCard({
         withholdingTax,
         coopSaving: 0,
       })
+      if (upsertError) {
+        setGenerating(false)
+        setGenerateError(`${emp.full_name}: ${upsertError.message}`)
+        return
+      }
     }
 
     await supabase.from('payroll_runs').update({ status: 'review' }).eq('id', run.id)
@@ -237,6 +269,7 @@ export default function PayrollRunCard({
   // taxable as lump-sum supplemental income, no statutory contributions.
   async function saveOffCycleAmounts() {
     setGenerating(true)
+    setGenerateError(null)
 
     for (const emp of employees) {
       const draft = offCycleDrafts[emp.id]
@@ -245,7 +278,7 @@ export default function PayrollRunCard({
 
       const withholdingTax = computeLumpSumTax(amount)
 
-      await upsertPayslip(emp, {
+      const upsertError = await upsertPayslip(emp, {
         basicPay: 0, holidayPay: 0, overtimePay: 0, nsdPay: 0, lateUndertime: 0,
         allowances: amount,
         addBackReason: draft?.reason || null,
@@ -254,6 +287,11 @@ export default function PayrollRunCard({
         withholdingTax,
         coopSaving: 0,
       })
+      if (upsertError) {
+        setGenerating(false)
+        setGenerateError(`${emp.full_name}: ${upsertError.message}`)
+        return
+      }
     }
 
     await supabase.from('payroll_runs').update({ status: 'review' }).eq('id', run.id)
@@ -374,6 +412,12 @@ export default function PayrollRunCard({
                 {generating ? 'Saving…' : 'Save Payslips'}
               </button>
             </div>
+          )}
+
+          {generateError && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">
+              {generateError}
+            </p>
           )}
 
           {payslips.length === 0 && !generating && (

@@ -55,6 +55,7 @@ export default function DTRView({
   const [drafts, setDrafts] = useState<Record<string, DTRRowDraft>>({})
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -102,6 +103,7 @@ export default function DTRView({
   async function saveWeek() {
     if (!employee) return
     setSaving(true)
+    setSaveError(null)
 
     const rows = dates
       .map(date => {
@@ -136,10 +138,16 @@ export default function DTRView({
       .filter((r): r is NonNullable<typeof r> => r !== null)
 
     if (rows.length > 0) {
-      await supabase.from('dtr_entries').upsert(rows, { onConflict: 'employee_id,work_date' })
+      const { error } = await supabase.from('dtr_entries').upsert(rows, { onConflict: 'employee_id,work_date' })
+      setSaving(false)
+      if (error) {
+        setSaveError(error.message)
+        return
+      }
+    } else {
+      setSaving(false)
     }
 
-    setSaving(false)
     setSavedAt(true)
     router.refresh()
   }
@@ -242,14 +250,17 @@ export default function DTRView({
       </div>
 
       {/* Single save for the whole week */}
-      <button
-        onClick={saveWeek}
-        disabled={saving || !employee}
-        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
-      >
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-        {saving ? 'Saving…' : savedAt ? 'Saved' : 'Save Week'}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={saveWeek}
+          disabled={saving || !employee}
+          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          {saving ? 'Saving…' : savedAt ? 'Saved' : 'Save Week'}
+        </button>
+        {saveError && <span className="text-xs text-red-600">{saveError}</span>}
+      </div>
 
       {/* Summary box */}
       {employee && (

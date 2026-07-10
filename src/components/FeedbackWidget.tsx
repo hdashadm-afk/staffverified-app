@@ -41,6 +41,7 @@ export default function FeedbackWidget({
   const [files, setFiles] = useState<File[]>([])
   const [attachError, setAttachError] = useState('')
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  const [previewFailed, setPreviewFailed] = useState<Record<number, boolean>>({})
   const fileInputId = useId()
   const pathname = usePathname()
   const supabase = createClient()
@@ -50,6 +51,7 @@ export default function FeedbackWidget({
   useEffect(() => {
     const urls = files.map(f => (isImageFile(f) ? URL.createObjectURL(f) : ''))
     setPreviewUrls(urls)
+    setPreviewFailed({})
     return () => urls.forEach(u => u && URL.revokeObjectURL(u))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files])
@@ -243,13 +245,13 @@ export default function FeedbackWidget({
                     <ul className="mt-2 space-y-1.5">
                       {files.map((f, i) => (
                         <li key={`${f.name}-${i}`} className="flex items-center gap-2 bg-gray-50 rounded-lg px-2.5 py-1.5 text-xs">
-                          {previewUrls[i] ? (
+                          {previewUrls[i] && !previewFailed[i] ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={previewUrls[i]}
                               alt={f.name}
                               className="w-8 h-8 rounded object-cover flex-shrink-0 bg-gray-200"
-                              onError={e => { e.currentTarget.style.display = 'none' }}
+                              onError={() => setPreviewFailed(prev => ({ ...prev, [i]: true }))}
                             />
                           ) : (
                             <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
