@@ -19,7 +19,6 @@ import {
   LogOut,
   MessageSquare,
   ShieldAlert,
-  Palmtree,
 } from 'lucide-react'
 
 const NAV_META = [
@@ -28,7 +27,6 @@ const NAV_META = [
   { href: '/permits',    label: 'Compliance',   icon: FileCheck },
   { href: '/dtr',        label: 'DTR',          icon: CalendarDays },
   { href: '/employees',  label: 'Employees',    icon: Users },
-  { href: '/leave',      label: 'Leave',        icon: Palmtree },
   { href: '/payroll',    label: 'Payroll',      icon: Banknote },
   { href: '/remittance', label: 'Remittance',   icon: RefreshCw },
   { href: '/nte',           label: 'NTE',                icon: FileWarning },
