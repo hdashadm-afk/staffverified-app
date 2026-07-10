@@ -1,6 +1,7 @@
 export type UserRole = 'owner' | 'assistant' | 'ops_officer' | 'ceo' | 'cfo'
 export type PermitStatus = 'pending' | 'submitted' | 'overdue' | 'acknowledged'
 export type PayrollStatus = 'draft' | 'review' | 'completed'
+export type PayrollRunType = 'regular' | '13th_month' | 'bonus' | 'adjustment'
 export type Agency = 'SSS' | 'PhilHealth' | 'HDMF' | 'BIR' | 'DOE' | 'DOLE' | 'Other'
 
 export interface Organization {
@@ -48,6 +49,9 @@ export interface Employee {
   philhealth_no: string | null
   pagibig_no: string | null
   tin_no: string | null
+  bank_name: string | null
+  bank_account_no: string | null
+  bank_account_name: string | null
   created_at: string
 }
 
@@ -89,6 +93,7 @@ export interface PayrollRun {
   cutoff_start: string
   cutoff_end: string
   status: PayrollStatus
+  run_type: PayrollRunType
   notes: string | null
   prepared_by: string | null
   created_at: string

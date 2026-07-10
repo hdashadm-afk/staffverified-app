@@ -31,6 +31,9 @@ export default function NewEmployeeButton({
     philhealth_no: '',
     pagibig_no: '',
     tin_no: '',
+    bank_name: '',
+    bank_account_no: '',
+    bank_account_name: '',
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -51,12 +54,19 @@ export default function NewEmployeeButton({
       philhealth_no: form.philhealth_no || null,
       pagibig_no: form.pagibig_no || null,
       tin_no: form.tin_no || null,
+      bank_name: form.bank_name || null,
+      bank_account_no: form.bank_account_no || null,
+      bank_account_name: form.bank_account_name || null,
       is_active: true,
     })
 
     setSaving(false)
     setOpen(false)
-    setForm({ full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular', has_sil: false, coop_saving_amount: '0', date_hired: '', sss_no: '', philhealth_no: '', pagibig_no: '', tin_no: '' })
+    setForm({
+      full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular',
+      has_sil: false, coop_saving_amount: '0', date_hired: '', sss_no: '', philhealth_no: '',
+      pagibig_no: '', tin_no: '', bank_name: '', bank_account_no: '', bank_account_name: '',
+    })
     router.refresh()
   }
 
@@ -187,6 +197,23 @@ export default function NewEmployeeButton({
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">TIN</label>
                   <input value={form.tin_no} onChange={e => setForm(f => ({ ...f, tin_no: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Bank name</label>
+                  <input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))}
+                    placeholder="BDO"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Bank account no.</label>
+                  <input value={form.bank_account_no} onChange={e => setForm(f => ({ ...f, bank_account_no: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Account name</label>
+                  <input value={form.bank_account_name} onChange={e => setForm(f => ({ ...f, bank_account_name: e.target.value }))}
+                    placeholder="Defaults to full name"
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
                 </div>
               </div>

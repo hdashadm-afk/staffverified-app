@@ -19,6 +19,7 @@ import {
   LogOut,
   MessageSquare,
   ShieldAlert,
+  CalendarClock,
 } from 'lucide-react'
 
 const NAV_META = [
@@ -26,6 +27,7 @@ const NAV_META = [
   { href: '/hours',      label: 'Hours Budget', icon: Clock },
   { href: '/permits',    label: 'Compliance',   icon: FileCheck },
   { href: '/dtr',        label: 'DTR',          icon: CalendarDays },
+  { href: '/schedule',   label: 'Schedule',     icon: CalendarClock },
   { href: '/employees',  label: 'Employees',    icon: Users },
   { href: '/payroll',    label: 'Payroll',      icon: Banknote },
   { href: '/remittance', label: 'Remittance',   icon: RefreshCw },

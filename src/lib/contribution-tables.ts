@@ -203,3 +203,22 @@ export function computeWeeklyWithholdingTax(cutoffTaxableIncome: number): number
   const annualTax = computeAnnualWithholdingTax(annualTaxableIncome)
   return annualTax / 52
 }
+
+// 13th month pay (and other similar benefits) is exempt from income tax up
+// to ₱90,000/year (NIRC Sec. 32(B)(7)(e), as amended by TRAIN law). Only the
+// excess is taxable. This is a lump sum, not a recurring cutoff, so the
+// excess is taxed directly against the annual bracket table — no
+// annualize/de-annualize step like computeWeeklyWithholdingTax.
+const THIRTEENTH_MONTH_EXEMPTION = 90000
+
+export function computeThirteenthMonthTax(thirteenthMonthPay: number): number {
+  const taxableExcess = Math.max(0, thirteenthMonthPay - THIRTEENTH_MONTH_EXEMPTION)
+  return computeAnnualWithholdingTax(taxableExcess)
+}
+
+// One-off bonuses/adjustments are fully taxable supplemental income, taxed
+// as a lump sum against the annual bracket table (no exemption threshold,
+// unlike 13th month pay).
+export function computeLumpSumTax(amount: number): number {
+  return computeAnnualWithholdingTax(Math.max(0, amount))
+}

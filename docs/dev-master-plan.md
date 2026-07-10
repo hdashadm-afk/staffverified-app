@@ -4,6 +4,23 @@ Working plan for closing the gap between the current codebase and the
 [KOS Phase 2 HR/Payroll checklist](#appendix-full-checklist) needed to be
 competitive with modern SMB HR/payroll platforms and Gusto Cofounder.
 
+## Where this fits in the KOS build sequence
+
+Per the KOS architecture work (tracked separately in Notion — Founder Space
++ build sequence docs): StaffVerified is locked in as the **HR + Payroll
+module under KOS**, step 2 in the build sequence. It keeps its own repo —
+no rename, no merge into a KOS monorepo.
+
+The other Ops Extension modules (Gas, Coffee, Hotel, Accounting, Marketing)
+are being validated cheaply first via manual tools (Excel file reports,
+logbooks) before any digital integration is built for them — an MVP
+pattern where the Owner's Space accepts Excel reports from each
+department's key person. **HR & Payroll skips that validation step
+entirely, because StaffVerified is already real, active code** — not a
+placeholder to prove out. That's the standard this repo needs to keep
+holding itself to: every fix and feature here should already be
+production-real, not throwaway validation.
+
 Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 
 ## Known bugs (fixed)
@@ -24,12 +41,13 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 
 | Area | Status | Notes |
 |---|---|---|
-| Employee records | ✅ | CRUD UI + save now working. Missing bank details field still. |
-| Time/attendance | ✅ | DTR + daily attendance (TL view) both work; regular/OT/NSD/holiday computed correctly; late/undertime now wired to `schedules` table (needs a schedule-entry UI to actually populate — see Tier 2). |
+| Employee records | ✅ | CRUD UI + save working; gov IDs and bank details (name/account no./account name) both present. |
+| Time/attendance | ✅ | DTR + daily attendance (TL view) both work; regular/OT/NSD/holiday computed correctly; DTR grid is now always-editable with one Save (no more per-row edit toggle that blocked rows past the first). Late/undertime wired to `schedules` table, and a `/schedule` page now exists to actually populate it. |
 | Leave / PTO | ⬜ | Out of scope for this app per owner direction — `has_sil` remains a flag only, no request/approve/balance module. (A working version was built and then intentionally reverted.) |
 | Payroll calculations | ✅ | Gross computation (basic, OT, NSD, holiday pay) shared between DTR preview and payslip generation via `summarizeCutoffEarnings()`. |
 | PH statutory contributions | ✅ | SSS, PhilHealth, Pag-IBIG implemented with real 2025 bracket tables (`contribution-tables.ts`); monthly-salary conversion fixed to match actual weekly cutoffs (was `×2`, now `×52/12`). |
 | Payslips | ✅ | Full gross-to-net breakdown including BIR withholding tax. `sil_pay` field is back to unused/0 (leave sync reverted with the leave module). |
+| Off-cycle payroll runs | ✅ | New Payroll Run flow supports 13th Month Pay (auto-computed from year's basic pay, DOLE rule, ₱90k tax exemption), Bonus, and Adjustment (manual amount/reason per employee), alongside the existing Regular DTR-based run. |
 | Owner cockpit payroll views | 🟡 | Single-org dashboard exists; no cross-venture rollup because the app is single-tenant-per-org today — "multi-venture owner" concept isn't modeled at the data layer yet. |
 
 ## Tier 2 — near-term enhancements
@@ -37,7 +55,7 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 | Area | Status | Notes |
 |---|---|---|
 | Self-service portal | ⬜ | No employee-facing role exists at all — current roles are all internal staff (ceo/cfo/ops_officer/owner/assistant/tl). |
-| Schedule entry UI | ⬜ | `schedules` table exists and is now read by DTR for late/undertime, but nothing lets anyone create a schedule row yet. |
+| Schedule entry UI | ✅ | `/schedule` page — set shift start/end per employee per day, same always-editable/single-save pattern as DTR. |
 | Industry-specific intake | ⬜ | No department/intake data model exists yet. |
 | Attachments/comments on intake | ⬜ | Depends on intake existing first. |
 | Feedback loop | ✅ | Report Issue (now "Kath") widget supports file/image attachments; admin inbox shows them via signed URLs. |
@@ -56,10 +74,13 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 2. ~~BIR withholding tax~~ — done.
 3. ~~Leave/PTO module~~ — built, then reverted per owner direction (out of
    scope for this app).
-4. **Schedule entry UI** — so late/undertime tracking (already wired) has
-   real data to compare against. **← next up.**
-5. Self-service portal, industry intake, agentic workflows — deferred
-   until Tier 1 is solid.
+4. ~~Schedule entry UI~~ — done.
+5. ~~Bank details field~~ — done.
+6. ~~Off-cycle payroll runs~~ — done.
+7. Self-service portal, industry intake, agentic workflows, cross-venture
+   owner cockpit — deferred; each is a bigger architectural lift (new
+   auth model, new data model, or multi-tenant support) than what's been
+   tackled so far and deserves its own scoping conversation first.
 
 ---
 

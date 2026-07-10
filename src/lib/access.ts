@@ -8,6 +8,7 @@ export const MODULE_ACCESS: Record<string, Role[]> = {
   '/hours':      ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
   '/permits':    ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/dtr':        ['ceo', 'ops_officer', 'owner', 'assistant', 'tl'],
+  '/schedule':   ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/employees':  ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/payroll':    ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
   '/remittance': ['ceo', 'cfo', 'owner'],
