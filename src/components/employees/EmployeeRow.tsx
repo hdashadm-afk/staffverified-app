@@ -29,6 +29,9 @@ export default function EmployeeRow({
     philhealth_no: employee.philhealth_no ?? '',
     pagibig_no: employee.pagibig_no ?? '',
     tin_no: employee.tin_no ?? '',
+    bank_name: employee.bank_name ?? '',
+    bank_account_no: employee.bank_account_no ?? '',
+    bank_account_name: employee.bank_account_name ?? '',
     has_sil: employee.has_sil,
     coop_saving_amount: employee.coop_saving_amount.toString(),
     is_active: employee.is_active,
@@ -49,6 +52,9 @@ export default function EmployeeRow({
         philhealth_no: form.philhealth_no || null,
         pagibig_no: form.pagibig_no || null,
         tin_no: form.tin_no || null,
+        bank_name: form.bank_name || null,
+        bank_account_no: form.bank_account_no || null,
+        bank_account_name: form.bank_account_name || null,
         has_sil: form.has_sil,
         coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
         is_active: form.is_active,
@@ -119,6 +125,18 @@ export default function EmployeeRow({
             <div>
               <label className={lbl}>TIN</label>
               <input value={form.tin_no} onChange={ev => setForm(f => ({ ...f, tin_no: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Bank name</label>
+              <input value={form.bank_name} onChange={ev => setForm(f => ({ ...f, bank_name: ev.target.value }))} className={fld} placeholder="BDO" />
+            </div>
+            <div>
+              <label className={lbl}>Bank account no.</label>
+              <input value={form.bank_account_no} onChange={ev => setForm(f => ({ ...f, bank_account_no: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Account name</label>
+              <input value={form.bank_account_name} onChange={ev => setForm(f => ({ ...f, bank_account_name: ev.target.value }))} className={fld} placeholder="Defaults to full name" />
             </div>
 
             <div className="flex items-center gap-2">

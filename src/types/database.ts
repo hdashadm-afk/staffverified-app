@@ -48,6 +48,9 @@ export interface Employee {
   philhealth_no: string | null
   pagibig_no: string | null
   tin_no: string | null
+  bank_name: string | null
+  bank_account_no: string | null
+  bank_account_name: string | null
   created_at: string
 }
 
