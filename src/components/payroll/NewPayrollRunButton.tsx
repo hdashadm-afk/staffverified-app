@@ -30,6 +30,7 @@ export default function NewPayrollRunButton({
 }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -59,8 +60,9 @@ export default function NewPayrollRunButton({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError(null)
 
-    await supabase.from('payroll_runs').insert({
+    const { error: insertError } = await supabase.from('payroll_runs').insert({
       org_id: orgId,
       station_id: form.station_id || null,
       run_type: form.run_type,
@@ -72,6 +74,12 @@ export default function NewPayrollRunButton({
     })
 
     setSaving(false)
+
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
+
     setOpen(false)
     router.refresh()
   }
@@ -82,7 +90,7 @@ export default function NewPayrollRunButton({
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setError(null); setOpen(true) }}
         className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
@@ -166,6 +174,10 @@ export default function NewPayrollRunButton({
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
                 />
               </div>
+
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
+              )}
 
               <div className="flex gap-3 pt-1">
                 <button

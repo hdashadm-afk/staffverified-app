@@ -74,7 +74,13 @@ export default function NTEPreview({ data, orgId }: { data: NTEData; orgId: stri
       setSaved(true)
     } catch (err) {
       console.error(err)
-      setSaveError('Save failed — please try again.')
+      // Supabase storage/postgrest errors are plain objects with a `message`
+      // field, not necessarily `instanceof Error` — check duck-typed.
+      const message =
+        err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
+          ? err.message
+          : 'Save failed — please try again.'
+      setSaveError(message)
     }
 
     setSaving(false)
