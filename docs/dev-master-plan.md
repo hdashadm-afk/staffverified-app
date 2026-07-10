@@ -6,25 +6,29 @@ competitive with modern SMB HR/payroll platforms and Gusto Cofounder.
 
 Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 
-## Known bugs (fix before anything else)
+## Known bugs (fixed)
 
-- **Employee add/edit is likely broken in production.** `EmployeeRow.tsx`
-  and `NewEmployeeButton.tsx` save `employment_type`, `sss_no`,
-  `philhealth_no`, `pagibig_no`, `tin_no` to the `employees` table, but no
-  migration in the repo ever added those columns. Unless the live Supabase
-  schema was hand-patched outside of git, every employee save fails
-  silently (the Supabase error isn't checked). **Fix: migration + type
-  update.**
+- ~~Employee add/edit broken in production~~ — **fixed.** Migration 009
+  added `employment_type`, `sss_no`, `philhealth_no`, `pagibig_no`,
+  `tin_no` to `employees`.
+- ~~`feedback_reports` and `nte_records` tables didn't exist on the live
+  database at all~~ — **fixed.** Migrations 006/007/008 applied; Report
+  Issue submissions and NTE disciplinary notices were both silently
+  failing before this, not just employee saves.
+- ~~Attach-file button on the feedback widget silently failed to open the
+  file picker on mobile in-app browsers~~ — **fixed.** Switched from a
+  JS-triggered `ref.click()` to a native `<label htmlFor>`, which doesn't
+  depend on JS to open the OS file picker. (PR #2, pending merge.)
 
 ## Tier 1 — must-have for launch
 
 | Area | Status | Notes |
 |---|---|---|
-| Employee records | 🟡 | CRUD UI exists; save is broken (see bug above). Missing bank details field. |
+| Employee records | ✅ | CRUD UI + save now working. Missing bank details field still. |
 | Time/attendance | ✅ | DTR + daily attendance (TL view) both work; regular/OT/NSD/holiday computed correctly; late/undertime now wired to `schedules` table (needs a schedule-entry UI to actually populate — see Tier 2). |
 | Leave / PTO | ⬜ | `has_sil` is just a boolean flag on the employee record. No request/approve flow, no balance tracking, nothing syncs into payroll. |
 | Payroll calculations | ✅ | Gross computation (basic, OT, NSD, holiday pay) shared between DTR preview and payslip generation via `summarizeCutoffEarnings()`. |
-| PH statutory contributions | 🟡 | SSS, PhilHealth, Pag-IBIG implemented with real 2025 bracket tables (`contribution-tables.ts`). **BIR withholding tax is completely missing** — net pay is not real net pay yet. |
+| PH statutory contributions | 🟡 | SSS, PhilHealth, Pag-IBIG implemented with real 2025 bracket tables (`contribution-tables.ts`). **BIR withholding tax is completely missing** — net pay is not real net pay yet. **← next up.** |
 | Payslips | 🟡 | Generated with full earnings/deductions breakdown; incomplete until BIR tax is added. SIL pay always 0 (stubbed). |
 | Owner cockpit payroll views | 🟡 | Single-org dashboard exists; no cross-venture rollup because the app is single-tenant-per-org today — "multi-venture owner" concept isn't modeled at the data layer yet. |
 
@@ -36,7 +40,7 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 | Schedule entry UI | ⬜ | `schedules` table exists and is now read by DTR for late/undertime, but nothing lets anyone create a schedule row yet. |
 | Industry-specific intake | ⬜ | No department/intake data model exists yet. |
 | Attachments/comments on intake | ⬜ | Depends on intake existing first. |
-| Feedback loop | ✅ | Report Issue widget supports file/image attachments; admin inbox shows them via signed URLs. |
+| Feedback loop | ✅ | Report Issue (now "Kath") widget supports file/image attachments; admin inbox shows them via signed URLs. |
 
 ## Tier 3 — competitive edge
 
@@ -48,12 +52,10 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 
 ## Immediate priority order
 
-1. **Fix employee save** — migration for `employment_type`, `sss_no`,
-   `philhealth_no`, `pagibig_no`, `tin_no` on `employees`; sync the
-   `Employee` TypeScript type.
+1. ~~Fix employee save~~ — done.
 2. **BIR withholding tax** — add a tax-table function alongside
    `contribution-tables.ts`; add `withholding_tax` column to `payslips`;
-   wire into `PayrollRunCard` net pay.
+   wire into `PayrollRunCard` net pay. **← current focus.**
 3. **Leave/PTO module** — request/approve flow + balance tracking,
    synced into payroll runs.
 4. **Schedule entry UI** — so late/undertime tracking (already wired) has

@@ -109,7 +109,10 @@ export function computeHDMF(monthlySalary: number): { employee: number; employer
 }
 
 // ─── Convenience: compute all three from a cutoff's total pay ───────────────
-// monthlySalary = cutoff basic pay × 2 (semi-monthly → monthly equivalent)
+// monthlySalary = weekly cutoff basic pay × 52/12 (weekly → monthly equivalent).
+// Cutoffs here are weekly (Thu–Wed, see cutoff.ts), not semi-monthly.
+const WEEKS_PER_MONTH = 52 / 12
+
 export interface StatutoryContributions {
   sss_employee: number
   sss_employer: number
@@ -124,7 +127,7 @@ export function computeAllContributions(
   cutoffBasicPay: number,
   isFirstCutoff: boolean // SSS/PhilHealth deducted on FIRST cutoff only per month
 ): StatutoryContributions {
-  const monthlySalary = cutoffBasicPay * 2
+  const monthlySalary = cutoffBasicPay * WEEKS_PER_MONTH
 
   const sss = computeSSS(monthlySalary)
   const ph = computePhilHealth(monthlySalary)
@@ -153,4 +156,50 @@ export function computeAllContributions(
     hdmf_employee: 0,
     hdmf_employer: 0,
   }
+}
+
+// ─── BIR Withholding Tax ────────────────────────────────────────────────────
+// TRAIN law (RA 10963) revised annual income tax table, effective Jan 1 2023
+// (Sec. 24(A)(2)(a), NIRC as amended). This is the authoritative table BIR
+// publishes — the daily/weekly/semi-monthly/monthly withholding tables are
+// all just this annual table pro-rated, so we annualize each cutoff's
+// taxable pay, tax it here, then de-annualize rather than hand-transcribing
+// a separate weekly bracket table (lower risk of a peso-level transcription
+// error).
+// Source: BIR Revenue Regulations No. 11-2018, as amended for 2023 rates.
+
+interface AnnualTaxBracket {
+  over: number
+  taxOn: number      // fixed tax at the bracket floor
+  rate: number        // marginal rate on the excess over `over`
+}
+
+const ANNUAL_TAX_BRACKETS: AnnualTaxBracket[] = [
+  { over: 0,          taxOn: 0,         rate: 0 },
+  { over: 250000,     taxOn: 0,         rate: 0.15 },
+  { over: 400000,     taxOn: 22500,     rate: 0.20 },
+  { over: 800000,     taxOn: 102500,    rate: 0.25 },
+  { over: 2000000,    taxOn: 402500,    rate: 0.30 },
+  { over: 8000000,    taxOn: 2202500,   rate: 0.35 },
+]
+
+/** Annual income tax due on a given annual taxable compensation. */
+export function computeAnnualWithholdingTax(annualTaxableIncome: number): number {
+  const bracket = [...ANNUAL_TAX_BRACKETS]
+    .reverse()
+    .find(b => annualTaxableIncome > b.over) ?? ANNUAL_TAX_BRACKETS[0]
+  return bracket.taxOn + (annualTaxableIncome - bracket.over) * bracket.rate
+}
+
+/**
+ * Withholding tax for one weekly cutoff.
+ * cutoffTaxableIncome = gross taxable pay for the cutoff (basic + OT + holiday
+ * + NSD) minus employee-share statutory contributions deducted that cutoff —
+ * SSS/PhilHealth/Pag-IBIG are pre-tax. Non-statutory deductions (coop savings,
+ * uniform, loans) are post-tax and must NOT be subtracted here.
+ */
+export function computeWeeklyWithholdingTax(cutoffTaxableIncome: number): number {
+  const annualTaxableIncome = cutoffTaxableIncome * 52
+  const annualTax = computeAnnualWithholdingTax(annualTaxableIncome)
+  return annualTax / 52
 }

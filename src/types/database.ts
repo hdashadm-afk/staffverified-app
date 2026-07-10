@@ -113,6 +113,7 @@ export interface Payslip {
   sss_contribution: number
   philhealth_contribution: number
   hdmf_contribution: number
+  withholding_tax: number
   uniform_deduction: number
   coop_saving: number
   gas_shortage: number
