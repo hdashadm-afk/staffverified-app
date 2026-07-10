@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MessageSquare, X, ChevronDown, Paperclip, FileText } from 'lucide-react'
@@ -8,6 +8,13 @@ import type { FeedbackSeverity } from '@/types/database'
 
 const MAX_ATTACHMENTS = 5
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024 // 10MB
+const IMAGE_EXTENSIONS = /\.(png|jpe?g|gif|webp|heic|heif|bmp|svg)$/i
+
+// Some mobile camera/gallery pickers hand back a File with an empty `type`,
+// so fall back to sniffing the filename extension.
+function isImageFile(f: File): boolean {
+  return f.type.startsWith('image/') || IMAGE_EXTENSIONS.test(f.name)
+}
 
 const SEVERITY_OPTIONS: { value: FeedbackSeverity; label: string; color: string }[] = [
   { value: 'bug',        label: 'Bug',        color: 'text-red-600' },
@@ -33,9 +40,19 @@ export default function FeedbackWidget({
   const [done, setDone] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [attachError, setAttachError] = useState('')
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const fileInputId = useId()
   const pathname = usePathname()
   const supabase = createClient()
+
+  // Create/revoke object URLs for image previews as the file list changes,
+  // instead of calling createObjectURL fresh on every render (which leaks).
+  useEffect(() => {
+    const urls = files.map(f => (isImageFile(f) ? URL.createObjectURL(f) : ''))
+    setPreviewUrls(urls)
+    return () => urls.forEach(u => u && URL.revokeObjectURL(u))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files])
 
   function openModal() {
     setMessage('')
@@ -226,9 +243,14 @@ export default function FeedbackWidget({
                     <ul className="mt-2 space-y-1.5">
                       {files.map((f, i) => (
                         <li key={`${f.name}-${i}`} className="flex items-center gap-2 bg-gray-50 rounded-lg px-2.5 py-1.5 text-xs">
-                          {f.type.startsWith('image/') ? (
+                          {previewUrls[i] ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={URL.createObjectURL(f)} alt={f.name} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                            <img
+                              src={previewUrls[i]}
+                              alt={f.name}
+                              className="w-8 h-8 rounded object-cover flex-shrink-0 bg-gray-200"
+                              onError={e => { e.currentTarget.style.display = 'none' }}
+                            />
                           ) : (
                             <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
                           )}

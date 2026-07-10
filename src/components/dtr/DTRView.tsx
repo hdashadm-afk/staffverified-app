@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DTREntry, Employee, Schedule, Station } from '@/types/database'
-import DTREntryRow from './DTREntryRow'
+import DTREntryRow, { DTRRowDraft } from './DTREntryRow'
 import {
   computeRegularHours,
   computeOvertimeHours,
@@ -14,6 +14,7 @@ import {
 } from '@/lib/payroll-math'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { Check, Loader2 } from 'lucide-react'
 
 function generateDates(start: string, end: string): string[] {
   const dates: string[] = []
@@ -25,6 +26,8 @@ function generateDates(start: string, end: string): string[] {
   }
   return dates
 }
+
+const emptyDraft: DTRRowDraft = { timeIn: '', timeOut: '', isHolidayRegular: false, isHolidaySpecial: false }
 
 export default function DTRView({
   employees,
@@ -49,9 +52,9 @@ export default function DTRView({
 }) {
   const [selectedEmployee, setSelectedEmployee] = useState<string>(employees[0]?.id ?? '')
   const [localEntries, setLocalEntries] = useState<DTREntry[]>(dtrEntries)
-  // One-shot signal: after saving date N, set this to date N+1 so that row auto-opens.
-  // The row consumes it immediately (calls onAutoOpened → clears back to null).
-  const [nextToOpen, setNextToOpen] = useState<string | null>(null)
+  const [drafts, setDrafts] = useState<Record<string, DTRRowDraft>>({})
+  const [saving, setSaving] = useState(false)
+  const [savedAt, setSavedAt] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -70,86 +73,100 @@ export default function DTRView({
       .map(s => [s.work_date, s])
   )
 
-  async function upsertEntry(workDate: string, timeIn: string, timeOut: string, flags: {
-    isHolidayRegular: boolean
-    isHolidaySpecial: boolean
-    notes: string
-  }) {
-    const reg = computeRegularHours(timeIn, timeOut)
-    const ot = computeOvertimeHours(timeIn, timeOut)
-    const nsd = computeNightShiftHours(timeIn, timeOut)
-    const schedule = scheduleMap[workDate]
-    const late = computeLateMinutes(timeIn, schedule?.shift_start ?? null)
-    const undertime = computeUndertimeMinutes(timeOut, schedule?.shift_end ?? null)
+  // Rebuild the whole week's editable drafts whenever the selected employee
+  // (or its underlying saved entries) changes — every row is always editable,
+  // no per-row edit toggle.
+  useEffect(() => {
+    const next: Record<string, DTRRowDraft> = {}
+    for (const date of dates) {
+      const e = entryMap[date]
+      next[date] = e
+        ? {
+            timeIn: e.time_in ?? '',
+            timeOut: e.time_out ?? '',
+            isHolidayRegular: e.is_holiday_regular,
+            isHolidaySpecial: e.is_holiday_special,
+          }
+        : { ...emptyDraft }
+    }
+    setDrafts(next)
+    setSavedAt(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEmployee, localEntries])
 
-    // Optimistic update so totals reflect immediately without waiting for router.refresh()
-    setLocalEntries(prev => {
-      const idx = prev.findIndex(
-        e => e.employee_id === selectedEmployee && e.work_date === workDate
-      )
-      const base = idx >= 0 ? prev[idx] : ({} as DTREntry)
-      const updated: DTREntry = {
-        ...base,
-        id: base.id ?? '',
-        created_at: base.created_at ?? new Date().toISOString(),
-        org_id: orgId,
-        employee_id: selectedEmployee,
-        station_id: employee?.station_id ?? null,
-        work_date: workDate,
-        time_in: timeIn || null,
-        time_out: timeOut || null,
-        regular_hours: reg,
-        overtime_hours: ot,
-        night_shift_hours: nsd,
-        late_minutes: late,
-        undertime_minutes: undertime,
-        is_holiday_regular: flags.isHolidayRegular,
-        is_holiday_special: flags.isHolidaySpecial,
-        notes: flags.notes || null,
-        entered_by: userId,
-      }
-      if (idx >= 0) return prev.map((e, i) => (i === idx ? updated : e))
-      return [...prev, updated]
-    })
+  function setDraft(date: string, patch: Partial<DTRRowDraft>) {
+    setDrafts(prev => ({ ...prev, [date]: { ...(prev[date] ?? emptyDraft), ...patch } }))
+    setSavedAt(false)
+  }
 
-    await supabase.from('dtr_entries').upsert({
-      org_id: orgId,
-      employee_id: selectedEmployee,
-      station_id: employee?.station_id ?? null,
-      work_date: workDate,
-      time_in: timeIn || null,
-      time_out: timeOut || null,
-      regular_hours: reg,
-      overtime_hours: ot,
-      night_shift_hours: nsd,
-      late_minutes: late,
-      undertime_minutes: undertime,
-      is_holiday_regular: flags.isHolidayRegular,
-      is_holiday_special: flags.isHolidaySpecial,
-      notes: flags.notes || null,
-      entered_by: userId,
-    }, { onConflict: 'employee_id,work_date' })
+  async function saveWeek() {
+    if (!employee) return
+    setSaving(true)
 
-    // Signal the next date row to auto-open for editing
-    const nextIdx = dates.indexOf(workDate) + 1
-    setNextToOpen(nextIdx < dates.length ? dates[nextIdx] : null)
+    const rows = dates
+      .map(date => {
+        const draft = drafts[date] ?? emptyDraft
+        if (!draft.timeIn && !draft.timeOut && !draft.isHolidayRegular && !draft.isHolidaySpecial) return null
 
+        const reg = computeRegularHours(draft.timeIn, draft.timeOut)
+        const ot = computeOvertimeHours(draft.timeIn, draft.timeOut)
+        const nsd = computeNightShiftHours(draft.timeIn, draft.timeOut)
+        const schedule = scheduleMap[date]
+        const late = computeLateMinutes(draft.timeIn, schedule?.shift_start ?? null)
+        const undertime = computeUndertimeMinutes(draft.timeOut, schedule?.shift_end ?? null)
+
+        return {
+          org_id: orgId,
+          employee_id: selectedEmployee,
+          station_id: employee.station_id,
+          work_date: date,
+          time_in: draft.timeIn || null,
+          time_out: draft.timeOut || null,
+          regular_hours: reg,
+          overtime_hours: ot,
+          night_shift_hours: nsd,
+          late_minutes: late,
+          undertime_minutes: undertime,
+          is_holiday_regular: draft.isHolidayRegular,
+          is_holiday_special: draft.isHolidaySpecial,
+          notes: entryMap[date]?.notes ?? null,
+          entered_by: userId,
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+
+    if (rows.length > 0) {
+      await supabase.from('dtr_entries').upsert(rows, { onConflict: 'employee_id,work_date' })
+    }
+
+    setSaving(false)
+    setSavedAt(true)
     router.refresh()
   }
 
-  const totals = dates.reduce((acc, d) => {
-    const e = entryMap[d]
-    if (!e) return acc
+  const totals = dates.reduce((acc, date) => {
+    const draft = drafts[date] ?? emptyDraft
     return {
-      regular: acc.regular + (e.regular_hours ?? 0),
-      ot: acc.ot + (e.overtime_hours ?? 0),
-      nsd: acc.nsd + (e.night_shift_hours ?? 0),
+      regular: acc.regular + computeRegularHours(draft.timeIn, draft.timeOut),
+      ot: acc.ot + computeOvertimeHours(draft.timeIn, draft.timeOut),
+      nsd: acc.nsd + computeNightShiftHours(draft.timeIn, draft.timeOut),
     }
   }, { regular: 0, ot: 0, nsd: 0 })
 
   const dailyRate = employee?.daily_rate ?? 0
   const earnings = summarizeCutoffEarnings(
-    dates.map(d => entryMap[d]).filter((e): e is DTREntry => !!e),
+    dates.map(date => {
+      const draft = drafts[date] ?? emptyDraft
+      return {
+        regular_hours: computeRegularHours(draft.timeIn, draft.timeOut),
+        overtime_hours: computeOvertimeHours(draft.timeIn, draft.timeOut),
+        night_shift_hours: computeNightShiftHours(draft.timeIn, draft.timeOut),
+        late_minutes: 0,
+        undertime_minutes: 0,
+        is_holiday_regular: draft.isHolidayRegular,
+        is_holiday_special: draft.isHolidaySpecial,
+      }
+    }),
     dailyRate,
     orgRates
   )
@@ -161,7 +178,7 @@ export default function DTRView({
         <label className="text-sm font-medium text-gray-700">Employee:</label>
         <select
           value={selectedEmployee}
-          onChange={e => { setSelectedEmployee(e.target.value); setNextToOpen(null) }}
+          onChange={e => setSelectedEmployee(e.target.value)}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
         >
           {employees.map(e => (
@@ -181,7 +198,7 @@ export default function DTRView({
         </span>
       </div>
 
-      {/* DTR table */}
+      {/* DTR table — every row is always editable */}
       <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
         <table className="w-full text-sm">
           <thead>
@@ -194,20 +211,23 @@ export default function DTRView({
               <th className="text-right px-4 py-3 font-medium">OT hrs</th>
               <th className="text-right px-4 py-3 font-medium">NSD hrs</th>
               <th className="text-left px-4 py-3 font-medium">Flags</th>
-              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {dates.map(date => (
-              <DTREntryRow
-                key={date}
-                date={date}
-                entry={entryMap[date] ?? null}
-                autoOpen={nextToOpen === date}
-                onAutoOpened={() => setNextToOpen(null)}
-                onSave={upsertEntry}
-              />
-            ))}
+            {dates.map(date => {
+              const draft = drafts[date] ?? emptyDraft
+              return (
+                <DTREntryRow
+                  key={date}
+                  date={date}
+                  draft={draft}
+                  regHrs={computeRegularHours(draft.timeIn, draft.timeOut)}
+                  otHrs={computeOvertimeHours(draft.timeIn, draft.timeOut)}
+                  nsdHrs={computeNightShiftHours(draft.timeIn, draft.timeOut)}
+                  onChange={patch => setDraft(date, patch)}
+                />
+              )
+            })}
           </tbody>
           <tfoot>
             <tr className="border-t border-gray-200 bg-gray-50 font-medium text-sm">
@@ -215,11 +235,21 @@ export default function DTRView({
               <td className="px-4 py-3 text-right">{totals.regular.toFixed(1)}</td>
               <td className="px-4 py-3 text-right">{totals.ot.toFixed(1)}</td>
               <td className="px-4 py-3 text-right">{totals.nsd.toFixed(1)}</td>
-              <td colSpan={2} />
+              <td />
             </tr>
           </tfoot>
         </table>
       </div>
+
+      {/* Single save for the whole week */}
+      <button
+        onClick={saveWeek}
+        disabled={saving || !employee}
+        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+      >
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+        {saving ? 'Saving…' : savedAt ? 'Saved' : 'Save Week'}
+      </button>
 
       {/* Summary box */}
       {employee && (
@@ -243,12 +273,6 @@ export default function DTRView({
             <span>NSD ({totals.nsd.toFixed(1)} hrs × 10%)</span>
             <span>₱{earnings.nsdPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
-          {earnings.lateUndertimeDeduction > 0 && (
-            <div className="flex justify-between text-red-700">
-              <span>Late / undertime deduction</span>
-              <span>-₱{earnings.lateUndertimeDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-            </div>
-          )}
           <div className="flex justify-between text-red-900 font-semibold border-t border-red-200 pt-1.5 mt-1.5">
             <span>Total</span>
             <span>₱{earnings.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
