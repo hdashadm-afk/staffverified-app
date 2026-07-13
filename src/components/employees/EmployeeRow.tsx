@@ -23,6 +23,7 @@ export default function EmployeeRow({
     position: employee.position ?? '',
     station_id: employee.station_id ?? '',
     daily_rate: employee.daily_rate.toString(),
+    allowance: ((employee as { allowance?: number }).allowance ?? 0).toString(),
     employment_type: employee.employment_type,
     date_hired: employee.date_hired ?? '',
     sss_no: employee.sss_no ?? '',
@@ -46,6 +47,7 @@ export default function EmployeeRow({
         position: form.position || null,
         station_id: form.station_id || null,
         daily_rate: parseFloat(form.daily_rate) || 0,
+        allowance: parseFloat(form.allowance) || 0,
         employment_type: form.employment_type,
         date_hired: form.date_hired || null,
         sss_no: form.sss_no || null,
@@ -102,8 +104,12 @@ export default function EmployeeRow({
               <input type="date" value={form.date_hired ?? ''} onChange={ev => setForm(f => ({ ...f, date_hired: ev.target.value }))} className={fld} />
             </div>
             <div>
-              <label className={lbl}>Daily rate (₱)</label>
+              <label className={lbl}>Daily rate / salary (₱)</label>
               <input type="number" min="0" value={form.daily_rate} onChange={ev => setForm(f => ({ ...f, daily_rate: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Allowance (₱/day)</label>
+              <input type="number" min="0" value={form.allowance} onChange={ev => setForm(f => ({ ...f, allowance: ev.target.value }))} className={fld} />
             </div>
             <div>
               <label className={lbl}>Coop saving / cutoff (₱)</label>

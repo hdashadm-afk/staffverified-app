@@ -23,6 +23,7 @@ export default function NewEmployeeButton({
     position: '',
     station_id: '',
     daily_rate: '',
+    allowance: '0',
     employment_type: 'regular',
     has_sil: false,
     coop_saving_amount: '0',
@@ -46,6 +47,7 @@ export default function NewEmployeeButton({
       position: form.position || null,
       station_id: form.station_id || null,
       daily_rate: parseFloat(form.daily_rate) || 0,
+      allowance: parseFloat(form.allowance) || 0,
       employment_type: form.employment_type,
       has_sil: form.has_sil,
       coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
@@ -64,7 +66,7 @@ export default function NewEmployeeButton({
     setOpen(false)
     setForm({
       full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular',
-      has_sil: false, coop_saving_amount: '0', date_hired: '', sss_no: '', philhealth_no: '',
+      allowance: '0', has_sil: false, coop_saving_amount: '0', date_hired: '', sss_no: '', philhealth_no: '',
       pagibig_no: '', tin_no: '', bank_name: '', bank_account_no: '', bank_account_name: '',
     })
     router.refresh()
@@ -163,6 +165,17 @@ export default function NewEmployeeButton({
                     onChange={e => setForm(f => ({ ...f, daily_rate: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Allowance (₱/day)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.allowance}
+                    onChange={e => setForm(f => ({ ...f, allowance: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="0"
                   />
                 </div>
                 <div>
