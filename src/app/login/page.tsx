@@ -59,7 +59,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-md border border-gray-100 p-8">
         <div className="mb-8 flex flex-col items-center text-center">
           <Logo size={56} />
-          <div className="text-2xl font-bold text-gray-900 tracking-tight mt-3">
+          <div className="text-xs font-medium text-gray-400 tracking-wide mt-3">Katiwala AI App</div>
+          <div className="text-2xl font-bold text-gray-900 tracking-tight -mt-0.5">
             Staff<span className="text-brand-blue-600">Verified</span>
           </div>
           <div className="text-sm text-gray-500 mt-1">Staff &amp; Admin for gas stations</div>
