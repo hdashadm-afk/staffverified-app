@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "StaffVerified — HR & Pay",
-  description: "Staff & Admin for gas stations",
+  description: "HR and Payroll for SMEs",
 };
 
 export default function RootLayout({
