@@ -60,7 +60,7 @@ export default function LoginPage() {
         <div className="mb-8 flex flex-col items-center text-center">
           <Logo size={56} />
           <div className="text-2xl font-bold text-gray-900 tracking-tight mt-3">
-            Station<span className="text-red-600">Verified</span>
+            Staff<span className="text-red-600">Verified</span>
           </div>
           <div className="text-sm text-gray-500 mt-1">Staff &amp; Admin for gas stations</div>
           <div className="mt-2 h-1 w-16 rounded-full bg-gradient-to-r from-red-600 to-yellow-400" />

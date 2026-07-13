@@ -51,13 +51,13 @@ export default function Sidebar({ profile }: { profile: any }) {
 
   return (
     <aside className="w-56 bg-white border-r border-gray-100 flex flex-col min-h-screen">
-      {/* Brand — StationVerified (platform) + client org */}
+      {/* Brand — StaffVerified (KOS Phase 2) + client org */}
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
           <Logo size={34} />
           <div className="leading-tight">
             <div className="font-bold text-gray-900 text-[15px] tracking-tight">
-              Station<span className="text-red-600">Verified</span>
+              Staff<span className="text-red-600">Verified</span>
             </div>
             <div className="text-[10px] text-gray-400 -mt-0.5">Staff &amp; Admin</div>
           </div>
