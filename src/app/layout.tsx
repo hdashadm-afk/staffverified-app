@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KOS-StaffVerified — HR & Pay",
+  title: "StaffVerified — HR & Pay",
   description: "Staff & Admin for gas stations",
 };
 

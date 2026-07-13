@@ -55,15 +55,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-gray-50 to-yellow-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-brand-surface px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-md border border-gray-100 p-8">
         <div className="mb-8 flex flex-col items-center text-center">
           <Logo size={56} />
           <div className="text-2xl font-bold text-gray-900 tracking-tight mt-3">
-            KOS-Staff<span className="text-red-600">Verified</span>
+            Staff<span className="text-brand-blue-600">Verified</span>
           </div>
           <div className="text-sm text-gray-500 mt-1">Staff &amp; Admin for gas stations</div>
-          <div className="mt-2 h-1 w-16 rounded-full bg-gradient-to-r from-red-600 to-yellow-400" />
+          <div className="mt-2 h-1 w-16 rounded-full bg-brand-blue-600" />
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -74,7 +74,7 @@ export default function LoginPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
               placeholder="you@example.com"
             />
           </div>
@@ -86,7 +86,7 @@ export default function LoginPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
               placeholder="..."
             />
           </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-50"
+            className="w-full bg-brand-blue-600 hover:bg-brand-blue-700 text-white font-medium rounded-lg py-2.5 text-sm transition-colors disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>

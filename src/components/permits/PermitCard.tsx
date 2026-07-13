@@ -10,7 +10,7 @@ function statusBadge(status: string, dueDate: string) {
   const overdue = status === 'pending' && new Date(dueDate) < new Date()
   if (overdue) return { label: 'Overdue', color: 'bg-red-100 text-red-700', icon: AlertCircle }
   if (status === 'submitted') return { label: 'Submitted', color: 'bg-green-100 text-green-700', icon: CheckCircle }
-  if (status === 'acknowledged') return { label: 'Acknowledged', color: 'bg-red-100 text-red-700', icon: CheckCircle }
+  if (status === 'acknowledged') return { label: 'Acknowledged', color: 'bg-brand-blue-100 text-brand-blue-700', icon: CheckCircle }
   return { label: 'Pending', color: 'bg-yellow-100 text-yellow-700', icon: Clock }
 }
 
@@ -31,6 +31,7 @@ export default function PermitCard({
   const [expanded, setExpanded] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [notes, setNotes] = useState(permit.notes ?? '')
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -39,7 +40,8 @@ export default function PermitCard({
 
   async function markSubmitted() {
     setSubmitting(true)
-    await supabase
+    setError(null)
+    const { error: updateError } = await supabase
       .from('permits')
       .update({
         status: 'submitted',
@@ -49,6 +51,12 @@ export default function PermitCard({
       })
       .eq('id', permit.id)
     setSubmitting(false)
+
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
+
     router.refresh()
   }
 
@@ -103,7 +111,7 @@ export default function PermitCard({
                   onChange={e => setNotes(e.target.value)}
                   placeholder="e.g. reference number, portal screenshot note…"
                   rows={2}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600 resize-none"
                 />
               </div>
               <button
@@ -113,6 +121,7 @@ export default function PermitCard({
               >
                 {submitting ? 'Marking…' : 'Mark as Submitted'}
               </button>
+              {error && <p className="text-xs text-red-600">{error}</p>}
             </div>
           )}
         </div>

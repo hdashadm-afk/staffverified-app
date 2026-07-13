@@ -36,7 +36,7 @@ export default function FeedbackList({ reports }: { reports: FeedbackReport[] })
 
   async function toggleResolved(report: FeedbackReport) {
     setToggling(report.id)
-    await supabase
+    const { error } = await supabase
       .from('feedback_reports')
       .update({
         is_resolved: !report.is_resolved,
@@ -44,6 +44,10 @@ export default function FeedbackList({ reports }: { reports: FeedbackReport[] })
       })
       .eq('id', report.id)
     setToggling(null)
+    if (error) {
+      alert(`Could not update report: ${error.message}`)
+      return
+    }
     router.refresh()
   }
 
@@ -65,7 +69,7 @@ export default function FeedbackList({ reports }: { reports: FeedbackReport[] })
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
               filter === f
-                ? 'bg-red-50 text-red-700'
+                ? 'bg-brand-blue-50 text-brand-blue-700'
                 : 'text-gray-500 hover:bg-gray-100'
             }`}
           >

@@ -38,6 +38,7 @@ export default function DailyAttendance({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [saving, setSaving] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<Record<string, boolean>>({})
+  const [rowErrors, setRowErrors] = useState<Record<string, string>>({})
   const [query, setQuery] = useState('')
 
   // entries already recorded at THIS station for the selected date
@@ -62,13 +63,14 @@ export default function DailyAttendance({
     if (!stationId) return
     const r = getRow(emp.id)
     setSaving(emp.id)
+    setRowErrors(prev => ({ ...prev, [emp.id]: '' }))
     const reg = computeRegularHours(r.in, r.out)
     const ot = computeOvertimeHours(r.in, r.out)
     const nsd = computeNightShiftHours(r.in, r.out)
     const sched = daySchedules[emp.id]
     const late = computeLateMinutes(r.in, sched?.shift_start ?? null)
     const undertime = computeUndertimeMinutes(r.out, sched?.shift_end ?? null)
-    await supabase.from('dtr_entries').upsert(
+    const { error } = await supabase.from('dtr_entries').upsert(
       {
         org_id: orgId,
         employee_id: emp.id,
@@ -86,6 +88,12 @@ export default function DailyAttendance({
       { onConflict: 'employee_id,work_date' }
     )
     setSaving(null)
+
+    if (error) {
+      setRowErrors(prev => ({ ...prev, [emp.id]: error.message }))
+      return
+    }
+
     setSavedAt(prev => ({ ...prev, [emp.id]: true }))
     setTimeout(() => setSavedAt(prev => ({ ...prev, [emp.id]: false })), 1500)
     router.refresh()
@@ -111,11 +119,11 @@ export default function DailyAttendance({
           type="date"
           value={date}
           onChange={e => { setDate(e.target.value); setRows({}) }}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
         />
         <span className="text-sm text-gray-500">{dayName}</span>
         <span className="ml-auto text-sm">
-          <span className="font-semibold text-red-700">{markedCount}</span>
+          <span className="font-semibold text-brand-blue-700">{markedCount}</span>
           <span className="text-gray-500"> marked at {stationName ?? 'your station'} today</span>
         </span>
       </div>
@@ -127,7 +135,7 @@ export default function DailyAttendance({
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search attendant by name…"
-          className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
         />
       </div>
 
@@ -166,11 +174,14 @@ export default function DailyAttendance({
                     <button onClick={() => setRow(emp.id, { in: '08:00', out: '17:00' })}
                       className="text-xs text-gray-500 hover:text-gray-800 mr-3">8–5</button>
                     <button onClick={() => save(emp)} disabled={saving === emp.id || !stationId}
-                      className="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md px-3 py-1.5 disabled:opacity-50">
+                      className="inline-flex items-center gap-1 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-xs font-medium rounded-md px-3 py-1.5 disabled:opacity-50">
                       {saving === emp.id ? <Loader2 className="w-3 h-3 animate-spin" />
                         : savedAt[emp.id] ? <Check className="w-3 h-3" /> : null}
                       {savedAt[emp.id] ? 'Saved' : marked ? 'Update' : 'Save'}
                     </button>
+                    {rowErrors[emp.id] && (
+                      <div className="text-xs text-red-600 mt-1">{rowErrors[emp.id]}</div>
+                    )}
                   </td>
                 </tr>
               )

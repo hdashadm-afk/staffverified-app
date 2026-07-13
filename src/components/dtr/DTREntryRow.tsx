@@ -41,7 +41,7 @@ export default function DTREntryRow({
           type="time"
           value={draft.timeIn}
           onChange={e => onChange({ timeIn: e.target.value })}
-          className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-red-500 w-28"
+          className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 w-28"
         />
       </td>
       <td className="px-4 py-2">
@@ -49,7 +49,7 @@ export default function DTREntryRow({
           type="time"
           value={draft.timeOut}
           onChange={e => onChange({ timeOut: e.target.value })}
-          className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-red-500 w-28"
+          className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 w-28"
         />
       </td>
       <td className="px-4 py-2 text-right tabular-nums text-gray-700 text-xs">

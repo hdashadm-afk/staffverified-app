@@ -70,6 +70,7 @@ export default function HoursBudgetDashboard({
     Object.fromEntries(stations.map(s => [s.id, s.weekly_hours_budget.toString()]))
   )
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -91,16 +92,25 @@ export default function HoursBudgetDashboard({
 
   async function saveBudgets() {
     setSaving(true)
+    setSaveError(null)
+    const failed: string[] = []
     for (const station of stations) {
       const val = parseFloat(budgets[station.id]) || 0
       if (val !== station.weekly_hours_budget) {
-        await supabase
+        const { error } = await supabase
           .from('stations')
           .update({ weekly_hours_budget: val })
           .eq('id', station.id)
+        if (error) failed.push(station.name)
       }
     }
     setSaving(false)
+
+    if (failed.length > 0) {
+      setSaveError(`Could not save budget for: ${failed.join(', ')}`)
+      return
+    }
+
     setEditing(false)
     router.refresh()
   }
@@ -185,7 +195,7 @@ export default function HoursBudgetDashboard({
                     step="0.5"
                     value={budgets[station.id]}
                     onChange={e => setBudgets(prev => ({ ...prev, [station.id]: e.target.value }))}
-                    className="w-24 border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                    className="w-24 border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-600"
                   />
                 </div>
               ) : (
@@ -198,13 +208,16 @@ export default function HoursBudgetDashboard({
 
       {/* Save budgets button */}
       {editing && isOwner && (
-        <button
-          onClick={saveBudgets}
-          disabled={saving}
-          className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {saving ? 'Saving…' : 'Save all budgets'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={saveBudgets}
+            disabled={saving}
+            className="bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save all budgets'}
+          </button>
+          {saveError && <span className="text-xs text-red-600">{saveError}</span>}
+        </div>
       )}
 
       {/* Unassigned hours note */}

@@ -61,7 +61,7 @@ export default function DOEPumpPriceForm({
   if (preview) {
     return (
       <div>
-        <button onClick={() => setPreview(false)} className="mb-4 text-sm text-red-600 hover:underline no-print">
+        <button onClick={() => setPreview(false)} className="mb-4 text-sm text-brand-blue-600 hover:underline no-print">
           ← Back to form
         </button>
 
@@ -146,7 +146,7 @@ export default function DOEPumpPriceForm({
           type="date"
           value={reportDate}
           onChange={e => setReportDate(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
         />
       </div>
 
@@ -173,7 +173,7 @@ export default function DOEPumpPriceForm({
                       placeholder="0.00"
                       value={prices[product]?.[s.id] ?? ''}
                       onChange={e => setPrice(product, s.id, e.target.value)}
-                      className="w-24 border border-gray-200 rounded px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-red-500"
+                      className="w-24 border border-gray-200 rounded px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-brand-blue-600"
                     />
                   </td>
                 ))}
@@ -185,7 +185,7 @@ export default function DOEPumpPriceForm({
 
       <button
         onClick={() => setPreview(true)}
-        className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
+        className="bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
       >
         Preview & Print Report
       </button>

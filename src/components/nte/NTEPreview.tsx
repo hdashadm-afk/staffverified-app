@@ -102,7 +102,7 @@ export default function NTEPreview({ data, orgId }: { data: NTEData; orgId: stri
           <button
             onClick={saveToRecord}
             disabled={saving}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Saving…' : 'Save to Employee Record'}

@@ -15,6 +15,7 @@ export default function NewEmployeeButton({
 }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -40,8 +41,9 @@ export default function NewEmployeeButton({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError(null)
 
-    await supabase.from('employees').insert({
+    const { error: insertError } = await supabase.from('employees').insert({
       org_id: orgId,
       full_name: form.full_name,
       position: form.position || null,
@@ -63,6 +65,12 @@ export default function NewEmployeeButton({
     })
 
     setSaving(false)
+
+    if (insertError) {
+      setError(insertError.message)
+      return
+    }
+
     setOpen(false)
     setForm({
       full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular',
@@ -75,8 +83,8 @@ export default function NewEmployeeButton({
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
+        onClick={() => { setError(null); setOpen(true) }}
+        className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
         Add Employee
@@ -99,7 +107,7 @@ export default function NewEmployeeButton({
                   required
                   value={form.full_name}
                   onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                   placeholder="Juan dela Cruz"
                 />
               </div>
@@ -110,7 +118,7 @@ export default function NewEmployeeButton({
                   <input
                     value={form.position}
                     onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                     placeholder="Cashier"
                   />
                 </div>
@@ -120,7 +128,7 @@ export default function NewEmployeeButton({
                     type="date"
                     value={form.date_hired}
                     onChange={e => setForm(f => ({ ...f, date_hired: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                   />
                 </div>
               </div>
@@ -131,7 +139,7 @@ export default function NewEmployeeButton({
                   <select
                     value={form.station_id}
                     onChange={e => setForm(f => ({ ...f, station_id: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                   >
                     <option value="">— not assigned —</option>
                     {stations.map(s => (
@@ -146,7 +154,7 @@ export default function NewEmployeeButton({
                 <select
                   value={form.employment_type}
                   onChange={e => setForm(f => ({ ...f, employment_type: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                 >
                   <option value="regular">Regular</option>
                   <option value="probationary">Probationary</option>
@@ -163,7 +171,7 @@ export default function NewEmployeeButton({
                     required
                     value={form.daily_rate}
                     onChange={e => setForm(f => ({ ...f, daily_rate: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                     placeholder="600"
                   />
                 </div>
@@ -185,7 +193,7 @@ export default function NewEmployeeButton({
                     min="0"
                     value={form.coop_saving_amount}
                     onChange={e => setForm(f => ({ ...f, coop_saving_amount: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                     placeholder="0"
                   />
                 </div>
@@ -195,39 +203,39 @@ export default function NewEmployeeButton({
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">SSS No.</label>
                   <input value={form.sss_no} onChange={e => setForm(f => ({ ...f, sss_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">PhilHealth No.</label>
                   <input value={form.philhealth_no} onChange={e => setForm(f => ({ ...f, philhealth_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Pag-IBIG No.</label>
                   <input value={form.pagibig_no} onChange={e => setForm(f => ({ ...f, pagibig_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">TIN</label>
                   <input value={form.tin_no} onChange={e => setForm(f => ({ ...f, tin_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Bank name</label>
                   <input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))}
                     placeholder="BDO"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Bank account no.</label>
                   <input value={form.bank_account_no} onChange={e => setForm(f => ({ ...f, bank_account_no: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Account name</label>
                   <input value={form.bank_account_name} onChange={e => setForm(f => ({ ...f, bank_account_name: e.target.value }))}
                     placeholder="Defaults to full name"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
               </div>
 
@@ -241,6 +249,10 @@ export default function NewEmployeeButton({
                 <span className="text-sm text-gray-700">Eligible for SIL (Service Incentive Leave)</span>
               </label>
 
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
+              )}
+
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -252,7 +264,7 @@ export default function NewEmployeeButton({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
+                  className="flex-1 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Add Employee'}
                 </button>

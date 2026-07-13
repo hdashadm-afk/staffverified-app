@@ -29,11 +29,15 @@ export default function DisciplinaryList({ records }: { records: NTERecordWithEm
 
   async function toggleAcknowledged(record: NTERecordWithEmployee) {
     setToggling(record.id)
-    await supabase
+    const { error } = await supabase
       .from('nte_records')
       .update({ acknowledged: !record.acknowledged })
       .eq('id', record.id)
     setToggling(null)
+    if (error) {
+      alert(`Could not update record: ${error.message}`)
+      return
+    }
     router.refresh()
   }
 
@@ -75,7 +79,7 @@ export default function DisciplinaryList({ records }: { records: NTERecordWithEm
             key={f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-              filter === f ? 'bg-red-50 text-red-700' : 'text-gray-500 hover:bg-gray-100'
+              filter === f ? 'bg-brand-blue-50 text-brand-blue-700' : 'text-gray-500 hover:bg-gray-100'
             }`}
           >
             {f === 'pending'
