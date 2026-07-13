@@ -12,6 +12,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, Zap, Download } from 'lucide-react'
+import PayslipView from './Payslip'
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600',
@@ -50,8 +51,11 @@ export default function PayrollRunCard({
   const [loaded, setLoaded] = useState(false)
   const [offCycleDrafts, setOffCycleDrafts] = useState<Record<string, { amount: string; reason: string }>>({})
   const [generateError, setGenerateError] = useState<string | null>(null)
+  const [slipFor, setSlipFor] = useState<(Payslip & { employees: { full_name: string } }) | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  const empById = Object.fromEntries(employees.map(e => [e.id, e]))
 
   const runType = run.run_type ?? 'regular'
 
@@ -487,7 +491,10 @@ export default function PayrollRunCard({
                 <tbody className="divide-y divide-gray-50">
                   {payslips.map(p => (
                     <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="py-2.5 pr-4 font-medium text-gray-800">{(p as any).employees?.full_name}</td>
+                      <td className="py-2.5 pr-4 font-medium text-gray-800">
+                        {(p as any).employees?.full_name}
+                        <button onClick={() => setSlipFor(p)} className="ml-2 text-xs text-red-600 hover:underline no-print">Slip</button>
+                      </td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.basic_pay.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.holiday_pay.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.overtime_pay.toLocaleString()}</td>
@@ -516,6 +523,18 @@ export default function PayrollRunCard({
             </div>
           )}
         </div>
+      )}
+
+      {slipFor && (
+        <PayslipView
+          slip={slipFor as any}
+          fullName={slipFor.employees?.full_name ?? ''}
+          dailyRate={empById[slipFor.employee_id]?.daily_rate ?? 0}
+          employeeNo={null}
+          cutoffStart={run.cutoff_start}
+          cutoffEnd={run.cutoff_end}
+          onClose={() => setSlipFor(null)}
+        />
       )}
     </div>
   )
