@@ -195,7 +195,7 @@ export default function HoursBudgetDashboard({
                     step="0.5"
                     value={budgets[station.id]}
                     onChange={e => setBudgets(prev => ({ ...prev, [station.id]: e.target.value }))}
-                    className="w-24 border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                    className="w-24 border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-600"
                   />
                 </div>
               ) : (
@@ -212,7 +212,7 @@ export default function HoursBudgetDashboard({
           <button
             onClick={saveBudgets}
             disabled={saving}
-            className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+            className="bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save all budgets'}
           </button>

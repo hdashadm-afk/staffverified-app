@@ -56,12 +56,12 @@ function StatCard({
     red:    'bg-red-50 text-red-600 border-red-100',
     yellow: 'bg-yellow-50 text-yellow-600 border-yellow-100',
     green:  'bg-green-50 text-green-600 border-green-100',
-    blue:   'bg-red-50 text-red-600 border-red-100',
+    blue:   'bg-brand-blue-50 text-brand-blue-600 border-brand-blue-100',
   }
   const iconBg = accent ? colors[accent] : 'bg-gray-50 text-gray-500 border-gray-100'
 
   return (
-    <Link href={href} className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm flex items-center gap-4 hover:border-red-200 transition-colors group">
+    <Link href={href} className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-sm flex items-center gap-4 hover:border-brand-blue-200 transition-colors group">
       <div className={`w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0 ${iconBg}`}>
         <Icon className="w-5 h-5" />
       </div>
@@ -70,7 +70,7 @@ function StatCard({
         <div className="text-xl font-semibold text-gray-900 leading-tight">{value}</div>
         {sub && <div className="text-xs text-gray-400 truncate">{sub}</div>}
       </div>
-      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-red-400 transition-colors flex-shrink-0" />
+      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-brand-blue-400 transition-colors flex-shrink-0" />
     </Link>
   )
 }
@@ -182,7 +182,7 @@ export default function DashboardHome({
                 <Link
                   key={p.id}
                   href="/permits"
-                  className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm hover:border-red-200 transition-colors group"
+                  className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm hover:border-brand-blue-200 transition-colors group"
                 >
                   {overdue
                     ? <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
@@ -210,7 +210,7 @@ export default function DashboardHome({
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-gray-700">Station hours — week of {weekLabel}</h2>
-            <Link href="/hours" className="text-xs text-red-600 hover:underline">View all →</Link>
+            <Link href="/hours" className="text-xs text-brand-blue-600 hover:underline">View all →</Link>
           </div>
           <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
             {stations.map((st, i) => {

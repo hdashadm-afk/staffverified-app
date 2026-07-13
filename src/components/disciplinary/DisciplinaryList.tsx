@@ -79,7 +79,7 @@ export default function DisciplinaryList({ records }: { records: NTERecordWithEm
             key={f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-              filter === f ? 'bg-red-50 text-red-700' : 'text-gray-500 hover:bg-gray-100'
+              filter === f ? 'bg-brand-blue-50 text-brand-blue-700' : 'text-gray-500 hover:bg-gray-100'
             }`}
           >
             {f === 'pending'

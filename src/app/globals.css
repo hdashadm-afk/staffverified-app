@@ -10,6 +10,22 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Katiwala ecosystem design system — docs/design-system.md */
+  --color-brand-blue-50: #eef2f6;
+  --color-brand-blue-100: #dbe3ec;
+  --color-brand-blue-200: #b3c3d6;
+  --color-brand-blue-300: #82a0bc;
+  --color-brand-blue-400: #4d7699;
+  --color-brand-blue-500: #2c5478;
+  --color-brand-blue-600: #1e3a5f;
+  --color-brand-blue-700: #182f4c;
+  --color-brand-blue-800: #14263e;
+  --color-brand-blue-900: #101f33;
+  --color-brand-ink: #0f172a;
+  --color-brand-slate: #475569;
+  --color-brand-border: #cbd5e1;
+  --color-brand-surface: #f8fafc;
 }
 
 body {

@@ -70,7 +70,7 @@ export default function NewRemittanceButton({
     <>
       <button
         onClick={() => { setError(null); setOpen(true) }}
-        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
+        className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
         Add Record
@@ -95,7 +95,7 @@ export default function NewRemittanceButton({
                     onClick={() => setForm(f => ({ ...f, agency: a }))}
                     className={`py-2 rounded-lg text-sm font-medium border transition-colors ${
                       form.agency === a
-                        ? 'bg-red-600 text-white border-red-600'
+                        ? 'bg-brand-blue-600 text-white border-brand-blue-600'
                         : 'border-gray-200 text-gray-600 hover:border-gray-300'
                     }`}
                   >
@@ -108,12 +108,12 @@ export default function NewRemittanceButton({
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Period start</label>
                   <input type="date" required value={form.period_start} onChange={e => setForm(f => ({ ...f, period_start: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Period end</label>
                   <input type="date" required value={form.period_end} onChange={e => setForm(f => ({ ...f, period_end: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
               </div>
 
@@ -122,14 +122,14 @@ export default function NewRemittanceButton({
                   <label className="block text-xs font-medium text-gray-600 mb-1">Total deducted (₱)</label>
                   <input type="number" min="0" step="0.01" required value={form.total_deducted}
                     onChange={e => setForm(f => ({ ...f, total_deducted: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                     placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Total remitted (₱)</label>
                   <input type="number" min="0" step="0.01" required value={form.total_remitted}
                     onChange={e => setForm(f => ({ ...f, total_remitted: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                     placeholder="0.00" />
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function NewRemittanceButton({
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Reference / SBR number</label>
                 <input value={form.reference_number} onChange={e => setForm(f => ({ ...f, reference_number: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                   placeholder="Optional — agency confirmation number" />
               </div>
 
@@ -145,7 +145,7 @@ export default function NewRemittanceButton({
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Link to payroll run (optional)</label>
                   <select value={form.payroll_run_id} onChange={e => setForm(f => ({ ...f, payroll_run_id: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600">
                     <option value="">— not linked —</option>
                     {runs.map(r => (
                       <option key={r.id} value={r.id}>
@@ -167,7 +167,7 @@ export default function NewRemittanceButton({
                   Cancel
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50">
+                  className="flex-1 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50">
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>

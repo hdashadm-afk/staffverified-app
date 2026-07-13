@@ -187,7 +187,7 @@ export default function DTRView({
         <select
           value={selectedEmployee}
           onChange={e => setSelectedEmployee(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
         >
           {employees.map(e => (
             <option key={e.id} value={e.id}>{e.full_name}</option>
@@ -254,7 +254,7 @@ export default function DTRView({
         <button
           onClick={saveWeek}
           disabled={saving || !employee}
-          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {saving ? 'Saving…' : savedAt ? 'Saved' : 'Save Week'}
@@ -264,27 +264,27 @@ export default function DTRView({
 
       {/* Summary box */}
       {employee && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-5 py-4 text-sm space-y-1">
-          <div className="font-medium text-red-800 mb-2">Estimated earnings for this cutoff</div>
-          <div className="flex justify-between text-red-700">
+        <div className="bg-brand-blue-50 border border-brand-blue-100 rounded-xl px-5 py-4 text-sm space-y-1">
+          <div className="font-medium text-brand-blue-800 mb-2">Estimated earnings for this cutoff</div>
+          <div className="flex justify-between text-brand-blue-700">
             <span>Basic pay ({totals.regular.toFixed(1)} reg hrs)</span>
             <span>₱{earnings.basicPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
           {earnings.holidayPay > 0 && (
-            <div className="flex justify-between text-red-700">
+            <div className="flex justify-between text-brand-blue-700">
               <span>Holiday pay</span>
               <span>₱{earnings.holidayPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
             </div>
           )}
-          <div className="flex justify-between text-red-700">
+          <div className="flex justify-between text-brand-blue-700">
             <span>Overtime ({totals.ot.toFixed(1)} hrs)</span>
             <span>₱{earnings.overtimePay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
-          <div className="flex justify-between text-red-700">
+          <div className="flex justify-between text-brand-blue-700">
             <span>NSD ({totals.nsd.toFixed(1)} hrs × 10%)</span>
             <span>₱{earnings.nsdPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
-          <div className="flex justify-between text-red-900 font-semibold border-t border-red-200 pt-1.5 mt-1.5">
+          <div className="flex justify-between text-brand-blue-900 font-semibold border-t border-brand-blue-200 pt-1.5 mt-1.5">
             <span>Total</span>
             <span>₱{earnings.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>

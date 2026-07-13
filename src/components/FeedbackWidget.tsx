@@ -142,7 +142,7 @@ export default function FeedbackWidget({
       {/* Floating trigger */}
       <button
         onClick={openModal}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg transition-colors"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-full shadow-lg transition-colors"
       >
         <MessageSquare className="w-4 h-4" />
         Kath
@@ -176,7 +176,7 @@ export default function FeedbackWidget({
                 )}
                 <button
                   onClick={() => setOpen(false)}
-                  className="mt-5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
+                  className="mt-5 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
                 >
                   Close
                 </button>
@@ -210,7 +210,7 @@ export default function FeedbackWidget({
                         onClick={() => setSeverity(opt.value)}
                         className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-colors ${
                           severity === opt.value
-                            ? 'border-red-500 bg-red-50 text-red-700'
+                            ? 'border-brand-blue-500 bg-brand-blue-50 text-brand-blue-700'
                             : 'border-gray-200 text-gray-500 hover:border-gray-300'
                         }`}
                       >
@@ -231,7 +231,7 @@ export default function FeedbackWidget({
                     required
                     rows={4}
                     placeholder="Describe the issue, what you expected, and what actually happened…"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600 resize-none"
                   />
                 </div>
 
@@ -295,7 +295,7 @@ export default function FeedbackWidget({
                 <button
                   type="submit"
                   disabled={saving || !message.trim()}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
+                  className="w-full bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Submitting…' : 'Submit Report'}
                 </button>

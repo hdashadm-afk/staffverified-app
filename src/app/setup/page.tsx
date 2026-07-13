@@ -83,7 +83,7 @@ export default function SetupPage() {
                 value={uuid}
                 onChange={e => setUuid(e.target.value)}
                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 font-mono"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-600 font-mono"
               />
               <p className="text-xs text-gray-400 mt-0.5">Supabase dashboard → Authentication → Users → copy UUID</p>
             </div>
@@ -94,7 +94,7 @@ export default function SetupPage() {
                 required
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-600"
               />
             </div>
 
@@ -105,7 +105,7 @@ export default function SetupPage() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-600"
               />
             </div>
 
@@ -114,7 +114,7 @@ export default function SetupPage() {
               <select
                 value={role}
                 onChange={e => setRole(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 bg-white"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-600 bg-white"
               >
                 {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
@@ -127,7 +127,7 @@ export default function SetupPage() {
                   value={stationId}
                   onChange={e => setStationId(e.target.value)}
                   required
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 bg-white"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-blue-600 bg-white"
                 >
                   <option value="">— pick station —</option>
                   {stations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -138,7 +138,7 @@ export default function SetupPage() {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50"
+              className="w-full bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50"
             >
               {status === 'loading' ? 'Creating…' : 'Create profile'}
             </button>

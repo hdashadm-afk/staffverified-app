@@ -86,7 +86,7 @@ export default function NewPermitButton({
     <>
       <button
         onClick={() => { setError(null); setOpen(true) }}
-        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
+        className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors"
       >
         <Plus className="w-4 h-4" />
         New Submission
@@ -114,7 +114,7 @@ export default function NewPermitButton({
                       onClick={() => applyPreset(p)}
                       className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                         form.permit_type === p.label
-                          ? 'bg-red-50 border-red-300 text-red-700'
+                          ? 'bg-brand-blue-50 border-brand-blue-300 text-brand-blue-700'
                           : 'border-gray-200 text-gray-600 hover:border-gray-300'
                       }`}
                     >
@@ -130,7 +130,7 @@ export default function NewPermitButton({
                   required
                   value={form.permit_type}
                   onChange={e => setForm(f => ({ ...f, permit_type: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                   placeholder="e.g. SSS Remittance"
                 />
               </div>
@@ -141,7 +141,7 @@ export default function NewPermitButton({
                   required
                   value={form.agency}
                   onChange={e => setForm(f => ({ ...f, agency: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                   placeholder="e.g. SSS, BIR, DOE"
                 />
               </div>
@@ -152,7 +152,7 @@ export default function NewPermitButton({
                   <select
                     value={form.station_id}
                     onChange={e => setForm(f => ({ ...f, station_id: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                   >
                     <option value="">All stations</option>
                     {stations.map(s => (
@@ -169,7 +169,7 @@ export default function NewPermitButton({
                   required
                   value={form.due_date}
                   onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                 />
               </div>
 
@@ -178,7 +178,7 @@ export default function NewPermitButton({
                 <select
                   value={form.recurrence_rule}
                   onChange={e => setForm(f => ({ ...f, recurrence_rule: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                 >
                   {RECURRENCE_OPTIONS.map(o => (
                     <option key={o.value} value={o.value}>{o.label}</option>
@@ -192,7 +192,7 @@ export default function NewPermitButton({
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600 resize-none"
                   placeholder="Optional details…"
                 />
               </div>
@@ -212,7 +212,7 @@ export default function NewPermitButton({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
+                  className="flex-1 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium rounded-lg py-2.5 transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Saving…' : 'Save'}
                 </button>

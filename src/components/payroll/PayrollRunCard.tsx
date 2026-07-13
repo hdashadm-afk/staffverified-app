@@ -28,7 +28,7 @@ const RUN_TYPE_LABELS: Record<string, string> = {
 }
 
 const RUN_TYPE_BADGE: Record<string, string> = {
-  regular: 'bg-blue-50 text-blue-700',
+  regular: 'bg-brand-blue-50 text-brand-blue-700',
   '13th_month': 'bg-purple-50 text-purple-700',
   bonus: 'bg-emerald-50 text-emerald-700',
   adjustment: 'bg-amber-50 text-amber-700',
@@ -375,7 +375,7 @@ export default function PayrollRunCard({
             <button
               onClick={generatePayslips}
               disabled={generating}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 mb-4"
+              className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 mb-4"
             >
               <Zap className="w-4 h-4" />
               {generating ? 'Generating…' : 'Generate Payslips from DTR'}
@@ -386,7 +386,7 @@ export default function PayrollRunCard({
             <button
               onClick={generateThirteenthMonth}
               disabled={generating}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 mb-4"
+              className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 mb-4"
             >
               <Zap className="w-4 h-4" />
               {generating ? 'Computing…' : 'Generate 13th Month Payslips'}
@@ -417,7 +417,7 @@ export default function PayrollRunCard({
                               step="0.01"
                               value={draft.amount}
                               onChange={e => setOffCycleDraft(emp.id, { amount: e.target.value })}
-                              className="w-28 border border-gray-200 rounded px-2 py-1 text-sm text-right text-gray-900 focus:outline-none focus:ring-1 focus:ring-red-500"
+                              className="w-28 border border-gray-200 rounded px-2 py-1 text-sm text-right text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600"
                             />
                           </td>
                           <td className="px-4 py-2">
@@ -425,7 +425,7 @@ export default function PayrollRunCard({
                               value={draft.reason}
                               onChange={e => setOffCycleDraft(emp.id, { reason: e.target.value })}
                               placeholder={runType === 'bonus' ? 'e.g. performance bonus' : 'e.g. salary correction'}
-                              className="w-full border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-red-500"
+                              className="w-full border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600"
                             />
                           </td>
                         </tr>
@@ -437,7 +437,7 @@ export default function PayrollRunCard({
               <button
                 onClick={saveOffCycleAmounts}
                 disabled={generating}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
               >
                 <Zap className="w-4 h-4" />
                 {generating ? 'Saving…' : 'Save Payslips'}

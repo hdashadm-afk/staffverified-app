@@ -1,11 +1,11 @@
-// StaffVerified logo mark — red badge + yellow verified check (Helium red/yellow theme)
+// StaffVerified logo mark — Brand Blue shield + white verified check
 export default function Logo({ size = 36 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="StaffVerified">
-      {/* red shield/badge */}
+      {/* shield/badge */}
       <path
         d="M24 3l16 5v13c0 11-7 19-16 24C15 40 8 32 8 21V8l16-5z"
-        fill="#DC2626"
+        fill="#1E3A5F"
       />
       {/* inner highlight */}
       <path
@@ -13,10 +13,10 @@ export default function Logo({ size = 36 }: { size?: number }) {
         fill="url(#g)"
         fillOpacity="0.18"
       />
-      {/* yellow verified check */}
+      {/* verified check */}
       <path
         d="M16.5 24.5l5 5 10-11"
-        stroke="#FACC15"
+        stroke="#FFFFFF"
         strokeWidth="4"
         strokeLinecap="round"
         strokeLinejoin="round"
