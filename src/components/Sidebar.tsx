@@ -57,7 +57,7 @@ export default function Sidebar({ profile }: { profile: any }) {
           <Logo size={34} />
           <div className="leading-tight">
             <div className="font-bold text-gray-900 text-[15px] tracking-tight">
-              Staff<span className="text-red-600">Verified</span>
+KOS-Staff<span className="text-red-600">Verified</span>
             </div>
             <div className="text-[10px] text-gray-400 -mt-0.5">Staff &amp; Admin</div>
           </div>
