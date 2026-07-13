@@ -11,7 +11,7 @@ import {
 } from '@/lib/contribution-tables'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, ChevronUp, Zap } from 'lucide-react'
+import { ChevronDown, ChevronUp, Zap, Download } from 'lucide-react'
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600',
@@ -303,6 +303,33 @@ export default function PayrollRunCard({
 
   const totalNetPay = payslips.reduce((s, p) => s + p.net_pay, 0)
 
+  // Export the payslip table to CSV (opens directly in Excel).
+  function exportExcel() {
+    const headers = [
+      'Employee', 'Basic', 'Holiday', 'OT', 'NSD', 'Allowances', 'Earnings',
+      'SSS', 'PhilHealth', 'HDMF', 'WTax', 'Coop', 'Deductions', 'Net Pay',
+    ]
+    const esc = (v: string | number) => {
+      const s = String(v)
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const body = payslips.map(p => [
+      (p as { employees?: { full_name: string } }).employees?.full_name ?? '',
+      p.basic_pay, p.holiday_pay, p.overtime_pay, p.night_shift_diff, p.allowances,
+      p.total_earnings, p.sss_contribution, p.philhealth_contribution, p.hdmf_contribution,
+      p.withholding_tax, p.coop_saving, p.total_deductions, p.net_pay,
+    ])
+    const totalRow = ['TOTAL NET PAY', '', '', '', '', '', '', '', '', '', '', '', '', totalNetPay]
+    const csv = [headers, ...body, totalRow].map(r => r.map(esc).join(',')).join('\r\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `payroll_${run.cutoff_start}_to_${run.cutoff_end}${run.stations?.name ? '_' + run.stations.name.replace(/[^a-z0-9]+/gi, '') : ''}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
       <div
@@ -422,6 +449,18 @@ export default function PayrollRunCard({
 
           {payslips.length === 0 && !generating && (
             <div className="text-sm text-gray-400 py-4">No payslips yet.</div>
+          )}
+
+          {payslips.length > 0 && (
+            <div className="flex justify-end mb-3">
+              <button
+                onClick={exportExcel}
+                className="flex items-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Export to Excel
+              </button>
+            </div>
           )}
 
           {payslips.length > 0 && (
