@@ -52,7 +52,7 @@ export default function DTRView({
       .map(e => [e.work_date, e])
   )
 
-  async function upsertEntry(workDate: string, timeIn: string, timeOut: string, flags: {
+  async function upsertEntry(workDate: string, timeIn: string, timeOut: string, stationId: string, flags: {
     isHolidayRegular: boolean
     isHolidaySpecial: boolean
     notes: string
@@ -73,7 +73,7 @@ export default function DTRView({
         created_at: base.created_at ?? new Date().toISOString(),
         org_id: orgId,
         employee_id: selectedEmployee,
-        station_id: employee?.station_id ?? null,
+        station_id: stationId || null,
         work_date: workDate,
         time_in: timeIn || null,
         time_out: timeOut || null,
@@ -94,7 +94,7 @@ export default function DTRView({
     await supabase.from('dtr_entries').upsert({
       org_id: orgId,
       employee_id: selectedEmployee,
-      station_id: employee?.station_id ?? null,
+      station_id: stationId || null,
       work_date: workDate,
       time_in: timeIn || null,
       time_out: timeOut || null,
@@ -168,6 +168,7 @@ export default function DTRView({
               <th className="text-right px-4 py-3 font-medium">Reg hrs</th>
               <th className="text-right px-4 py-3 font-medium">OT hrs</th>
               <th className="text-right px-4 py-3 font-medium">NSD hrs</th>
+              <th className="text-left px-4 py-3 font-medium">Station</th>
               <th className="text-left px-4 py-3 font-medium">Flags</th>
               <th className="px-4 py-3" />
             </tr>
@@ -178,6 +179,8 @@ export default function DTRView({
                 key={date}
                 date={date}
                 entry={entryMap[date] ?? null}
+                stations={stations}
+                defaultStationId={employee?.station_id ?? null}
                 autoOpen={nextToOpen === date}
                 onAutoOpened={() => setNextToOpen(null)}
                 onSave={upsertEntry}
@@ -190,7 +193,7 @@ export default function DTRView({
               <td className="px-4 py-3 text-right">{totals.regular.toFixed(1)}</td>
               <td className="px-4 py-3 text-right">{totals.ot.toFixed(1)}</td>
               <td className="px-4 py-3 text-right">{totals.nsd.toFixed(1)}</td>
-              <td colSpan={2} />
+              <td colSpan={3} />
             </tr>
           </tfoot>
         </table>

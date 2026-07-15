@@ -26,7 +26,7 @@ export default async function PayrollPage() {
 
   const { data: employees } = await supabase
     .from('employees')
-    .select('id, full_name, daily_rate, has_sil, coop_saving_amount, station_id')
+    .select('id, full_name, daily_rate, has_sil, coop_saving_amount, station_id, allowance')
     .eq('org_id', profile!.org_id)
     .eq('is_active', true)
 

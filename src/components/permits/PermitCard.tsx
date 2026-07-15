@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Permit, CompliancePenaltyRate, PermitHistoryEntry } from '@/types/database'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp, History } from 'lucide-react'
+import { CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp, History, Pencil } from 'lucide-react'
 
 function statusBadge(status: string, dueDate: string) {
   const overdue = status === 'pending' && new Date(dueDate) < new Date()
@@ -37,6 +37,7 @@ export default function PermitCard({
 }) {
   const [expanded, setExpanded] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [editingSubmitted, setEditingSubmitted] = useState(false)
   const [notes, setNotes] = useState(permit.notes ?? '')
   const [amountDue, setAmountDue] = useState(permit.amount_due?.toString() ?? '')
   const [amountPaid, setAmountPaid] = useState(permit.amount_paid?.toString() ?? permit.amount_due?.toString() ?? '')
@@ -100,11 +101,12 @@ export default function PermitCard({
       from_status: permit.status,
       to_status: 'submitted',
       amount_paid: amountPaid ? Number(amountPaid) : null,
-      notes: notes || null,
+      notes: editingSubmitted ? `[Correction] ${notes || 'entry edited'}` : (notes || null),
       changed_by: userId,
     })
 
     setSubmitting(false)
+    setEditingSubmitted(false)
     router.refresh()
   }
 
@@ -144,10 +146,25 @@ export default function PermitCard({
             <p className="text-sm text-gray-600">{permit.description}</p>
           )}
 
-          {permit.status === 'submitted' && permit.resolved_at && (
-            <div className="text-xs text-gray-500">
-              Resolved {new Date(permit.resolved_at).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}
-              {permit.amount_paid != null && ` · Paid ₱${permit.amount_paid.toLocaleString()}`}
+          {permit.status === 'submitted' && permit.resolved_at && !editingSubmitted && (
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs text-gray-500">
+                Resolved {new Date(permit.resolved_at).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}
+                {permit.amount_paid != null && ` · Paid ₱${permit.amount_paid.toLocaleString()}`}
+              </div>
+              <button
+                onClick={() => {
+                  setAmountDue(permit.amount_due?.toString() ?? '')
+                  setAmountPaid(permit.amount_paid?.toString() ?? '')
+                  setNotes('')
+                  setEditingSubmitted(true)
+                }}
+                className="flex items-center gap-1 text-gray-400 hover:text-gray-700 transition-colors text-xs shrink-0"
+                title="Wrong entry? Edit it"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit</span>
+              </button>
             </div>
           )}
 
@@ -158,8 +175,13 @@ export default function PermitCard({
             </div>
           )}
 
-          {permit.status !== 'submitted' && permit.status !== 'acknowledged' && (
+          {((permit.status !== 'submitted' && permit.status !== 'acknowledged') || editingSubmitted) && (
             <div className="space-y-3">
+              {editingSubmitted && (
+                <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs text-amber-700">
+                  Correcting a submitted entry — update the fields below and save. This will be logged in the history.
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Amount due (₱, optional)</label>
@@ -190,22 +212,35 @@ export default function PermitCard({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Notes (optional)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  {editingSubmitted ? 'Reason for correction' : 'Notes (optional)'}
+                </label>
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  placeholder="e.g. reference number, portal screenshot note…"
+                  placeholder={editingSubmitted ? 'e.g. wrong amount entered, fixed to match receipt' : 'e.g. reference number, portal screenshot note…'}
                   rows={2}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
                 />
               </div>
-              <button
-                onClick={markResolved}
-                disabled={submitting}
-                className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
-              >
-                {submitting ? 'Resolving…' : 'Resolve now'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={markResolved}
+                  disabled={submitting}
+                  className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {submitting ? 'Saving…' : editingSubmitted ? 'Save correction' : 'Resolve now'}
+                </button>
+                {editingSubmitted && (
+                  <button
+                    onClick={() => setEditingSubmitted(false)}
+                    disabled={submitting}
+                    className="border border-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

@@ -30,8 +30,11 @@ export default function NTEPreview({ data, orgId }: { data: NTEData; orgId: stri
     setSaveError(null)
 
     try {
-      // Lazy-load PDF libs — keeps initial bundle lean
-      const html2canvas = (await import('html2canvas')).default
+      // Lazy-load PDF libs — keeps initial bundle lean.
+      // html2canvas-pro (not html2canvas) — the original chokes with
+      // "unsupported color function oklch" since Tailwind v4's default
+      // palette is defined in oklch(); the -pro fork supports it.
+      const html2canvas = (await import('html2canvas-pro')).default
       const { jsPDF } = await import('jspdf')
 
       // Capture the NTE document element

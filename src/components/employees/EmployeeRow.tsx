@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Employee, Station } from '@/types/database'
+import { Employee, EmploymentType, Station } from '@/types/database'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Pencil, X, Check } from 'lucide-react'
@@ -18,25 +18,21 @@ export default function EmployeeRow({
   const router = useRouter()
   const supabase = createClient()
 
-  const e = employee as Employee & {
-    employment_type?: string
-    date_hired?: string | null
-    sss_no?: string | null
-    philhealth_no?: string | null
-    pagibig_no?: string | null
-    tin_no?: string | null
-  }
   const [form, setForm] = useState({
     full_name: employee.full_name,
     position: employee.position ?? '',
     station_id: employee.station_id ?? '',
     daily_rate: employee.daily_rate.toString(),
-    employment_type: e.employment_type ?? 'regular',
-    date_hired: e.date_hired ?? '',
-    sss_no: e.sss_no ?? '',
-    philhealth_no: e.philhealth_no ?? '',
-    pagibig_no: e.pagibig_no ?? '',
-    tin_no: e.tin_no ?? '',
+    employment_type: employee.employment_type ?? 'regular',
+    date_hired: employee.date_hired ?? '',
+    sss_no: employee.sss_no ?? '',
+    philhealth_no: employee.philhealth_no ?? '',
+    pagibig_no: employee.pagibig_no ?? '',
+    tin_no: employee.tin_no ?? '',
+    bank_name: employee.bank_name ?? '',
+    bank_account_no: employee.bank_account_no ?? '',
+    bank_account_name: employee.bank_account_name ?? '',
+    allowance: employee.allowance.toString(),
     has_sil: employee.has_sil,
     coop_saving_amount: employee.coop_saving_amount.toString(),
     is_active: employee.is_active,
@@ -57,6 +53,10 @@ export default function EmployeeRow({
         philhealth_no: form.philhealth_no || null,
         pagibig_no: form.pagibig_no || null,
         tin_no: form.tin_no || null,
+        bank_name: form.bank_name || null,
+        bank_account_no: form.bank_account_no || null,
+        bank_account_name: form.bank_account_name || null,
+        allowance: parseFloat(form.allowance) || 0,
         has_sil: form.has_sil,
         coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
         is_active: form.is_active,
@@ -93,7 +93,7 @@ export default function EmployeeRow({
 
             <div>
               <label className={lbl}>Employment type</label>
-              <select value={form.employment_type} onChange={ev => setForm(f => ({ ...f, employment_type: ev.target.value }))} className={fld}>
+              <select value={form.employment_type} onChange={ev => setForm(f => ({ ...f, employment_type: ev.target.value as EmploymentType }))} className={fld}>
                 <option value="regular">Regular</option>
                 <option value="probationary">Probationary</option>
                 <option value="ojt">OJT</option>
@@ -127,6 +127,23 @@ export default function EmployeeRow({
             <div>
               <label className={lbl}>TIN</label>
               <input value={form.tin_no} onChange={ev => setForm(f => ({ ...f, tin_no: ev.target.value }))} className={fld} />
+            </div>
+
+            <div>
+              <label className={lbl}>Allowance (₱/cutoff)</label>
+              <input type="number" min="0" value={form.allowance} onChange={ev => setForm(f => ({ ...f, allowance: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Bank name</label>
+              <input value={form.bank_name} onChange={ev => setForm(f => ({ ...f, bank_name: ev.target.value }))} className={fld} placeholder="BDO" />
+            </div>
+            <div>
+              <label className={lbl}>Bank account no.</label>
+              <input value={form.bank_account_no} onChange={ev => setForm(f => ({ ...f, bank_account_no: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Bank account name</label>
+              <input value={form.bank_account_name} onChange={ev => setForm(f => ({ ...f, bank_account_name: ev.target.value }))} className={fld} placeholder="Defaults to full name" />
             </div>
 
             <div className="flex items-center gap-2">

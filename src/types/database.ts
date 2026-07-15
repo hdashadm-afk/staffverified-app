@@ -32,6 +32,8 @@ export interface UserProfile {
   created_at: string
 }
 
+export type EmploymentType = 'regular' | 'probationary' | 'ojt'
+
 export interface Employee {
   id: string
   org_id: string
@@ -43,6 +45,15 @@ export interface Employee {
   coop_saving_amount: number
   is_active: boolean
   date_hired: string | null
+  employment_type: EmploymentType
+  sss_no: string | null
+  philhealth_no: string | null
+  pagibig_no: string | null
+  tin_no: string | null
+  bank_name: string | null
+  bank_account_no: string | null
+  bank_account_name: string | null
+  allowance: number
   created_at: string
 }
 
@@ -103,6 +114,11 @@ export interface Payslip {
   gas_shortage_note: string | null
   sss_loan: number
   pagibig_loan: number
+  withholding_tax: number
+  bonus: number
+  thirteenth_month_pay: number
+  salary_adjustment: number
+  salary_adjustment_reason: string | null
   total_deductions: number
   net_pay: number
   variance_amount: number

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { PayrollRun, Employee, Payslip, DTREntry } from '@/types/database'
 import { OrgRates, computeOvertimePay, computeNSD, computeHolidayPay, computeLateUndertimeDeduction } from '@/lib/payroll-math'
 import { computeAllContributions } from '@/lib/contribution-tables'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, ChevronUp, Zap } from 'lucide-react'
+import { ChevronDown, ChevronUp, Zap, Pencil, Check, X } from 'lucide-react'
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600',
@@ -21,7 +21,7 @@ export default function PayrollRunCard({
   orgRates,
 }: {
   run: PayrollRun & { stations: { name: string } | null }
-  employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'coop_saving_amount' | 'station_id'>[]
+  employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'coop_saving_amount' | 'station_id' | 'allowance'>[]
   orgId: string
   orgRates: OrgRates
 }) {
@@ -29,8 +29,86 @@ export default function PayrollRunCard({
   const [generating, setGenerating] = useState(false)
   const [payslips, setPayslips] = useState<(Payslip & { employees: { full_name: string } })[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [editingPayslipId, setEditingPayslipId] = useState<string | null>(null)
+  const [savingAdjustments, setSavingAdjustments] = useState(false)
+  const [adjForm, setAdjForm] = useState({
+    bonus: '0',
+    thirteenth_month_pay: '0',
+    salary_adjustment: '0',
+    salary_adjustment_reason: '',
+    sss_loan: '0',
+    pagibig_loan: '0',
+    gas_shortage: '0',
+    gas_shortage_note: '',
+    uniform_deduction: '0',
+    withholding_tax: '0',
+  })
   const router = useRouter()
   const supabase = createClient()
+
+  function startAdjust(p: Payslip) {
+    setAdjForm({
+      bonus: p.bonus.toString(),
+      thirteenth_month_pay: p.thirteenth_month_pay.toString(),
+      salary_adjustment: p.salary_adjustment.toString(),
+      salary_adjustment_reason: p.salary_adjustment_reason ?? '',
+      sss_loan: p.sss_loan.toString(),
+      pagibig_loan: p.pagibig_loan.toString(),
+      gas_shortage: p.gas_shortage.toString(),
+      gas_shortage_note: p.gas_shortage_note ?? '',
+      uniform_deduction: p.uniform_deduction.toString(),
+      withholding_tax: p.withholding_tax.toString(),
+    })
+    setEditingPayslipId(p.id)
+  }
+
+  async function saveAdjustments(p: Payslip) {
+    setSavingAdjustments(true)
+    const bonus = parseFloat(adjForm.bonus) || 0
+    const thirteenthMonth = parseFloat(adjForm.thirteenth_month_pay) || 0
+    const salaryAdjustment = parseFloat(adjForm.salary_adjustment) || 0
+    const sssLoan = parseFloat(adjForm.sss_loan) || 0
+    const pagibigLoan = parseFloat(adjForm.pagibig_loan) || 0
+    const gasShortage = parseFloat(adjForm.gas_shortage) || 0
+    const uniformDeduction = parseFloat(adjForm.uniform_deduction) || 0
+    const withholdingTax = parseFloat(adjForm.withholding_tax) || 0
+
+    // Earnings side: basic/holiday/OT/NSD/allowances minus late-undertime are computed
+    // from DTR and untouched here; bonus/13th month/adjustment are the manual add-ons.
+    const totalEarnings =
+      p.basic_pay + p.holiday_pay + p.overtime_pay + p.night_shift_diff + p.sil_pay +
+      p.allowances + p.add_back - p.late_undertime_deduction +
+      bonus + thirteenthMonth + salaryAdjustment
+
+    const totalDeductions =
+      p.sss_contribution + p.philhealth_contribution + p.hdmf_contribution + p.coop_saving +
+      uniformDeduction + gasShortage + sssLoan + pagibigLoan + withholdingTax
+
+    const netPay = totalEarnings - totalDeductions
+
+    const updates = {
+      bonus,
+      thirteenth_month_pay: thirteenthMonth,
+      salary_adjustment: salaryAdjustment,
+      salary_adjustment_reason: adjForm.salary_adjustment_reason || null,
+      sss_loan: sssLoan,
+      pagibig_loan: pagibigLoan,
+      gas_shortage: gasShortage,
+      gas_shortage_note: adjForm.gas_shortage_note || null,
+      uniform_deduction: uniformDeduction,
+      withholding_tax: withholdingTax,
+      total_earnings: Math.round(totalEarnings * 100) / 100,
+      total_deductions: Math.round(totalDeductions * 100) / 100,
+      net_pay: Math.round(netPay * 100) / 100,
+    }
+
+    await supabase.from('payslips').update(updates).eq('id', p.id)
+
+    setPayslips(prev => prev.map(row => (row.id === p.id ? { ...row, ...updates } : row)))
+    setSavingAdjustments(false)
+    setEditingPayslipId(null)
+    router.refresh()
+  }
 
   async function loadPayslips() {
     const { data } = await supabase
@@ -86,7 +164,7 @@ export default function PayrollRunCard({
         lateUndertime += computeLateUndertimeDeduction(dailyRate, e.late_minutes, e.undertime_minutes)
       }
 
-      const totalEarnings = basicPay + holidayPay + overtimePay + nsdPay - lateUndertime + emp.coop_saving_amount * 0 // add_back = 0 initially
+      const totalEarnings = basicPay + holidayPay + overtimePay + nsdPay - lateUndertime + emp.allowance
 
       // Monthly contributions (SSS/PhilHealth/Pag-IBIG) are deducted once per month.
       // Under weekly cutoffs (Thu–Wed), apply them on the FIRST cutoff of the month
@@ -113,7 +191,7 @@ export default function PayrollRunCard({
         overtime_pay: Math.round(overtimePay * 100) / 100,
         late_undertime_deduction: Math.round(lateUndertime * 100) / 100,
         night_shift_diff: Math.round(nsdPay * 100) / 100,
-        allowances: 0,
+        allowances: emp.allowance,
         add_back: 0,
         total_earnings: Math.round(totalEarnings * 100) / 100,
         sss_contribution: contribs.sss_employee,
@@ -124,6 +202,10 @@ export default function PayrollRunCard({
         gas_shortage: 0,
         sss_loan: 0,
         pagibig_loan: 0,
+        withholding_tax: 0,
+        bonus: 0,
+        thirteenth_month_pay: 0,
+        salary_adjustment: 0,
         total_deductions: Math.round(totalDeductions * 100) / 100,
         net_pay: Math.round(netPay * 100) / 100,
         variance_amount: 0,
@@ -203,11 +285,13 @@ export default function PayrollRunCard({
                     <th className="text-right py-2 font-medium">Coop</th>
                     <th className="text-right py-2 font-medium">Deductions</th>
                     <th className="text-right py-2 font-medium text-green-700">Net Pay</th>
+                    <th className="py-2" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {payslips.map(p => (
-                    <tr key={p.id} className="hover:bg-gray-50">
+                    <Fragment key={p.id}>
+                    <tr className="hover:bg-gray-50">
                       <td className="py-2.5 pr-4 font-medium text-gray-800">{(p as any).employees?.full_name}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.basic_pay.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.holiday_pay.toLocaleString()}</td>
@@ -220,7 +304,89 @@ export default function PayrollRunCard({
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-500 text-xs">₱{p.coop_saving.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-red-600">-₱{p.total_deductions.toLocaleString()}</td>
                       <td className="py-2.5 pl-2 text-right tabular-nums font-semibold text-green-700">₱{p.net_pay.toLocaleString()}</td>
+                      <td className="py-2.5 pl-2 text-right">
+                        {editingPayslipId !== p.id && (
+                          <button
+                            onClick={() => startAdjust(p)}
+                            title="Add bonus, 13th month, loans, shortage, adjustments"
+                            className="text-gray-400 hover:text-gray-700 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </td>
                     </tr>
+                    {editingPayslipId === p.id && (
+                      <tr className="bg-red-50/60">
+                        <td colSpan={13} className="px-3 py-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Bonus (₱)</label>
+                              <input type="number" value={adjForm.bonus} onChange={e => setAdjForm(f => ({ ...f, bonus: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">13th month pay (₱)</label>
+                              <input type="number" value={adjForm.thirteenth_month_pay} onChange={e => setAdjForm(f => ({ ...f, thirteenth_month_pay: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Salary adjustment (₱, +/-)</label>
+                              <input type="number" value={adjForm.salary_adjustment} onChange={e => setAdjForm(f => ({ ...f, salary_adjustment: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Adjustment reason</label>
+                              <input value={adjForm.salary_adjustment_reason} onChange={e => setAdjForm(f => ({ ...f, salary_adjustment_reason: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">SSS loan (₱)</label>
+                              <input type="number" value={adjForm.sss_loan} onChange={e => setAdjForm(f => ({ ...f, sss_loan: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Pag-IBIG loan (₱)</label>
+                              <input type="number" value={adjForm.pagibig_loan} onChange={e => setAdjForm(f => ({ ...f, pagibig_loan: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Shortage (₱)</label>
+                              <input type="number" value={adjForm.gas_shortage} onChange={e => setAdjForm(f => ({ ...f, gas_shortage: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Shortage note</label>
+                              <input value={adjForm.gas_shortage_note} onChange={e => setAdjForm(f => ({ ...f, gas_shortage_note: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Uniform deduction (₱)</label>
+                              <input type="number" value={adjForm.uniform_deduction} onChange={e => setAdjForm(f => ({ ...f, uniform_deduction: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Withholding tax (₱)</label>
+                              <input type="number" value={adjForm.withholding_tax} onChange={e => setAdjForm(f => ({ ...f, withholding_tax: e.target.value }))}
+                                className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-red-500" />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 justify-end mt-4">
+                            <button onClick={() => setEditingPayslipId(null)} disabled={savingAdjustments}
+                              className="flex items-center gap-1 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg px-4 py-2 hover:bg-gray-50 disabled:opacity-50">
+                              <X className="w-4 h-4" /> Cancel
+                            </button>
+                            <button onClick={() => saveAdjustments(p)} disabled={savingAdjustments}
+                              className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50">
+                              <Check className="w-4 h-4" /> {savingAdjustments ? 'Saving…' : 'Save'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   ))}
                 </tbody>
                 <tfoot>
@@ -229,6 +395,7 @@ export default function PayrollRunCard({
                     <td className="py-2.5 pl-2 text-right tabular-nums text-green-700">
                       ₱{totalNetPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
+                    <td />
                   </tr>
                 </tfoot>
               </table>
