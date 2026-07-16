@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Pencil, Undo2 } from 'lucide-react'
 
 function statusBadge(status: string, dueDate: string) {
-  const overdue = status === 'pending' && new Date(dueDate) < new Date()
+  const overdue = status === 'pending' && new Date(dueDate + 'T00:00:00') < new Date()
   if (overdue) return { label: 'Overdue', color: 'bg-red-100 text-red-700', icon: AlertCircle }
   if (status === 'submitted') return { label: 'Submitted', color: 'bg-green-100 text-green-700', icon: CheckCircle }
   if (status === 'acknowledged') return { label: 'Acknowledged', color: 'bg-brand-blue-100 text-brand-blue-700', icon: CheckCircle }
@@ -15,7 +15,7 @@ function statusBadge(status: string, dueDate: string) {
 }
 
 function daysUntil(date: string) {
-  const diff = Math.ceil((new Date(date).getTime() - Date.now()) / 86400000)
+  const diff = Math.ceil((new Date(date + 'T00:00:00').getTime() - Date.now()) / 86400000)
   if (diff < 0) return `${Math.abs(diff)}d overdue`
   if (diff === 0) return 'Due today'
   return `Due in ${diff}d`
@@ -117,8 +117,8 @@ export default function PermitCard({
 
         <div className="flex items-center gap-4">
           <div className="text-xs text-gray-500 text-right">
-            <div>{new Date(permit.due_date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-            <div className={permit.status === 'pending' && new Date(permit.due_date) < new Date() ? 'text-red-500 font-medium' : 'text-gray-400'}>
+            <div>{new Date(permit.due_date + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+            <div className={permit.status === 'pending' && new Date(permit.due_date + 'T00:00:00') < new Date() ? 'text-red-500 font-medium' : 'text-gray-400'}>
               {daysUntil(permit.due_date)}
             </div>
           </div>

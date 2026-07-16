@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DTREntry, DTRCutoffStatus, Employee, Schedule, Station } from '@/types/database'
+import { DTREntry, DTRCutoffStatus, DTRHourOverrideField, Employee, Schedule, Station } from '@/types/database'
 import DTREntryRow, { DTRRowDraft } from './DTREntryRow'
 import {
   computeRegularHours,
@@ -31,7 +31,10 @@ function generateDates(start: string, end: string): string[] {
 // Roles that can reopen a payday-locked DTR — same set that can write dtr_cutoff_status (see migration 013).
 const REOPEN_ROLES = ['owner', 'assistant', 'ops_officer', 'ceo']
 
-const emptyDraft: DTRRowDraft = { timeIn: '', timeOut: '', isHolidayRegular: false, isHolidaySpecial: false }
+const emptyDraft: DTRRowDraft = {
+  timeIn: '', timeOut: '', isHolidayRegular: false, isHolidaySpecial: false,
+  otOverride: null, nsdOverride: null,
+}
 
 export default function DTRView({
   employees,
@@ -57,6 +60,7 @@ export default function DTRView({
   const [drafts, setDrafts] = useState<Record<string, DTRRowDraft>>({})
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState<'draft' | 'final' | null>(null)
+  const [overrideReason, setOverrideReason] = useState('')
   const [savedAt, setSavedAt] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [reopening, setReopening] = useState(false)
@@ -133,10 +137,13 @@ export default function DTRView({
             timeOut: e.time_out ?? '',
             isHolidayRegular: e.is_holiday_regular,
             isHolidaySpecial: e.is_holiday_special,
+            otOverride: e.overtime_hours_override ? e.overtime_hours : null,
+            nsdOverride: e.night_shift_hours_override ? e.night_shift_hours : null,
           }
         : { ...emptyDraft }
     }
     setDrafts(next)
+    setOverrideReason('')
     setSavedAt(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries])
@@ -147,10 +154,28 @@ export default function DTRView({
     setSavedAt(false)
   }
 
+  function effectiveOt(draft: DTRRowDraft): number {
+    return draft.otOverride ?? computeOvertimeHours(draft.timeIn, draft.timeOut)
+  }
+  function effectiveNsd(draft: DTRRowDraft): number {
+    return draft.nsdOverride ?? computeNightShiftHours(draft.timeIn, draft.timeOut)
+  }
+
+  const hasAnyOverride = dates.some(date => {
+    const d = drafts[date]
+    return d && (d.otOverride !== null || d.nsdOverride !== null)
+  })
+
   async function save(finalize: boolean) {
     if (!employee || locked) return
     setSaving(finalize ? 'final' : 'draft')
     setSaveError(null)
+
+    // Per-day audit entries for overrides that are new or changed vs. what's
+    // currently saved — computed before the upsert so we still have the
+    // "before" state to compare against.
+    type PendingAudit = { work_date: string; field: DTRHourOverrideField; original_value: number; new_value: number }
+    const pendingAudits: PendingAudit[] = []
 
     const rows = dates
       .map(date => {
@@ -158,11 +183,25 @@ export default function DTRView({
         if (!draft.timeIn && !draft.timeOut && !draft.isHolidayRegular && !draft.isHolidaySpecial) return null
 
         const reg = computeRegularHours(draft.timeIn, draft.timeOut)
-        const ot = computeOvertimeHours(draft.timeIn, draft.timeOut)
-        const nsd = computeNightShiftHours(draft.timeIn, draft.timeOut)
+        const computedOt = computeOvertimeHours(draft.timeIn, draft.timeOut)
+        const computedNsd = computeNightShiftHours(draft.timeIn, draft.timeOut)
+        const ot = draft.otOverride ?? computedOt
+        const nsd = draft.nsdOverride ?? computedNsd
         const schedule = scheduleMap[date]
         const late = computeLateMinutes(draft.timeIn, schedule?.shift_start ?? null)
         const undertime = computeUndertimeMinutes(draft.timeOut, schedule?.shift_end ?? null)
+
+        const prevEntry = entryMap[date]
+        const otChanged = draft.otOverride !== null
+          && (!prevEntry?.overtime_hours_override || prevEntry.overtime_hours !== draft.otOverride)
+        if (otChanged) {
+          pendingAudits.push({ work_date: date, field: 'overtime', original_value: computedOt, new_value: ot })
+        }
+        const nsdChanged = draft.nsdOverride !== null
+          && (!prevEntry?.night_shift_hours_override || prevEntry.night_shift_hours !== draft.nsdOverride)
+        if (nsdChanged) {
+          pendingAudits.push({ work_date: date, field: 'night_shift', original_value: computedNsd, new_value: nsd })
+        }
 
         return {
           org_id: orgId,
@@ -174,6 +213,8 @@ export default function DTRView({
           regular_hours: reg,
           overtime_hours: ot,
           night_shift_hours: nsd,
+          overtime_hours_override: draft.otOverride !== null,
+          night_shift_hours_override: draft.nsdOverride !== null,
           late_minutes: late,
           undertime_minutes: undertime,
           is_holiday_regular: draft.isHolidayRegular,
@@ -185,11 +226,35 @@ export default function DTRView({
       .filter((r): r is NonNullable<typeof r> => r !== null)
 
     if (rows.length > 0) {
-      const { error } = await supabase.from('dtr_entries').upsert(rows, { onConflict: 'employee_id,work_date' })
+      const { data: savedRows, error } = await supabase
+        .from('dtr_entries')
+        .upsert(rows, { onConflict: 'employee_id,work_date' })
+        .select('id, work_date')
       if (error) {
         setSaving(null)
         setSaveError(error.message)
         return
+      }
+
+      if (pendingAudits.length > 0 && savedRows) {
+        const idByDate = Object.fromEntries(savedRows.map(r => [r.work_date, r.id]))
+        const auditRows = pendingAudits
+          .filter(a => idByDate[a.work_date])
+          .map(a => ({
+            org_id: orgId,
+            dtr_entry_id: idByDate[a.work_date],
+            employee_id: selectedEmployee,
+            work_date: a.work_date,
+            field: a.field,
+            original_value: a.original_value,
+            new_value: a.new_value,
+            reason: overrideReason || null,
+            changed_by: userId,
+          }))
+        if (auditRows.length > 0) {
+          // Best-effort — a failed audit log shouldn't block the DTR save that already succeeded.
+          await supabase.from('dtr_hour_overrides').insert(auditRows)
+        }
       }
     }
 
@@ -214,6 +279,7 @@ export default function DTRView({
       return
     }
     setCutoffStatus(statusRow as DTRCutoffStatus)
+    setOverrideReason('')
     setSavedAt(true)
     router.refresh()
   }
@@ -235,8 +301,8 @@ export default function DTRView({
     const draft = drafts[date] ?? emptyDraft
     return {
       regular: acc.regular + computeRegularHours(draft.timeIn, draft.timeOut),
-      ot: acc.ot + computeOvertimeHours(draft.timeIn, draft.timeOut),
-      nsd: acc.nsd + computeNightShiftHours(draft.timeIn, draft.timeOut),
+      ot: acc.ot + effectiveOt(draft),
+      nsd: acc.nsd + effectiveNsd(draft),
     }
   }, { regular: 0, ot: 0, nsd: 0 })
 
@@ -246,8 +312,8 @@ export default function DTRView({
       const draft = drafts[date] ?? emptyDraft
       return {
         regular_hours: computeRegularHours(draft.timeIn, draft.timeOut),
-        overtime_hours: computeOvertimeHours(draft.timeIn, draft.timeOut),
-        night_shift_hours: computeNightShiftHours(draft.timeIn, draft.timeOut),
+        overtime_hours: effectiveOt(draft),
+        night_shift_hours: effectiveNsd(draft),
         late_minutes: 0,
         undertime_minutes: 0,
         is_holiday_regular: draft.isHolidayRegular,
@@ -398,6 +464,23 @@ export default function DTRView({
           </tfoot>
         </table>
       </div>
+      <p className="text-xs text-gray-400 -mt-2">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 align-middle mr-1" />
+        OT/NSD hours are auto-computed from Time In/Out — click a value to override it manually; the override is what payroll uses.
+      </p>
+
+      {hasAnyOverride && (
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Reason for override (optional)</label>
+          <textarea
+            value={overrideReason}
+            onChange={e => setOverrideReason(e.target.value)}
+            placeholder="e.g. approved adjustment for system downtime, correction per manager"
+            rows={2}
+            className="w-full max-w-lg border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600 resize-none"
+          />
+        </div>
+      )}
 
       {/* Save as Draft (keep editing) vs Save Week (finalize for payroll) */}
       <div className="flex items-center gap-3">

@@ -67,6 +67,8 @@ export interface DTREntry {
   regular_hours: number
   overtime_hours: number
   night_shift_hours: number
+  overtime_hours_override: boolean
+  night_shift_hours_override: boolean
   late_minutes: number
   undertime_minutes: number
   is_holiday_regular: boolean
@@ -85,6 +87,22 @@ export interface DTRCutoffStatus {
   reopened_by: string | null
   reopened_at: string | null
   updated_at: string
+}
+
+export type DTRHourOverrideField = 'overtime' | 'night_shift'
+
+export interface DTRHourOverride {
+  id: string
+  org_id: string
+  dtr_entry_id: string
+  employee_id: string
+  work_date: string
+  field: DTRHourOverrideField
+  original_value: number
+  new_value: number
+  reason: string | null
+  changed_by: string | null
+  changed_at: string
 }
 
 export interface Schedule {
