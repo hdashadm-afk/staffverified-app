@@ -30,8 +30,11 @@ export default function NTEPreview({ data, orgId }: { data: NTEData; orgId: stri
     setSaveError(null)
 
     try {
-      // Lazy-load PDF libs — keeps initial bundle lean
-      const html2canvas = (await import('html2canvas')).default
+      // Lazy-load PDF libs — keeps initial bundle lean.
+      // html2canvas-pro (not the classic html2canvas) — Tailwind v4's default
+      // palette compiles to oklch() colors, which the classic library's color
+      // parser doesn't understand and throws on.
+      const html2canvas = (await import('html2canvas-pro')).default
       const { jsPDF } = await import('jspdf')
 
       // Capture the NTE document element
