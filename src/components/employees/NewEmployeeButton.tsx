@@ -123,43 +123,27 @@ export default function NewEmployeeButton({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Date hired</label>
-                  <input
-                    type="date"
-                    value={form.date_hired}
-                    onChange={e => setForm(f => ({ ...f, date_hired: e.target.value }))}
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Employment type</label>
+                  <select
+                    value={form.employment_type}
+                    onChange={e => setForm(f => ({ ...f, employment_type: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
-                  />
+                  >
+                    <option value="regular">Regular</option>
+                    <option value="probationary">Probationary</option>
+                    <option value="ojt">OJT</option>
+                  </select>
                 </div>
               </div>
 
-              {stations.length > 0 && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Station</label>
-                  <select
-                    value={form.station_id}
-                    onChange={e => setForm(f => ({ ...f, station_id: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
-                  >
-                    <option value="">— not assigned —</option>
-                    {stations.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Employment type</label>
-                <select
-                  value={form.employment_type}
-                  onChange={e => setForm(f => ({ ...f, employment_type: e.target.value }))}
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date hired</label>
+                <input
+                  type="date"
+                  value={form.date_hired}
+                  onChange={e => setForm(f => ({ ...f, date_hired: e.target.value }))}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
-                >
-                  <option value="regular">Regular</option>
-                  <option value="probationary">Probationary</option>
-                  <option value="ojt">OJT</option>
-                </select>
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -174,6 +158,7 @@ export default function NewEmployeeButton({
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                     placeholder="600"
                   />
+                  <p className="text-[11px] text-gray-400 mt-1">For a standard 8-hour work day</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Allowance (₱/day)</label>
@@ -182,21 +167,22 @@ export default function NewEmployeeButton({
                     min="0"
                     value={form.allowance}
                     onChange={e => setForm(f => ({ ...f, allowance: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Coop saving/cutoff (₱)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.coop_saving_amount}
-                    onChange={e => setForm(f => ({ ...f, coop_saving_amount: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                     placeholder="0"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Coop saving/cutoff (₱)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.coop_saving_amount}
+                  onChange={e => setForm(f => ({ ...f, coop_saving_amount: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
+                  placeholder="0"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -238,6 +224,23 @@ export default function NewEmployeeButton({
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
                 </div>
               </div>
+
+              {stations.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Station *</label>
+                  <select
+                    required
+                    value={form.station_id}
+                    onChange={e => setForm(f => ({ ...f, station_id: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
+                  >
+                    <option value="" disabled>— select station —</option>
+                    {stations.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <label className="flex items-center gap-3 cursor-pointer">
                 <input

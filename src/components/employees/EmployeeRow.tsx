@@ -24,7 +24,7 @@ export default function EmployeeRow({
     position: employee.position ?? '',
     station_id: employee.station_id ?? '',
     daily_rate: employee.daily_rate.toString(),
-    allowance: ((employee as { allowance?: number }).allowance ?? 0).toString(),
+    allowance: employee.allowance.toString(),
     employment_type: employee.employment_type,
     date_hired: employee.date_hired ?? '',
     sss_no: employee.sss_no ?? '',
@@ -92,14 +92,6 @@ export default function EmployeeRow({
               <input value={form.position} onChange={ev => setForm(f => ({ ...f, position: ev.target.value }))} className={fld} placeholder="Attendant" />
             </div>
             <div>
-              <label className={lbl}>Station (home)</label>
-              <select value={form.station_id} onChange={ev => setForm(f => ({ ...f, station_id: ev.target.value }))} className={fld}>
-                <option value="">— roving / none —</option>
-                {stations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-
-            <div>
               <label className={lbl}>Employment type</label>
               <select value={form.employment_type} onChange={ev => setForm(f => ({ ...f, employment_type: ev.target.value }))} className={fld}>
                 <option value="regular">Regular</option>
@@ -112,7 +104,7 @@ export default function EmployeeRow({
               <input type="date" value={form.date_hired ?? ''} onChange={ev => setForm(f => ({ ...f, date_hired: ev.target.value }))} className={fld} />
             </div>
             <div>
-              <label className={lbl}>Daily rate / salary (₱)</label>
+              <label className={lbl}>Daily rate (₱, 8-hr day)</label>
               <input type="number" min="0" value={form.daily_rate} onChange={ev => setForm(f => ({ ...f, daily_rate: ev.target.value }))} className={fld} />
             </div>
             <div>
@@ -152,17 +144,24 @@ export default function EmployeeRow({
               <label className={lbl}>Account name</label>
               <input value={form.bank_account_name} onChange={ev => setForm(f => ({ ...f, bank_account_name: ev.target.value }))} className={fld} placeholder="Defaults to full name" />
             </div>
-
-            <div className="flex items-center gap-2">
-              <input id={`sil-${employee.id}`} type="checkbox" checked={form.has_sil} onChange={ev => setForm(f => ({ ...f, has_sil: ev.target.checked }))} className="rounded" />
-              <label htmlFor={`sil-${employee.id}`} className="text-sm text-gray-700">SIL eligible</label>
-            </div>
             <div>
               <label className={lbl}>Status</label>
               <select value={form.is_active ? 'active' : 'inactive'} onChange={ev => setForm(f => ({ ...f, is_active: ev.target.value === 'active' }))} className={fld}>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
+            </div>
+            <div>
+              <label className={lbl}>Station *</label>
+              <select required value={form.station_id} onChange={ev => setForm(f => ({ ...f, station_id: ev.target.value }))} className={fld}>
+                <option value="" disabled>— select station —</option>
+                {stations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input id={`sil-${employee.id}`} type="checkbox" checked={form.has_sil} onChange={ev => setForm(f => ({ ...f, has_sil: ev.target.checked }))} className="rounded" />
+              <label htmlFor={`sil-${employee.id}`} className="text-sm text-gray-700">SIL eligible</label>
             </div>
           </div>
 
@@ -188,7 +187,7 @@ export default function EmployeeRow({
       <td className="px-4 py-3 text-gray-600">{employee.stations?.name ?? '—'}</td>
       <td className="px-4 py-3">
         {(() => {
-          const t = (employee as { employment_type?: string }).employment_type ?? 'regular'
+          const t = employee.employment_type || 'regular'
           const styles: Record<string, string> = {
             regular: 'bg-brand-blue-50 text-brand-blue-700',
             probationary: 'bg-amber-50 text-amber-700',

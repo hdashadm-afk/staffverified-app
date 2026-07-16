@@ -50,6 +50,7 @@ export default function DTRView({
   cutoffStart: string
   cutoffEnd: string
 }) {
+  const [selectedStation, setSelectedStation] = useState<string>('')
   const [selectedEmployee, setSelectedEmployee] = useState<string>(employees[0]?.id ?? '')
   const [localEntries, setLocalEntries] = useState<DTREntry[]>(dtrEntries)
   const [drafts, setDrafts] = useState<Record<string, DTRRowDraft>>({})
@@ -58,6 +59,18 @@ export default function DTRView({
   const [saveError, setSaveError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  const visibleEmployees = selectedStation
+    ? employees.filter(e => e.station_id === selectedStation)
+    : employees
+
+  // Keep the employee selector in sync when the station filter narrows the list
+  useEffect(() => {
+    if (!visibleEmployees.some(e => e.id === selectedEmployee)) {
+      setSelectedEmployee(visibleEmployees[0]?.id ?? '')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStation])
 
   const employee = employees.find(e => e.id === selectedEmployee)
   const dates = generateDates(cutoffStart, cutoffEnd)
@@ -181,15 +194,30 @@ export default function DTRView({
 
   return (
     <div className="space-y-4">
-      {/* Employee selector */}
-      <div className="flex items-center gap-3">
+      {/* Station + Employee selectors */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {stations.length > 0 && (
+          <>
+            <label className="text-sm font-medium text-gray-700">Station:</label>
+            <select
+              value={selectedStation}
+              onChange={e => setSelectedStation(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
+            >
+              <option value="">All stations</option>
+              {stations.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </>
+        )}
         <label className="text-sm font-medium text-gray-700">Employee:</label>
         <select
           value={selectedEmployee}
           onChange={e => setSelectedEmployee(e.target.value)}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
         >
-          {employees.map(e => (
+          {visibleEmployees.map(e => (
             <option key={e.id} value={e.id}>{e.full_name}</option>
           ))}
         </select>

@@ -40,6 +40,7 @@ export interface Employee {
   full_name: string
   position: string | null
   daily_rate: number
+  allowance: number
   has_sil: boolean
   coop_saving_amount: number
   is_active: boolean

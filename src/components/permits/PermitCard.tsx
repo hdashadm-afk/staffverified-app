@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Permit } from '@/types/database'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Pencil, Undo2 } from 'lucide-react'
 
 function statusBadge(status: string, dueDate: string) {
   const overdue = status === 'pending' && new Date(dueDate) < new Date()
@@ -31,6 +31,7 @@ export default function PermitCard({
   const [expanded, setExpanded] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [notes, setNotes] = useState(permit.notes ?? '')
+  const [editingSubmitted, setEditingSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
@@ -57,6 +58,42 @@ export default function PermitCard({
       return
     }
 
+    router.refresh()
+  }
+
+  async function saveSubmittedNotes() {
+    setSubmitting(true)
+    setError(null)
+    const { error: updateError } = await supabase
+      .from('permits')
+      .update({ notes: notes || null })
+      .eq('id', permit.id)
+    setSubmitting(false)
+
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
+
+    setEditingSubmitted(false)
+    router.refresh()
+  }
+
+  async function undoSubmission() {
+    setSubmitting(true)
+    setError(null)
+    const { error: updateError } = await supabase
+      .from('permits')
+      .update({ status: 'pending', submitted_at: null, submitted_by: null })
+      .eq('id', permit.id)
+    setSubmitting(false)
+
+    if (updateError) {
+      setError(updateError.message)
+      return
+    }
+
+    setEditingSubmitted(false)
     router.refresh()
   }
 
@@ -97,8 +134,58 @@ export default function PermitCard({
           )}
 
           {permit.status === 'submitted' && permit.submitted_at && (
-            <div className="text-xs text-gray-500">
-              Submitted {new Date(permit.submitted_at).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-gray-500">
+                  Submitted {new Date(permit.submitted_at).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}
+                </div>
+                {!editingSubmitted && (
+                  <button
+                    onClick={() => setEditingSubmitted(true)}
+                    className="flex items-center gap-1 text-xs text-brand-blue-600 hover:underline"
+                  >
+                    <Pencil className="w-3 h-3" /> Edit
+                  </button>
+                )}
+              </div>
+
+              {editingSubmitted && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                    <textarea
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      placeholder="e.g. reference number, portal screenshot note…"
+                      rows={2}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600 resize-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={saveSubmittedNotes}
+                      disabled={submitting}
+                      className="bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {submitting ? 'Saving…' : 'Save changes'}
+                    </button>
+                    <button
+                      onClick={undoSubmission}
+                      disabled={submitting}
+                      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-3 py-2 disabled:opacity-50"
+                    >
+                      <Undo2 className="w-3.5 h-3.5" /> Wrong entry — undo submission
+                    </button>
+                    <button
+                      onClick={() => { setEditingSubmitted(false); setNotes(permit.notes ?? ''); setError(null) }}
+                      className="text-xs text-gray-500 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    {error && <span className="text-xs text-red-600">{error}</span>}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
