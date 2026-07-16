@@ -76,6 +76,17 @@ export interface DTREntry {
   created_at: string
 }
 
+export interface DTRCutoffStatus {
+  id: string
+  org_id: string
+  employee_id: string
+  cutoff_start: string
+  status: 'draft' | 'finalized'
+  reopened_by: string | null
+  reopened_at: string | null
+  updated_at: string
+}
+
 export interface Schedule {
   id: string
   org_id: string

@@ -16,6 +16,7 @@ export default function DTREntryRow({
   otHrs,
   nsdHrs,
   onChange,
+  disabled = false,
 }: {
   date: string
   draft: DTRRowDraft
@@ -23,6 +24,7 @@ export default function DTREntryRow({
   otHrs: number
   nsdHrs: number
   onChange: (patch: Partial<DTRRowDraft>) => void
+  disabled?: boolean
 }) {
   const d = new Date(date + 'T00:00:00')
   const dayName = DAYS[d.getDay()]
@@ -41,7 +43,8 @@ export default function DTREntryRow({
           type="time"
           value={draft.timeIn}
           onChange={e => onChange({ timeIn: e.target.value })}
-          className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 w-28"
+          disabled={disabled}
+          className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 w-28 disabled:bg-gray-50 disabled:text-gray-400"
         />
       </td>
       <td className="px-4 py-2">
@@ -49,7 +52,8 @@ export default function DTREntryRow({
           type="time"
           value={draft.timeOut}
           onChange={e => onChange({ timeOut: e.target.value })}
-          className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 w-28"
+          disabled={disabled}
+          className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 w-28 disabled:bg-gray-50 disabled:text-gray-400"
         />
       </td>
       <td className="px-4 py-2 text-right tabular-nums text-gray-700 text-xs">
@@ -68,6 +72,7 @@ export default function DTREntryRow({
               type="checkbox"
               checked={draft.isHolidayRegular}
               onChange={e => onChange({ isHolidayRegular: e.target.checked, isHolidaySpecial: e.target.checked ? false : draft.isHolidaySpecial })}
+              disabled={disabled}
               className="rounded"
             />
             Reg Holiday
@@ -77,6 +82,7 @@ export default function DTREntryRow({
               type="checkbox"
               checked={draft.isHolidaySpecial}
               onChange={e => onChange({ isHolidaySpecial: e.target.checked, isHolidayRegular: e.target.checked ? false : draft.isHolidayRegular })}
+              disabled={disabled}
               className="rounded"
             />
             Special

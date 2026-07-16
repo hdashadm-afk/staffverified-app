@@ -31,3 +31,8 @@ export function currentCutoff(date: Date = new Date()) {
   const end = cutoffEnd(start)
   return { start, end, payday: payday(end) }
 }
+
+/** True once today has reached the cutoff's Payroll Date (payday). */
+export function isPastPayday(cutoffEndDate: string, today: Date = new Date()): boolean {
+  return fmt(today) >= payday(cutoffEndDate)
+}
