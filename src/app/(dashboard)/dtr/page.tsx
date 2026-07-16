@@ -89,13 +89,10 @@ export default async function DTRPage() {
         <DTRView
           employees={employees ?? []}
           stations={stations ?? []}
-          dtrEntries={dtrEntries ?? []}
-          schedules={schedules ?? []}
           orgRates={org ?? undefined}
           orgId={profile!.org_id}
           userId={profile!.id}
-          cutoffStart={cutoffStart}
-          cutoffEnd={cutoffEnd}
+          role={profile!.role}
         />
       )}
     </div>

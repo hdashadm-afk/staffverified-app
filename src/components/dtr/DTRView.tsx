@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DTREntry, Employee, Schedule, Station } from '@/types/database'
+import { DTREntry, DTRCutoffStatus, Employee, Schedule, Station } from '@/types/database'
 import DTREntryRow, { DTRRowDraft } from './DTREntryRow'
 import {
   computeRegularHours,
@@ -12,14 +12,15 @@ import {
   summarizeCutoffEarnings,
   OrgRates,
 } from '@/lib/payroll-math'
+import { cutoffStart, cutoffEnd, payday, isPastPayday } from '@/lib/cutoff'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Check, Loader2 } from 'lucide-react'
+import { Check, Loader2, ChevronLeft, ChevronRight, Lock, Unlock } from 'lucide-react'
 
 function generateDates(start: string, end: string): string[] {
   const dates: string[] = []
-  const cur = new Date(start)
-  const endDate = new Date(end)
+  const cur = new Date(start + 'T00:00:00')
+  const endDate = new Date(end + 'T00:00:00')
   while (cur <= endDate) {
     dates.push(cur.toISOString().split('T')[0])
     cur.setDate(cur.getDate() + 1)
@@ -27,36 +28,38 @@ function generateDates(start: string, end: string): string[] {
   return dates
 }
 
+// Roles that can reopen a payday-locked DTR — same set that can write dtr_cutoff_status (see migration 013).
+const REOPEN_ROLES = ['owner', 'assistant', 'ops_officer', 'ceo']
+
 const emptyDraft: DTRRowDraft = { timeIn: '', timeOut: '', isHolidayRegular: false, isHolidaySpecial: false }
 
 export default function DTRView({
   employees,
   stations,
-  dtrEntries,
-  schedules,
   orgRates,
   orgId,
   userId,
-  cutoffStart,
-  cutoffEnd,
+  role,
 }: {
   employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'station_id'>[]
   stations: Pick<Station, 'id' | 'name'>[]
-  dtrEntries: DTREntry[]
-  schedules: Pick<Schedule, 'employee_id' | 'work_date' | 'shift_start' | 'shift_end'>[]
   orgRates?: OrgRates
   orgId: string
   userId: string
-  cutoffStart: string
-  cutoffEnd: string
+  role: string | null | undefined
 }) {
   const [selectedStation, setSelectedStation] = useState<string>('')
   const [selectedEmployee, setSelectedEmployee] = useState<string>(employees[0]?.id ?? '')
-  const [localEntries, setLocalEntries] = useState<DTREntry[]>(dtrEntries)
+  const [cutoffOffset, setCutoffOffset] = useState(0)
+  const [entries, setEntries] = useState<DTREntry[]>([])
+  const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [cutoffStatus, setCutoffStatus] = useState<DTRCutoffStatus | null>(null)
   const [drafts, setDrafts] = useState<Record<string, DTRRowDraft>>({})
-  const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState<'draft' | 'final' | null>(null)
   const [savedAt, setSavedAt] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [reopening, setReopening] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -73,23 +76,53 @@ export default function DTRView({
   }, [selectedStation])
 
   const employee = employees.find(e => e.id === selectedEmployee)
-  const dates = generateDates(cutoffStart, cutoffEnd)
 
-  const entryMap = Object.fromEntries(
-    localEntries
-      .filter(e => e.employee_id === selectedEmployee)
-      .map(e => [e.work_date, e])
-  )
+  const anchor = new Date()
+  anchor.setDate(anchor.getDate() + cutoffOffset * 7)
+  const start = cutoffStart(anchor)
+  const end = cutoffEnd(start)
+  const cutoffPayday = payday(end)
+  const dates = generateDates(start, end)
 
-  const scheduleMap = Object.fromEntries(
-    schedules
-      .filter(s => s.employee_id === selectedEmployee)
-      .map(s => [s.work_date, s])
-  )
+  // Every cutoff period this component can show is either the current one
+  // (offset 0) or a past one (offset < 0) — schedule/DTR entry never look
+  // ahead, same as before this feature. A finalized past cutoff locks once
+  // today reaches its payday, unless someone has reopened it.
+  const locked = cutoffStatus?.status === 'finalized' && isPastPayday(end) && !cutoffStatus.reopened_at
 
-  // Rebuild the whole week's editable drafts whenever the selected employee
-  // (or its underlying saved entries) changes — every row is always editable,
-  // no per-row edit toggle.
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      if (!selectedEmployee) return
+      setLoading(true)
+      const [entriesRes, schedulesRes, statusRes] = await Promise.all([
+        supabase.from('dtr_entries').select('*')
+          .eq('org_id', orgId).eq('employee_id', selectedEmployee)
+          .gte('work_date', start).lte('work_date', end),
+        supabase.from('schedules').select('*')
+          .eq('org_id', orgId).eq('employee_id', selectedEmployee)
+          .gte('work_date', start).lte('work_date', end),
+        supabase.from('dtr_cutoff_status').select('*')
+          .eq('org_id', orgId).eq('employee_id', selectedEmployee)
+          .eq('cutoff_start', start).maybeSingle(),
+      ])
+      if (cancelled) return
+      setEntries((entriesRes.data ?? []) as DTREntry[])
+      setSchedules((schedulesRes.data ?? []) as Schedule[])
+      setCutoffStatus((statusRes.data ?? null) as DTRCutoffStatus | null)
+      setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEmployee, start, end])
+
+  const entryMap = Object.fromEntries(entries.map(e => [e.work_date, e]))
+  const scheduleMap = Object.fromEntries(schedules.map(s => [s.work_date, s]))
+
+  // Rebuild the whole week's editable drafts whenever the selected employee,
+  // cutoff, or underlying saved entries change — every row is always
+  // editable (unless locked), no per-row edit toggle.
   useEffect(() => {
     const next: Record<string, DTRRowDraft> = {}
     for (const date of dates) {
@@ -106,16 +139,17 @@ export default function DTRView({
     setDrafts(next)
     setSavedAt(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedEmployee, localEntries])
+  }, [entries])
 
   function setDraft(date: string, patch: Partial<DTRRowDraft>) {
+    if (locked) return
     setDrafts(prev => ({ ...prev, [date]: { ...(prev[date] ?? emptyDraft), ...patch } }))
     setSavedAt(false)
   }
 
-  async function saveWeek() {
-    if (!employee) return
-    setSaving(true)
+  async function save(finalize: boolean) {
+    if (!employee || locked) return
+    setSaving(finalize ? 'final' : 'draft')
     setSaveError(null)
 
     const rows = dates
@@ -152,17 +186,49 @@ export default function DTRView({
 
     if (rows.length > 0) {
       const { error } = await supabase.from('dtr_entries').upsert(rows, { onConflict: 'employee_id,work_date' })
-      setSaving(false)
       if (error) {
+        setSaving(null)
         setSaveError(error.message)
         return
       }
-    } else {
-      setSaving(false)
     }
 
+    const { data: statusRow, error: statusError } = await supabase
+      .from('dtr_cutoff_status')
+      .upsert(
+        {
+          org_id: orgId,
+          employee_id: selectedEmployee,
+          cutoff_start: start,
+          status: finalize ? 'finalized' : 'draft',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'employee_id,cutoff_start' }
+      )
+      .select()
+      .single()
+
+    setSaving(null)
+    if (statusError) {
+      setSaveError(statusError.message)
+      return
+    }
+    setCutoffStatus(statusRow as DTRCutoffStatus)
     setSavedAt(true)
     router.refresh()
+  }
+
+  async function reopen() {
+    if (!cutoffStatus) return
+    setReopening(true)
+    const { data, error } = await supabase
+      .from('dtr_cutoff_status')
+      .update({ reopened_by: userId, reopened_at: new Date().toISOString() })
+      .eq('id', cutoffStatus.id)
+      .select()
+      .single()
+    setReopening(false)
+    if (!error) setCutoffStatus(data as DTRCutoffStatus)
   }
 
   const totals = dates.reduce((acc, date) => {
@@ -226,16 +292,71 @@ export default function DTRView({
         )}
       </div>
 
-      {/* Cutoff label */}
-      <div className="text-sm text-gray-500">
-        Cutoff: <span className="font-medium text-gray-700">
-          {new Date(cutoffStart).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} –{' '}
-          {new Date(cutoffEnd).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
-        </span>
+      {/* Cutoff nav */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          onClick={() => setCutoffOffset(o => o - 1)}
+          className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
+          aria-label="Previous cutoff"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <div className="text-sm text-gray-500">
+          Cutoff: <span className="font-medium text-gray-700">
+            {new Date(start + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })} –{' '}
+            {new Date(end + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </span>
+          {' · '}Payday (Fri): <span className="font-medium text-gray-700">
+            {new Date(cutoffPayday + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
+          </span>
+        </div>
+        <button
+          onClick={() => setCutoffOffset(o => o + 1)}
+          disabled={cutoffOffset >= 0}
+          className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-transparent"
+          aria-label="Next cutoff"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        {cutoffOffset !== 0 && (
+          <button onClick={() => setCutoffOffset(0)} className="text-xs text-brand-blue-600 hover:underline">
+            Back to current cutoff
+          </button>
+        )}
+        {cutoffStatus?.status === 'draft' && (
+          <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">Draft</span>
+        )}
+        {cutoffStatus?.status === 'finalized' && (
+          <span className="text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2.5 py-0.5">Finalized</span>
+        )}
       </div>
 
-      {/* DTR table — every row is always editable */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+      {locked && (
+        <div className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm">
+          <div className="flex items-center gap-2 text-gray-600">
+            <Lock className="w-4 h-4" />
+            Payroll for this cutoff has been processed (payday {new Date(cutoffPayday + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}) — DTR is locked.
+          </div>
+          {REOPEN_ROLES.includes(role ?? '') && (
+            <button
+              onClick={reopen}
+              disabled={reopening}
+              className="flex items-center gap-1.5 text-xs font-medium text-brand-blue-700 hover:underline disabled:opacity-50"
+            >
+              {reopening ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unlock className="w-3.5 h-3.5" />}
+              Reopen
+            </button>
+          )}
+        </div>
+      )}
+      {cutoffStatus?.reopened_at && (
+        <div className="text-xs text-gray-400">
+          Reopened {new Date(cutoffStatus.reopened_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+        </div>
+      )}
+
+      {/* DTR table — every row is always editable, unless locked */}
+      <div className={`bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm ${loading ? 'opacity-50' : ''}`}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
@@ -261,6 +382,7 @@ export default function DTRView({
                   otHrs={computeOvertimeHours(draft.timeIn, draft.timeOut)}
                   nsdHrs={computeNightShiftHours(draft.timeIn, draft.timeOut)}
                   onChange={patch => setDraft(date, patch)}
+                  disabled={locked}
                 />
               )
             })}
@@ -277,15 +399,23 @@ export default function DTRView({
         </table>
       </div>
 
-      {/* Single save for the whole week */}
+      {/* Save as Draft (keep editing) vs Save Week (finalize for payroll) */}
       <div className="flex items-center gap-3">
         <button
-          onClick={saveWeek}
-          disabled={saving || !employee}
+          onClick={() => save(false)}
+          disabled={!!saving || !employee || locked}
+          className="flex items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {saving === 'draft' ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          {saving === 'draft' ? 'Saving…' : 'Save as Draft'}
+        </button>
+        <button
+          onClick={() => save(true)}
+          disabled={!!saving || !employee || locked}
           className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors disabled:opacity-50"
         >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-          {saving ? 'Saving…' : savedAt ? 'Saved' : 'Save Week'}
+          {saving === 'final' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+          {saving === 'final' ? 'Saving…' : savedAt && cutoffStatus?.status === 'finalized' ? 'Saved' : 'Save Week'}
         </button>
         {saveError && <span className="text-xs text-red-600">{saveError}</span>}
       </div>
