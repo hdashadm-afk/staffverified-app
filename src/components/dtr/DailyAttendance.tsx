@@ -10,9 +10,10 @@ import {
   computeLateMinutes,
   computeUndertimeMinutes,
 } from '@/lib/payroll-math'
+import { manilaTodayISO } from '@/lib/cutoff'
 import { Check, Loader2, Search } from 'lucide-react'
 
-type Emp = { id: string; full_name: string; station_id: string | null; daily_rate: number }
+type Emp = { id: string; full_name: string; station_id: string | null; daily_rate: number; regular_hours_per_day?: number }
 type Entry = { employee_id: string; work_date: string; time_in: string | null; time_out: string | null }
 type Sched = { employee_id: string; work_date: string; shift_start: string | null; shift_end: string | null }
 
@@ -35,7 +36,7 @@ export default function DailyAttendance({
 }) {
   const router = useRouter()
   const supabase = createClient()
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(manilaTodayISO())
   const [saving, setSaving] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<Record<string, boolean>>({})
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({})
@@ -64,8 +65,9 @@ export default function DailyAttendance({
     const r = getRow(emp.id)
     setSaving(emp.id)
     setRowErrors(prev => ({ ...prev, [emp.id]: '' }))
-    const reg = computeRegularHours(r.in, r.out)
-    const ot = computeOvertimeHours(r.in, r.out)
+    const regularHoursPerDay = emp.regular_hours_per_day ?? 8
+    const reg = computeRegularHours(r.in, r.out, regularHoursPerDay)
+    const ot = computeOvertimeHours(r.in, r.out, regularHoursPerDay)
     const nsd = computeNightShiftHours(r.in, r.out)
     const sched = daySchedules[emp.id]
     const late = computeLateMinutes(r.in, sched?.shift_start ?? null)

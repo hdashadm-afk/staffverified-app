@@ -29,6 +29,12 @@ export default async function EmployeesPage() {
     .select('id, name')
     .eq('org_id', profile!.org_id)
 
+  const { data: positions } = await supabase
+    .from('positions')
+    .select('id, name')
+    .eq('org_id', profile!.org_id)
+    .order('sort_order')
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -36,10 +42,10 @@ export default async function EmployeesPage() {
           <h1 className="text-xl font-semibold text-gray-900">Employees</h1>
           <p className="text-sm text-gray-500 mt-0.5">Staff records for all stations</p>
         </div>
-        <NewEmployeeButton orgId={profile!.org_id} stations={stations ?? []} />
+        <NewEmployeeButton orgId={profile!.org_id} stations={stations ?? []} positions={positions ?? []} />
       </div>
 
-      <EmployeeList employees={(employees ?? []) as any} orgId={profile!.org_id} stations={stations ?? []} />
+      <EmployeeList employees={(employees ?? []) as any} orgId={profile!.org_id} stations={stations ?? []} positions={positions ?? []} />
     </div>
   )
 }
