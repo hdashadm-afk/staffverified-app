@@ -12,7 +12,7 @@ export default function PayrollRunList({
   orgRates,
 }: {
   runs: (PayrollRun & { stations: { name: string } | null })[]
-  employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'coop_saving_amount' | 'station_id'>[]
+  employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'coop_saving_amount' | 'station_id' | 'regular_hours_per_day'>[]
   orgId: string
   orgRates: OrgRates
 }) {

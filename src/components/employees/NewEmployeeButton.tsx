@@ -4,14 +4,16 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Plus, X } from 'lucide-react'
-import { Station } from '@/types/database'
+import { Position, Station } from '@/types/database'
 
 export default function NewEmployeeButton({
   orgId,
   stations,
+  positions,
 }: {
   orgId: string
   stations: Pick<Station, 'id' | 'name'>[]
+  positions: Pick<Position, 'id' | 'name'>[]
 }) {
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -25,6 +27,7 @@ export default function NewEmployeeButton({
     station_id: '',
     daily_rate: '',
     allowance: '0',
+    regular_hours_per_day: '8',
     employment_type: 'regular',
     has_sil: false,
     coop_saving_amount: '0',
@@ -50,6 +53,7 @@ export default function NewEmployeeButton({
       station_id: form.station_id || null,
       daily_rate: parseFloat(form.daily_rate) || 0,
       allowance: parseFloat(form.allowance) || 0,
+      regular_hours_per_day: parseInt(form.regular_hours_per_day, 10) || 8,
       employment_type: form.employment_type,
       has_sil: form.has_sil,
       coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
@@ -74,7 +78,7 @@ export default function NewEmployeeButton({
     setOpen(false)
     setForm({
       full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular',
-      allowance: '0', has_sil: false, coop_saving_amount: '0', date_hired: '', sss_no: '', philhealth_no: '',
+      allowance: '0', regular_hours_per_day: '8', has_sil: false, coop_saving_amount: '0', date_hired: '', sss_no: '', philhealth_no: '',
       pagibig_no: '', tin_no: '', bank_name: '', bank_account_no: '', bank_account_name: '',
     })
     router.refresh()
@@ -112,15 +116,20 @@ export default function NewEmployeeButton({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Position</label>
-                  <input
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Position *</label>
+                  <select
+                    required
                     value={form.position}
                     onChange={e => setForm(f => ({ ...f, position: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
-                    placeholder="Cashier"
-                  />
+                  >
+                    <option value="" disabled>— select position —</option>
+                    {positions.map(p => (
+                      <option key={p.id} value={p.name}>{p.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Employment type</label>
@@ -137,6 +146,21 @@ export default function NewEmployeeButton({
               </div>
 
               <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Regular working hours per day *</label>
+                <select
+                  required
+                  value={form.regular_hours_per_day}
+                  onChange={e => setForm(f => ({ ...f, regular_hours_per_day: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
+                >
+                  <option value="8">8 Hours</option>
+                  <option value="10">10 Hours</option>
+                  <option value="12">12 Hours</option>
+                </select>
+                <p className="text-[11px] text-gray-400 mt-1">Used for DTR overtime/undertime and hourly-rate calculations</p>
+              </div>
+
+              <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Date hired</label>
                 <input
                   type="date"
@@ -146,9 +170,9 @@ export default function NewEmployeeButton({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Daily rate (₱) *</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Daily Basic Rate (₱) *</label>
                   <input
                     type="number"
                     min="0"
@@ -158,7 +182,6 @@ export default function NewEmployeeButton({
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                     placeholder="600"
                   />
-                  <p className="text-[11px] text-gray-400 mt-1">For a standard 8-hour work day</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Allowance (₱/day)</label>
@@ -185,7 +208,7 @@ export default function NewEmployeeButton({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">SSS No.</label>
                   <input value={form.sss_no} onChange={e => setForm(f => ({ ...f, sss_no: e.target.value }))}

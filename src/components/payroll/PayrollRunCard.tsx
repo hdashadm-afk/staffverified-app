@@ -41,7 +41,7 @@ export default function PayrollRunCard({
   orgRates,
 }: {
   run: PayrollRun & { stations: { name: string } | null }
-  employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'coop_saving_amount' | 'station_id'>[]
+  employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'coop_saving_amount' | 'station_id' | 'regular_hours_per_day'>[]
   orgId: string
   orgRates: OrgRates
 }) {
@@ -153,7 +153,7 @@ export default function PayrollRunCard({
       const dailyRate = emp.daily_rate
 
       const { basicPay, holidayPay, overtimePay, nsdPay, lateUndertimeDeduction: lateUndertime, totalEarnings } =
-        summarizeCutoffEarnings(entries, dailyRate, orgRates)
+        summarizeCutoffEarnings(entries, dailyRate, orgRates, emp.regular_hours_per_day)
 
       // Monthly contributions (SSS/PhilHealth/Pag-IBIG) are deducted once per month.
       // Under weekly cutoffs (Thu–Wed), apply them on the FIRST cutoff of the month

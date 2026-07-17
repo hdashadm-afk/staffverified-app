@@ -41,6 +41,7 @@ export interface Employee {
   position: string | null
   daily_rate: number
   allowance: number
+  regular_hours_per_day: number
   has_sil: boolean
   coop_saving_amount: number
   is_active: boolean
@@ -56,6 +57,14 @@ export interface Employee {
   created_at: string
 }
 
+export interface Position {
+  id: string
+  org_id: string
+  name: string
+  sort_order: number
+  created_at: string
+}
+
 export interface DTREntry {
   id: string
   org_id: string
@@ -67,6 +76,8 @@ export interface DTREntry {
   regular_hours: number
   overtime_hours: number
   night_shift_hours: number
+  overtime_hours_overridden: boolean
+  night_shift_hours_overridden: boolean
   late_minutes: number
   undertime_minutes: number
   is_holiday_regular: boolean
@@ -74,6 +85,21 @@ export interface DTREntry {
   notes: string | null
   entered_by: string | null
   created_at: string
+}
+
+export type DTROverrideField = 'overtime_hours' | 'night_shift_hours'
+
+export interface DTROverrideLogEntry {
+  id: string
+  org_id: string
+  employee_id: string
+  work_date: string
+  field: DTROverrideField
+  old_value: number | null
+  new_value: number
+  reason: string | null
+  changed_by: string | null
+  changed_at: string
 }
 
 export interface DTRCutoffStatus {

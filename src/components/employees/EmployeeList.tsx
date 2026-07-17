@@ -1,17 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { Employee, Station } from '@/types/database'
+import { Employee, Position, Station } from '@/types/database'
 import EmployeeRow from './EmployeeRow'
 
 export default function EmployeeList({
   employees,
   orgId,
   stations,
+  positions,
 }: {
   employees: (Employee & { stations: { name: string } | null })[]
   orgId: string
   stations: Pick<Station, 'id' | 'name'>[]
+  positions: Pick<Position, 'id' | 'name'>[]
 }) {
   const [showInactive, setShowInactive] = useState(false)
 
@@ -39,8 +41,8 @@ export default function EmployeeList({
           No employees yet. Add your first staff member.
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-          <table className="w-full text-sm">
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
                 <th className="text-left px-5 py-3 font-medium">Name</th>
@@ -55,7 +57,7 @@ export default function EmployeeList({
             </thead>
             <tbody className="divide-y divide-gray-50">
               {visible.map(emp => (
-                <EmployeeRow key={emp.id} employee={emp} stations={stations} />
+                <EmployeeRow key={emp.id} employee={emp} stations={stations} positions={positions} />
               ))}
             </tbody>
           </table>

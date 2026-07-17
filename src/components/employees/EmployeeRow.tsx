@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Employee, Station } from '@/types/database'
+import { Employee, Position, Station } from '@/types/database'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Pencil, X, Check } from 'lucide-react'
@@ -9,9 +9,11 @@ import { Pencil, X, Check } from 'lucide-react'
 export default function EmployeeRow({
   employee,
   stations,
+  positions,
 }: {
   employee: Employee & { stations: { name: string } | null }
   stations: Pick<Station, 'id' | 'name'>[]
+  positions: Pick<Position, 'id' | 'name'>[]
 }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -25,6 +27,7 @@ export default function EmployeeRow({
     station_id: employee.station_id ?? '',
     daily_rate: employee.daily_rate.toString(),
     allowance: employee.allowance.toString(),
+    regular_hours_per_day: employee.regular_hours_per_day.toString(),
     employment_type: employee.employment_type,
     date_hired: employee.date_hired ?? '',
     sss_no: employee.sss_no ?? '',
@@ -50,6 +53,7 @@ export default function EmployeeRow({
         station_id: form.station_id || null,
         daily_rate: parseFloat(form.daily_rate) || 0,
         allowance: parseFloat(form.allowance) || 0,
+        regular_hours_per_day: parseInt(form.regular_hours_per_day, 10) || 8,
         employment_type: form.employment_type,
         date_hired: form.date_hired || null,
         sss_no: form.sss_no || null,
@@ -82,14 +86,17 @@ export default function EmployeeRow({
     return (
       <tr className="bg-brand-blue-50/60">
         <td colSpan={8} className="px-5 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div className="col-span-2">
               <label className={lbl}>Full name</label>
               <input value={form.full_name} onChange={ev => setForm(f => ({ ...f, full_name: ev.target.value }))} className={fld} />
             </div>
             <div>
               <label className={lbl}>Position</label>
-              <input value={form.position} onChange={ev => setForm(f => ({ ...f, position: ev.target.value }))} className={fld} placeholder="Attendant" />
+              <select required value={form.position} onChange={ev => setForm(f => ({ ...f, position: ev.target.value }))} className={fld}>
+                <option value="" disabled>— select position —</option>
+                {positions.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+              </select>
             </div>
             <div>
               <label className={lbl}>Employment type</label>
@@ -104,12 +111,20 @@ export default function EmployeeRow({
               <input type="date" value={form.date_hired ?? ''} onChange={ev => setForm(f => ({ ...f, date_hired: ev.target.value }))} className={fld} />
             </div>
             <div>
-              <label className={lbl}>Daily rate (₱, 8-hr day)</label>
+              <label className={lbl}>Daily Basic Rate (₱)</label>
               <input type="number" min="0" value={form.daily_rate} onChange={ev => setForm(f => ({ ...f, daily_rate: ev.target.value }))} className={fld} />
             </div>
             <div>
               <label className={lbl}>Allowance (₱/day)</label>
               <input type="number" min="0" value={form.allowance} onChange={ev => setForm(f => ({ ...f, allowance: ev.target.value }))} className={fld} />
+            </div>
+            <div>
+              <label className={lbl}>Regular hrs/day</label>
+              <select value={form.regular_hours_per_day} onChange={ev => setForm(f => ({ ...f, regular_hours_per_day: ev.target.value }))} className={fld}>
+                <option value="8">8 Hours</option>
+                <option value="10">10 Hours</option>
+                <option value="12">12 Hours</option>
+              </select>
             </div>
             <div>
               <label className={lbl}>Coop saving / cutoff (₱)</label>
@@ -199,6 +214,7 @@ export default function EmployeeRow({
       </td>
       <td className="px-4 py-3 text-right text-gray-900">
         ₱{employee.daily_rate.toLocaleString()}
+        <span className="text-gray-400 text-xs"> / {employee.regular_hours_per_day}h</span>
       </td>
       <td className="px-4 py-3">
         {employee.has_sil ? (

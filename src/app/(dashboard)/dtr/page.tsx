@@ -21,7 +21,7 @@ export default async function DTRPage() {
 
   const { data: employees } = await supabase
     .from('employees')
-    .select('id, full_name, daily_rate, has_sil, station_id')
+    .select('id, full_name, daily_rate, has_sil, station_id, regular_hours_per_day')
     .eq('org_id', profile!.org_id)
     .eq('is_active', true)
     .order('full_name')

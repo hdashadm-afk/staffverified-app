@@ -1,5 +1,10 @@
 // Payroll math — Helium Fuels rules (Rojelyn's spec, June 2026)
 // All rates are org-configurable; defaults here match Helium.
+//
+// Regular working hours per day is per-employee (8/10/12 — set on the
+// Employee record), not a fixed 8. Every function that used to hardcode 8
+// now takes it as a parameter, defaulting to 8 for any caller that hasn't
+// been updated to pass an employee's actual value.
 
 export interface OrgRates {
   ot_multiplier: number         // default 1.0
@@ -15,27 +20,31 @@ const DEFAULT_RATES: OrgRates = {
   holiday_special_multiplier: 1.3,
 }
 
-export function hourlyRate(dailyRate: number): number {
-  return dailyRate / 8
+const DEFAULT_REGULAR_HOURS_PER_DAY = 8
+
+export function hourlyRate(dailyRate: number, regularHoursPerDay: number = DEFAULT_REGULAR_HOURS_PER_DAY): number {
+  return dailyRate / regularHoursPerDay
 }
 
-// OT pay = (daily / 8) × ot_hours × ot_multiplier
+// OT pay = (daily / regular hrs/day) × ot_hours × ot_multiplier
 export function computeOvertimePay(
   dailyRate: number,
   overtimeHours: number,
-  rates: OrgRates = DEFAULT_RATES
+  rates: OrgRates = DEFAULT_RATES,
+  regularHoursPerDay: number = DEFAULT_REGULAR_HOURS_PER_DAY
 ): number {
-  return hourlyRate(dailyRate) * overtimeHours * rates.ot_multiplier
+  return hourlyRate(dailyRate, regularHoursPerDay) * overtimeHours * rates.ot_multiplier
 }
 
-// Night shift differential = (daily / 8) × nsd_hours × nsd_rate
+// Night shift differential = (daily / regular hrs/day) × nsd_hours × nsd_rate
 // Night shift window: 10 PM – 6 AM
 export function computeNSD(
   dailyRate: number,
   nightShiftHours: number,
-  rates: OrgRates = DEFAULT_RATES
+  rates: OrgRates = DEFAULT_RATES,
+  regularHoursPerDay: number = DEFAULT_REGULAR_HOURS_PER_DAY
 ): number {
-  return hourlyRate(dailyRate) * nightShiftHours * rates.nsd_rate
+  return hourlyRate(dailyRate, regularHoursPerDay) * nightShiftHours * rates.nsd_rate
 }
 
 // Holiday pay replaces (not adds to) basic pay for that day
@@ -54,10 +63,11 @@ export function computeHolidayPay(
 export function computeLateUndertimeDeduction(
   dailyRate: number,
   lateMinutes: number,
-  undertimeMinutes: number
+  undertimeMinutes: number,
+  regularHoursPerDay: number = DEFAULT_REGULAR_HOURS_PER_DAY
 ): number {
   const totalMinutes = lateMinutes + undertimeMinutes
-  return (dailyRate / (8 * 60)) * totalMinutes
+  return (dailyRate / (regularHoursPerDay * 60)) * totalMinutes
 }
 
 // Parses "HH:MM" or "HH:MM:SS" (as returned by Postgres time columns) into minutes since midnight.
@@ -94,20 +104,20 @@ export function computeNightShiftHours(timeIn: string, timeOut: string): number 
   return Math.max(0, overlap / 60)
 }
 
-// Regular hours (capped at 8 per day, not counting OT or holidays)
-export function computeRegularHours(timeIn: string, timeOut: string): number {
+// Regular hours (capped at regularHoursPerDay, not counting OT or holidays)
+export function computeRegularHours(timeIn: string, timeOut: string, regularHoursPerDay: number = DEFAULT_REGULAR_HOURS_PER_DAY): number {
   if (!timeIn || !timeOut) return 0
   let diff = timeToMinutes(timeOut) - timeToMinutes(timeIn)
   if (diff < 0) diff += 24 * 60
-  return Math.min(8, diff / 60)
+  return Math.min(regularHoursPerDay, diff / 60)
 }
 
-// OT hours = total hours worked beyond 8
-export function computeOvertimeHours(timeIn: string, timeOut: string): number {
+// OT hours = total hours worked beyond regularHoursPerDay
+export function computeOvertimeHours(timeIn: string, timeOut: string, regularHoursPerDay: number = DEFAULT_REGULAR_HOURS_PER_DAY): number {
   if (!timeIn || !timeOut) return 0
   let diff = timeToMinutes(timeOut) - timeToMinutes(timeIn)
   if (diff < 0) diff += 24 * 60
-  return Math.max(0, diff / 60 - 8)
+  return Math.max(0, diff / 60 - regularHoursPerDay)
 }
 
 // Late minutes = minutes after the scheduled shift start the employee clocked in.
@@ -147,9 +157,10 @@ export interface CutoffEarnings {
 export function summarizeCutoffEarnings(
   entries: CutoffEntry[],
   dailyRate: number,
-  rates: OrgRates = DEFAULT_RATES
+  rates: OrgRates = DEFAULT_RATES,
+  regularHoursPerDay: number = DEFAULT_REGULAR_HOURS_PER_DAY
 ): CutoffEarnings {
-  const hourly = hourlyRate(dailyRate)
+  const hourly = hourlyRate(dailyRate, regularHoursPerDay)
   let basicPay = 0
   let holidayPay = 0
   let overtimePay = 0
@@ -162,9 +173,9 @@ export function summarizeCutoffEarnings(
     } else {
       basicPay += hourly * e.regular_hours
     }
-    overtimePay += computeOvertimePay(dailyRate, e.overtime_hours, rates)
-    nsdPay += computeNSD(dailyRate, e.night_shift_hours, rates)
-    lateUndertimeDeduction += computeLateUndertimeDeduction(dailyRate, e.late_minutes, e.undertime_minutes)
+    overtimePay += computeOvertimePay(dailyRate, e.overtime_hours, rates, regularHoursPerDay)
+    nsdPay += computeNSD(dailyRate, e.night_shift_hours, rates, regularHoursPerDay)
+    lateUndertimeDeduction += computeLateUndertimeDeduction(dailyRate, e.late_minutes, e.undertime_minutes, regularHoursPerDay)
   }
 
   return {
