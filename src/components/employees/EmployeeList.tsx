@@ -41,8 +41,8 @@ export default function EmployeeList({
           No employees yet. Add your first staff member.
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-          <table className="w-full text-sm">
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
                 <th className="text-left px-5 py-3 font-medium">Name</th>

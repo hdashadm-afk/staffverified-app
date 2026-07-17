@@ -116,7 +116,7 @@ export default function NewEmployeeButton({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Position *</label>
                   <select
@@ -170,7 +170,7 @@ export default function NewEmployeeButton({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Daily Basic Rate (₱) *</label>
                   <input
@@ -208,7 +208,7 @@ export default function NewEmployeeButton({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">SSS No.</label>
                   <input value={form.sss_no} onChange={e => setForm(f => ({ ...f, sss_no: e.target.value }))}

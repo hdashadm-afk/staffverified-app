@@ -413,9 +413,10 @@ export default function DTRView({
         </div>
       )}
 
-      {/* DTR table — every row is always editable, unless locked */}
-      <div className={`bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm ${loading ? 'opacity-50' : ''}`}>
-        <table className="w-full text-sm">
+      {/* DTR table — every row is always editable, unless locked.
+          Scrolls horizontally on narrow screens instead of breaking the page layout. */}
+      <div className={`bg-white border border-gray-100 rounded-xl shadow-sm overflow-x-auto ${loading ? 'opacity-50' : ''}`}>
+        <table className="w-full text-sm min-w-[720px]">
           <thead>
             <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
               <th className="text-left px-5 py-3 font-medium">Date</th>

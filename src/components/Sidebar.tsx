@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -20,6 +21,8 @@ import {
   MessageSquare,
   ShieldAlert,
   CalendarClock,
+  Menu,
+  X,
 } from 'lucide-react'
 
 const NAV_META = [
@@ -43,14 +46,15 @@ export default function Sidebar({ profile }: { profile: any }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   async function handleSignOut() {
     await supabase.auth.signOut()
     router.push('/login')
   }
 
-  return (
-    <aside className="w-56 bg-white border-r border-gray-100 flex flex-col min-h-screen">
+  const navContent = (
+    <>
       {/* Brand — StaffVerified (platform) + client org */}
       <div className="px-4 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">
@@ -71,13 +75,14 @@ export default function Sidebar({ profile }: { profile: any }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
+              onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 active
                   ? 'bg-brand-blue-50 text-brand-blue-700'
@@ -107,6 +112,53 @@ export default function Sidebar({ profile }: { profile: any }) {
           Sign out
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Mobile top bar — visible below md, replaces the always-on desktop sidebar */}
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 sticky top-0 z-30">
+        <div className="flex items-center gap-2">
+          <Logo size={28} />
+          <div className="font-bold text-gray-900 text-sm tracking-tight">
+            Staff<span className="text-brand-blue-600">Verified</span>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+          className="p-2 -mr-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Mobile drawer + backdrop */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-40 flex">
+          <div
+            className="fixed inset-0 bg-black/40"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+          <aside className="relative w-72 max-w-[85vw] bg-white flex flex-col h-full shadow-xl">
+            <button
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+              className="absolute top-3 right-3 p-2 text-gray-400 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            {navContent}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop sidebar — hidden below md */}
+      <aside className="hidden md:flex w-56 bg-white border-r border-gray-100 flex-col min-h-screen">
+        {navContent}
+      </aside>
+    </>
   )
 }

@@ -86,7 +86,7 @@ export default function EmployeeRow({
     return (
       <tr className="bg-brand-blue-50/60">
         <td colSpan={8} className="px-5 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div className="col-span-2">
               <label className={lbl}>Full name</label>
               <input value={form.full_name} onChange={ev => setForm(f => ({ ...f, full_name: ev.target.value }))} className={fld} />
