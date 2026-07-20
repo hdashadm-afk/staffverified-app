@@ -36,12 +36,14 @@ function generateDates(start: string, end: string): string[] {
 // Roles that can reopen a payday-locked DTR — same set that can write dtr_cutoff_status (see migration 013).
 const REOPEN_ROLES = ['owner', 'assistant', 'ops_officer', 'ceo']
 
-// Only Admin (owner) and HR (assistant) can manually override computed OT/NSD hours.
-const OT_NSD_OVERRIDE_ROLES = ['owner', 'assistant']
+// HR (assistant) and Admin (ops_officer) — company-authorized — can override
+// computed OT/NSD hours without needing Owner sign-off; Owner approval is
+// reserved for payroll release, not DTR entry. Owner can still edit too.
+const OT_NSD_OVERRIDE_ROLES = ['owner', 'assistant', 'ops_officer']
 
 const emptyDraft: DTRRowDraft = {
   timeIn: '', timeOut: '', isHolidayRegular: false, isHolidaySpecial: false,
-  otOverride: null, nsdOverride: null, otOverrideReason: '', nsdOverrideReason: '',
+  otOverride: null, nsdOverride: null, otOverrideReason: '', nsdOverrideReason: '', stationId: '',
 }
 
 export default function DTRView({
@@ -151,8 +153,9 @@ export default function DTRView({
             nsdOverride: e.night_shift_hours_overridden ? e.night_shift_hours : null,
             otOverrideReason: '',
             nsdOverrideReason: '',
+            stationId: e.station_id ?? employee?.station_id ?? '',
           }
-        : { ...emptyDraft }
+        : { ...emptyDraft, stationId: employee?.station_id ?? '' }
     }
     setDrafts(next)
     setSavedAt(false)
@@ -216,7 +219,7 @@ export default function DTRView({
         return {
           org_id: orgId,
           employee_id: selectedEmployee,
-          station_id: employee.station_id,
+          station_id: draft.stationId || employee.station_id,
           work_date: date,
           time_in: draft.timeIn || null,
           time_out: draft.timeOut || null,
@@ -420,6 +423,7 @@ export default function DTRView({
           <thead>
             <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
               <th className="text-left px-5 py-3 font-medium">Date</th>
+              {stations.length > 1 && <th className="text-left px-4 py-3 font-medium">Station</th>}
               <th className="text-left px-4 py-3 font-medium">Day</th>
               <th className="text-left px-4 py-3 font-medium">Time In</th>
               <th className="text-left px-4 py-3 font-medium">Time Out</th>
@@ -444,6 +448,7 @@ export default function DTRView({
                   otOverridden={existing?.overtime_hours_overridden ?? false}
                   nsdOverridden={existing?.night_shift_hours_overridden ?? false}
                   canOverride={canOverrideOtNsd}
+                  stations={stations}
                   onChange={patch => setDraft(date, patch)}
                   disabled={locked}
                 />
@@ -452,7 +457,7 @@ export default function DTRView({
           </tbody>
           <tfoot>
             <tr className="border-t border-gray-200 bg-gray-50 font-medium text-sm">
-              <td className="px-5 py-3 text-gray-700" colSpan={4}>Totals</td>
+              <td className="px-5 py-3 text-gray-700" colSpan={stations.length > 1 ? 5 : 4}>Totals</td>
               <td className="px-4 py-3 text-right">{totals.regular.toFixed(1)}</td>
               <td className="px-4 py-3 text-right">{totals.ot.toFixed(1)}</td>
               <td className="px-4 py-3 text-right">{totals.nsd.toFixed(1)}</td>
@@ -464,7 +469,7 @@ export default function DTRView({
 
       {canOverrideOtNsd && (
         <p className="text-xs text-gray-400">
-          OT and NSD hours are auto-computed from Time In/Out. As Admin/HR you can type a different value to override it — use the ↺ icon to go back to the auto-computed value.
+          OT and NSD hours are auto-computed from Time In/Out. As HR or Admin you can type a different value to override it — use the ↺ icon to go back to the auto-computed value.
         </p>
       )}
 
