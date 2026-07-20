@@ -1,18 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { PayrollRun, Employee, Payslip, DTREntry } from '@/types/database'
+import { PayrollRun, Employee, Payslip, DTREntry, DeductionType, EmployeeDeductionSetting } from '@/types/database'
 import { OrgRates, summarizeCutoffEarnings } from '@/lib/payroll-math'
 import {
-  computeAllContributions,
   computeWeeklyWithholdingTax,
   computeThirteenthMonthTax,
   computeLumpSumTax,
 } from '@/lib/contribution-tables'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, ChevronUp, Zap, Download } from 'lucide-react'
+import { ChevronDown, ChevronUp, Zap, Download, Sliders } from 'lucide-react'
 import PayslipView from './Payslip'
+import PayslipAdjustModal from './PayslipAdjustModal'
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600',
@@ -41,7 +41,7 @@ export default function PayrollRunCard({
   orgRates,
 }: {
   run: PayrollRun & { stations: { name: string } | null }
-  employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'coop_saving_amount' | 'station_id' | 'regular_hours_per_day'>[]
+  employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'station_id' | 'regular_hours_per_day'>[]
   orgId: string
   orgRates: OrgRates
 }) {
@@ -52,6 +52,7 @@ export default function PayrollRunCard({
   const [offCycleDrafts, setOffCycleDrafts] = useState<Record<string, { amount: string; reason: string }>>({})
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [slipFor, setSlipFor] = useState<(Payslip & { employees: { full_name: string } }) | null>(null)
+  const [slipToAdjust, setSlipToAdjust] = useState<(Payslip & { employees: { full_name: string } }) | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -74,7 +75,7 @@ export default function PayrollRunCard({
     if (!loaded) await loadPayslips()
   }
 
-  async function upsertPayslip(emp: { id: string; coop_saving_amount: number }, fields: {
+  async function upsertPayslip(emp: { id: string }, fields: {
     basicPay: number
     holidayPay: number
     overtimePay: number
@@ -83,15 +84,23 @@ export default function PayrollRunCard({
     allowances: number
     addBackReason: string | null
     totalEarnings: number
-    sssEmployee: number
-    philhealthEmployee: number
-    hdmfEmployee: number
-    withholdingTax: number
+    sss: number
+    sssLoan: number
+    philhealth: number
+    pagibig: number
+    pagibigLoan: number
+    coopLoan: number
     coopSaving: number
+    short: number
+    withholdingTax: number
+    salaryAdjustment: number
+    bonus: number
+    thirteenthMonthPay: number
   }) {
     const totalDeductions =
-      fields.sssEmployee + fields.philhealthEmployee + fields.hdmfEmployee + fields.withholdingTax + fields.coopSaving
-    const netPay = fields.totalEarnings - totalDeductions
+      fields.sss + fields.sssLoan + fields.philhealth + fields.pagibig + fields.pagibigLoan +
+      fields.coopLoan + fields.coopSaving + fields.short + fields.withholdingTax
+    const netPay = fields.totalEarnings - totalDeductions + fields.salaryAdjustment + fields.bonus + fields.thirteenthMonthPay
 
     const { error } = await supabase.from('payslips').upsert({
       org_id: orgId,
@@ -107,21 +116,51 @@ export default function PayrollRunCard({
       add_back: 0,
       add_back_reason: fields.addBackReason,
       total_earnings: Math.round(fields.totalEarnings * 100) / 100,
-      sss_contribution: fields.sssEmployee,
-      philhealth_contribution: fields.philhealthEmployee,
-      hdmf_contribution: fields.hdmfEmployee,
+      sss_contribution: fields.sss,
+      philhealth_contribution: fields.philhealth,
+      hdmf_contribution: fields.pagibig,
       withholding_tax: Math.round(fields.withholdingTax * 100) / 100,
       uniform_deduction: 0,
       coop_saving: fields.coopSaving,
-      gas_shortage: 0,
-      sss_loan: 0,
-      pagibig_loan: 0,
+      coop_loan: fields.coopLoan,
+      gas_shortage: fields.short,
+      sss_loan: fields.sssLoan,
+      pagibig_loan: fields.pagibigLoan,
+      salary_adjustment: fields.salaryAdjustment,
+      bonus: fields.bonus,
+      thirteenth_month_pay: fields.thirteenthMonthPay,
       total_deductions: Math.round(totalDeductions * 100) / 100,
       net_pay: Math.round(netPay * 100) / 100,
       variance_amount: 0,
     }, { onConflict: 'payroll_run_id,employee_id' })
 
     return error
+  }
+
+  // Employee-level defaults from Weekly Payroll Deductions & Adjustments
+  // (Employee Profile). can_deduct gates whether the saved weekly_amount is
+  // actually applied — an amount can be saved while the toggle stays off.
+  async function loadDeductionSettings(): Promise<Record<string, Partial<Record<DeductionType, EmployeeDeductionSetting>>>> {
+    const { data } = await supabase
+      .from('employee_deduction_settings')
+      .select('*')
+      .eq('org_id', orgId)
+
+    const byEmployee: Record<string, Partial<Record<DeductionType, EmployeeDeductionSetting>>> = {}
+    for (const row of (data ?? []) as EmployeeDeductionSetting[]) {
+      if (!byEmployee[row.employee_id]) byEmployee[row.employee_id] = {}
+      byEmployee[row.employee_id][row.deduction_type] = row
+    }
+    return byEmployee
+  }
+
+  function settingAmount(
+    settings: Record<string, Partial<Record<DeductionType, EmployeeDeductionSetting>>>,
+    employeeId: string,
+    type: DeductionType
+  ): number {
+    const setting = settings[employeeId]?.[type]
+    return setting?.can_deduct ? setting.weekly_amount : 0
   }
 
   async function generatePayslips() {
@@ -148,6 +187,8 @@ export default function PayrollRunCard({
       dtrByEmployee[d.employee_id].push(d as DTREntry)
     }
 
+    const deductionSettings = await loadDeductionSettings()
+
     for (const emp of employees) {
       const entries = dtrByEmployee[emp.id] ?? []
       const dailyRate = emp.daily_rate
@@ -155,18 +196,25 @@ export default function PayrollRunCard({
       const { basicPay, holidayPay, overtimePay, nsdPay, lateUndertimeDeduction: lateUndertime, totalEarnings } =
         summarizeCutoffEarnings(entries, dailyRate, orgRates, emp.regular_hours_per_day)
 
-      // Monthly contributions (SSS/PhilHealth/Pag-IBIG) are deducted once per month.
-      // Under weekly cutoffs (Thu–Wed), apply them on the FIRST cutoff of the month
-      // i.e. the one whose start date falls within the first 7 days.
-      const cutoffDay = new Date(run.cutoff_start).getDate()
-      const isFirstCutoff = cutoffDay <= 7
+      // Weekly Payroll Deductions & Adjustments (Employee Profile): each item's
+      // default weekly amount applies to every cutoff when its Can Deduct
+      // toggle is on — these are per-employee defaults, overridable per run
+      // via the payslip's own Adjust action, not recomputed from brackets.
+      const sss = settingAmount(deductionSettings, emp.id, 'sss')
+      const philhealth = settingAmount(deductionSettings, emp.id, 'philhealth')
+      const pagibig = settingAmount(deductionSettings, emp.id, 'pagibig')
+      const sssLoan = settingAmount(deductionSettings, emp.id, 'sss_loan')
+      const pagibigLoan = settingAmount(deductionSettings, emp.id, 'pagibig_loan')
+      const coopLoan = settingAmount(deductionSettings, emp.id, 'coop_loan')
+      const coopSaving = settingAmount(deductionSettings, emp.id, 'coop_savings')
+      const short = settingAmount(deductionSettings, emp.id, 'short')
+      const salaryAdjustment = settingAmount(deductionSettings, emp.id, 'salary_adjustment')
+      const bonus = settingAmount(deductionSettings, emp.id, 'bonus')
+      const thirteenthMonthPay = settingAmount(deductionSettings, emp.id, 'thirteenth_month_pay')
 
-      const contribs = computeAllContributions(basicPay + holidayPay, isFirstCutoff)
-
-      // Statutory contributions are pre-tax; coop savings and other
-      // deductions below are post-tax and don't reduce taxable income.
-      const taxableIncome =
-        totalEarnings - contribs.sss_employee - contribs.philhealth_employee - contribs.hdmf_employee
+      // Statutory contributions are pre-tax; loans, coop savings, short and
+      // the other adjustments below are post-tax and don't reduce taxable income.
+      const taxableIncome = totalEarnings - sss - philhealth - pagibig
       const withholdingTax = computeWeeklyWithholdingTax(Math.max(0, taxableIncome))
 
       const upsertError = await upsertPayslip(emp, {
@@ -174,11 +222,9 @@ export default function PayrollRunCard({
         allowances: 0,
         addBackReason: null,
         totalEarnings,
-        sssEmployee: contribs.sss_employee,
-        philhealthEmployee: contribs.philhealth_employee,
-        hdmfEmployee: contribs.hdmf_employee,
+        sss, sssLoan, philhealth, pagibig, pagibigLoan, coopLoan, coopSaving, short,
         withholdingTax,
-        coopSaving: emp.coop_saving_amount,
+        salaryAdjustment, bonus, thirteenthMonthPay,
       })
       if (upsertError) {
         setGenerating(false)
@@ -246,9 +292,9 @@ export default function PayrollRunCard({
         addBackReason: null,
         totalEarnings: thirteenthMonthPay,
         // 13th month pay is excluded from SSS/PhilHealth/Pag-IBIG contribution basis.
-        sssEmployee: 0, philhealthEmployee: 0, hdmfEmployee: 0,
+        sss: 0, sssLoan: 0, philhealth: 0, pagibig: 0, pagibigLoan: 0, coopLoan: 0, coopSaving: 0, short: 0,
         withholdingTax,
-        coopSaving: 0,
+        salaryAdjustment: 0, bonus: 0, thirteenthMonthPay: 0,
       })
       if (upsertError) {
         setGenerating(false)
@@ -287,9 +333,9 @@ export default function PayrollRunCard({
         allowances: amount,
         addBackReason: draft?.reason || null,
         totalEarnings: amount,
-        sssEmployee: 0, philhealthEmployee: 0, hdmfEmployee: 0,
+        sss: 0, sssLoan: 0, philhealth: 0, pagibig: 0, pagibigLoan: 0, coopLoan: 0, coopSaving: 0, short: 0,
         withholdingTax,
-        coopSaving: 0,
+        salaryAdjustment: 0, bonus: 0, thirteenthMonthPay: 0,
       })
       if (upsertError) {
         setGenerating(false)
@@ -311,7 +357,8 @@ export default function PayrollRunCard({
   function exportExcel() {
     const headers = [
       'Employee', 'Basic', 'Holiday', 'OT', 'NSD', 'Allowances', 'Earnings',
-      'SSS', 'PhilHealth', 'HDMF', 'WTax', 'Coop', 'Deductions', 'Net Pay',
+      'SSS', 'SSS Loan', 'PhilHealth', 'Pag-IBIG', 'Pag-IBIG Loan', 'Coop Loan', 'Coop Savings', 'Short',
+      'WTax', 'Deductions', 'Salary Adjustment', 'Bonus', '13th Month Pay', 'Net Pay',
     ]
     const esc = (v: string | number) => {
       const s = String(v)
@@ -320,10 +367,11 @@ export default function PayrollRunCard({
     const body = payslips.map(p => [
       (p as { employees?: { full_name: string } }).employees?.full_name ?? '',
       p.basic_pay, p.holiday_pay, p.overtime_pay, p.night_shift_diff, p.allowances,
-      p.total_earnings, p.sss_contribution, p.philhealth_contribution, p.hdmf_contribution,
-      p.withholding_tax, p.coop_saving, p.total_deductions, p.net_pay,
+      p.total_earnings, p.sss_contribution, p.sss_loan, p.philhealth_contribution, p.hdmf_contribution,
+      p.pagibig_loan, p.coop_loan, p.coop_saving, p.gas_shortage,
+      p.withholding_tax, p.total_deductions, p.salary_adjustment, p.bonus, p.thirteenth_month_pay, p.net_pay,
     ])
-    const totalRow = ['TOTAL NET PAY', '', '', '', '', '', '', '', '', '', '', '', '', totalNetPay]
+    const totalRow = ['TOTAL NET PAY', ...Array(headers.length - 2).fill(''), totalNetPay]
     const csv = [headers, ...body, totalRow].map(r => r.map(esc).join(',')).join('\r\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -494,6 +542,15 @@ export default function PayrollRunCard({
                       <td className="py-2.5 pr-4 font-medium text-gray-800">
                         {(p as any).employees?.full_name}
                         <button onClick={() => setSlipFor(p)} className="ml-2 text-xs text-red-600 hover:underline no-print">Slip</button>
+                        {run.status !== 'completed' && (
+                          <button
+                            onClick={() => setSlipToAdjust(p)}
+                            className="ml-2 text-xs text-brand-blue-600 hover:underline no-print inline-flex items-center gap-0.5"
+                            title="Override deductions/adjustments for this payroll period only"
+                          >
+                            <Sliders className="w-3 h-3" /> Adjust
+                          </button>
+                        )}
                       </td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.basic_pay.toLocaleString()}</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-gray-600">₱{p.holiday_pay.toLocaleString()}</td>
@@ -534,6 +591,18 @@ export default function PayrollRunCard({
           cutoffStart={run.cutoff_start}
           cutoffEnd={run.cutoff_end}
           onClose={() => setSlipFor(null)}
+        />
+      )}
+
+      {slipToAdjust && (
+        <PayslipAdjustModal
+          slip={slipToAdjust}
+          onClose={() => setSlipToAdjust(null)}
+          onSaved={async () => {
+            setSlipToAdjust(null)
+            await loadPayslips()
+            router.refresh()
+          }}
         />
       )}
     </div>

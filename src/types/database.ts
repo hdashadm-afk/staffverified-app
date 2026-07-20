@@ -4,6 +4,14 @@ export type PayrollStatus = 'draft' | 'review' | 'completed'
 export type PayrollRunType = 'regular' | '13th_month' | 'bonus' | 'adjustment'
 export type Agency = 'SSS' | 'PhilHealth' | 'HDMF' | 'BIR' | 'DOE' | 'DOLE' | 'Other'
 
+// Weekly Payroll Deductions & Adjustments — Employee Profile
+export type DeductionType =
+  | 'sss' | 'philhealth' | 'pagibig'
+  | 'sss_loan' | 'pagibig_loan' | 'coop_loan'
+  | 'coop_savings'
+  | 'short' | 'salary_adjustment'
+  | 'bonus' | 'thirteenth_month_pay'
+
 export interface Organization {
   id: string
   name: string
@@ -63,6 +71,17 @@ export interface Position {
   name: string
   sort_order: number
   created_at: string
+}
+
+export interface EmployeeDeductionSetting {
+  id: string
+  org_id: string
+  employee_id: string
+  deduction_type: DeductionType
+  can_deduct: boolean
+  weekly_amount: number
+  created_at: string
+  updated_at: string
 }
 
 export interface DTREntry {
@@ -159,10 +178,14 @@ export interface Payslip {
   withholding_tax: number
   uniform_deduction: number
   coop_saving: number
+  coop_loan: number
   gas_shortage: number
   gas_shortage_note: string | null
   sss_loan: number
   pagibig_loan: number
+  salary_adjustment: number
+  bonus: number
+  thirteenth_month_pay: number
   total_deductions: number
   net_pay: number
   variance_amount: number

@@ -30,7 +30,6 @@ export default function NewEmployeeButton({
     regular_hours_per_day: '8',
     employment_type: 'regular',
     has_sil: false,
-    coop_saving_amount: '0',
     date_hired: '',
     sss_no: '',
     philhealth_no: '',
@@ -56,7 +55,6 @@ export default function NewEmployeeButton({
       regular_hours_per_day: parseInt(form.regular_hours_per_day, 10) || 8,
       employment_type: form.employment_type,
       has_sil: form.has_sil,
-      coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
       date_hired: form.date_hired || null,
       sss_no: form.sss_no || null,
       philhealth_no: form.philhealth_no || null,
@@ -78,7 +76,7 @@ export default function NewEmployeeButton({
     setOpen(false)
     setForm({
       full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular',
-      allowance: '0', regular_hours_per_day: '8', has_sil: false, coop_saving_amount: '0', date_hired: '', sss_no: '', philhealth_no: '',
+      allowance: '0', regular_hours_per_day: '8', has_sil: false, date_hired: '', sss_no: '', philhealth_no: '',
       pagibig_no: '', tin_no: '', bank_name: '', bank_account_no: '', bank_account_name: '',
     })
     router.refresh()
@@ -194,18 +192,6 @@ export default function NewEmployeeButton({
                     placeholder="0"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Coop saving/cutoff (₱)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={form.coop_saving_amount}
-                  onChange={e => setForm(f => ({ ...f, coop_saving_amount: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
-                  placeholder="0"
-                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

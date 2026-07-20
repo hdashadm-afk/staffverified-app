@@ -22,6 +22,9 @@ type PayslipData = {
   gas_shortage: number
   sss_loan: number
   pagibig_loan: number
+  salary_adjustment?: number
+  bonus?: number
+  thirteenth_month_pay?: number
   total_deductions: number
   net_pay: number
   employees?: { full_name: string }
@@ -56,7 +59,6 @@ export default function Payslip({
   onClose: () => void
 }) {
   const days = dailyRate > 0 ? (slip.basic_pay / dailyRate) : 0
-  const sssLoanPagibig = (slip.sss_loan ?? 0) + (slip.pagibig_loan ?? 0)
 
   const Row = ({ label, value, red = false, bold = false }: { label: string; value: number; red?: boolean; bold?: boolean }) => (
     <div className="flex justify-between border-t border-black px-2 py-[3px]">
@@ -128,15 +130,25 @@ export default function Payslip({
               <div>
                 <div className="px-2 py-[3px] font-bold">Deductions</div>
                 <Row label="SSS" value={slip.sss_contribution} />
-                <Row label="PH" value={slip.philhealth_contribution} />
-                <Row label="HDMF" value={slip.hdmf_contribution} />
-                <Row label="Uniform" value={slip.uniform_deduction} />
-                <Row label="Coop Saving" value={slip.coop_saving} />
+                <Row label="SSS Loan" value={slip.sss_loan} red />
+                <Row label="PhilHealth" value={slip.philhealth_contribution} />
+                <Row label="Pag-IBIG" value={slip.hdmf_contribution} />
+                <Row label="Pag-IBIG Loan" value={slip.pagibig_loan} red />
                 <Row label="Coop Loan" value={slip.coop_loan ?? 0} />
-                <Row label="Gas Shortage" value={slip.gas_shortage} red />
-                <Row label="SSS Loan/Pagibig" value={sssLoanPagibig} red />
+                <Row label="Coop Savings" value={slip.coop_saving} />
+                <Row label="Short" value={slip.gas_shortage} red />
+                <Row label="Uniform" value={slip.uniform_deduction} />
                 <Row label="Total Deduction" value={slip.total_deductions} bold />
               </div>
+            </div>
+
+            {/* Salary Adjustment / Bonus / 13th Month Pay — applied after
+                deductions, not part of Gross Pay/Total Earnings above. */}
+            <div className="border-t border-black">
+              <div className="px-2 py-[3px] font-bold">Adjustments</div>
+              <Row label="Salary Adjustment" value={slip.salary_adjustment ?? 0} />
+              <Row label="Bonus" value={slip.bonus ?? 0} />
+              <Row label="13th Month Pay" value={slip.thirteenth_month_pay ?? 0} />
             </div>
 
             {/* Net / Gross */}
