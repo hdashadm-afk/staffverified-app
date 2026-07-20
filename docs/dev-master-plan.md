@@ -66,7 +66,7 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 | Area | Status | Notes |
 |---|---|---|
 | Self-service portal | ⬜ | No employee-facing role exists at all — current roles are all internal staff (ceo/cfo/ops_officer/owner/assistant/tl). |
-| Schedule entry UI | ✅ | `/schedule` page — set shift start/end per employee per day, same always-editable/single-save pattern as DTR. |
+| Schedule entry UI | 🟡 | `/schedule` page — set shift start/end per employee per day, same always-editable/single-save pattern as DTR. **Queued follow-ups (not started, per owner spec):** (1) Schedule cutoff must always mirror the DTR module's cutoff — any DTR cutoff change should auto-update Schedule's. (2) Schedule weeks must always render as fixed Thursday→Wednesday blocks regardless of the payroll cutoff length — if a payroll cutoff spans multiple weeks (e.g. biweekly), Schedule splits into consecutive Thu–Wed weeks (e.g. cutoff Jul 2–15 → Week 1 Jul 2–8, Week 2 Jul 9–15). Current cutoff is weekly-only, so this anticipates a future biweekly cutoff option. (3) Add a per-entry Station dropdown with a fixed code list: HC, HB, HT, HSJ, HD, HQ, HBANI, ADMIN, OPS — needs reconciling against what's actually in the org's `stations` table before building, since today's station list may not match these codes 1:1. |
 | Industry-specific intake | ⬜ | No department/intake data model exists yet. |
 | Attachments/comments on intake | ⬜ | Depends on intake existing first. |
 | Feedback loop | ✅ | Report Issue (now "Kath") widget supports file/image attachments; admin inbox shows them via signed URLs. |
