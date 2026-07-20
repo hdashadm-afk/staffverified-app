@@ -47,6 +47,7 @@ export interface Employee {
   org_id: string
   station_id: string | null
   full_name: string
+  email: string | null
   position: string | null
   daily_rate: number
   allowance: number

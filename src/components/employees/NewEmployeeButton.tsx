@@ -23,6 +23,7 @@ export default function NewEmployeeButton({
 
   const [form, setForm] = useState({
     full_name: '',
+    email: '',
     position: '',
     station_id: '',
     daily_rate: '',
@@ -48,6 +49,7 @@ export default function NewEmployeeButton({
     const { error: insertError } = await supabase.from('employees').insert({
       org_id: orgId,
       full_name: form.full_name,
+      email: form.email || null,
       position: form.position || null,
       station_id: form.station_id || null,
       daily_rate: parseFloat(form.daily_rate) || 0,
@@ -75,7 +77,7 @@ export default function NewEmployeeButton({
 
     setOpen(false)
     setForm({
-      full_name: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular',
+      full_name: '', email: '', position: '', station_id: '', daily_rate: '', employment_type: 'regular',
       allowance: '0', regular_hours_per_day: '8', has_sil: false, date_hired: '', sss_no: '', philhealth_no: '',
       pagibig_no: '', tin_no: '', bank_name: '', bank_account_no: '', bank_account_name: '',
     })
@@ -111,6 +113,17 @@ export default function NewEmployeeButton({
                   onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
                   placeholder="Juan dela Cruz"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Email (for payslip delivery)</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
+                  placeholder="employee@email.com"
                 />
               </div>
 
