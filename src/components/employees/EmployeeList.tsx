@@ -46,6 +46,7 @@ export default function EmployeeList({
             <thead>
               <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
                 <th className="text-left px-5 py-3 font-medium">Name</th>
+                <th className="text-left px-4 py-3 font-medium">Email</th>
                 <th className="text-left px-4 py-3 font-medium">Position</th>
                 <th className="text-left px-4 py-3 font-medium">Station</th>
                 <th className="text-left px-4 py-3 font-medium">Type</th>

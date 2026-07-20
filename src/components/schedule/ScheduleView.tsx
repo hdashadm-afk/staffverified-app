@@ -3,17 +3,24 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Employee, Schedule, Station } from '@/types/database'
-import { cutoffStart, cutoffEnd } from '@/lib/cutoff'
+import { cutoffStart, cutoffEnd, payday } from '@/lib/cutoff'
 import { ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+// Same weekly Thursday->Wednesday cutoff as DTR (both call lib/cutoff.ts),
+// so Schedule and DTR always agree on cutoff boundaries.
 function generateDates(start: string, end: string): string[] {
   const dates: string[] = []
   const cur = new Date(start + 'T00:00:00')
   const endDate = new Date(end + 'T00:00:00')
   while (cur <= endDate) {
-    dates.push(cur.toISOString().split('T')[0])
+    // Format from the Date object's own calendar fields — never toISOString(),
+    // which reconverts to UTC and can silently shift the date. See lib/cutoff.ts.
+    const y = cur.getFullYear()
+    const m = String(cur.getMonth() + 1).padStart(2, '0')
+    const day = String(cur.getDate()).padStart(2, '0')
+    dates.push(`${y}-${m}-${day}`)
     cur.setDate(cur.getDate() + 1)
   }
   return dates
@@ -22,8 +29,11 @@ function generateDates(start: string, end: string): string[] {
 interface Draft {
   shiftStart: string
   shiftEnd: string
+  // Station this shift counts against — defaults to the employee's home
+  // station, but staff sometimes float to cover another station.
+  stationId: string
 }
-const emptyDraft: Draft = { shiftStart: '', shiftEnd: '' }
+const emptyDraft: Draft = { shiftStart: '', shiftEnd: '', stationId: '' }
 
 export default function ScheduleView({
   employees,
@@ -48,6 +58,7 @@ export default function ScheduleView({
   anchor.setDate(anchor.getDate() + weekOffset * 7)
   const start = cutoffStart(anchor)
   const end = cutoffEnd(start)
+  const weekPayday = payday(end)
   const dates = generateDates(start, end)
 
   const employee = employees.find(e => e.id === selectedEmployee)
@@ -77,7 +88,9 @@ export default function ScheduleView({
     const next: Record<string, Draft> = {}
     for (const date of dates) {
       const s = scheduleMap[date]
-      next[date] = s ? { shiftStart: s.shift_start ?? '', shiftEnd: s.shift_end ?? '' } : { ...emptyDraft }
+      next[date] = s
+        ? { shiftStart: s.shift_start ?? '', shiftEnd: s.shift_end ?? '', stationId: s.station_id ?? employee?.station_id ?? '' }
+        : { ...emptyDraft, stationId: employee?.station_id ?? '' }
     }
     setDrafts(next)
     setSavedAt(false)
@@ -98,7 +111,7 @@ export default function ScheduleView({
       for (const date of dates) {
         const dow = new Date(date + 'T00:00:00').getDay()
         if (dow === 0 || dow === 6) continue // skip Sun/Sat
-        next[date] = { ...first }
+        next[date] = { ...first, stationId: prev[date]?.stationId || first.stationId }
       }
       return next
     })
@@ -117,7 +130,7 @@ export default function ScheduleView({
         return {
           org_id: orgId,
           employee_id: selectedEmployee,
-          station_id: employee.station_id,
+          station_id: draft.stationId || employee.station_id,
           work_date: date,
           shift_start: draft.shiftStart || null,
           shift_end: draft.shiftEnd || null,
@@ -163,10 +176,15 @@ export default function ScheduleView({
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <span className="text-sm text-gray-700 font-medium">
-          {new Date(start + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
-          {' – '}
-          {new Date(end + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+        <span className="text-sm text-gray-700">
+          Cutoff (Thu–Wed): <span className="font-medium">
+            {new Date(start + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
+            {' – '}
+            {new Date(end + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </span>
+          {' · '}Payday (Fri): <span className="font-medium">
+            {new Date(weekPayday + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
+          </span>
         </span>
         <button
           onClick={() => setWeekOffset(w => w + 1)}
@@ -190,6 +208,7 @@ export default function ScheduleView({
           <thead>
             <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wide">
               <th className="text-left px-5 py-3 font-medium">Date</th>
+              {stations.length > 1 && <th className="text-left px-4 py-3 font-medium">Station</th>}
               <th className="text-left px-4 py-3 font-medium">Day</th>
               <th className="text-left px-4 py-3 font-medium">Shift Start</th>
               <th className="text-left px-4 py-3 font-medium">Shift End</th>
@@ -197,7 +216,7 @@ export default function ScheduleView({
           </thead>
           <tbody className="divide-y divide-gray-50">
             {loading ? (
-              <tr><td colSpan={4} className="px-5 py-8 text-center text-gray-400">Loading…</td></tr>
+              <tr><td colSpan={stations.length > 1 ? 5 : 4} className="px-5 py-8 text-center text-gray-400">Loading…</td></tr>
             ) : (
               dates.map(date => {
                 const d = new Date(date + 'T00:00:00')
@@ -209,6 +228,20 @@ export default function ScheduleView({
                     <td className="px-5 py-2.5 text-gray-700 tabular-nums">
                       {d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
                     </td>
+                    {stations.length > 1 && (
+                      <td className="px-4 py-2">
+                        <select
+                          value={draft.stationId}
+                          onChange={e => setDraft(date, { stationId: e.target.value })}
+                          title="Station this shift counts against — change if the employee is covering another station"
+                          className="border border-gray-200 rounded px-1.5 py-1 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 max-w-[110px]"
+                        >
+                          {stations.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
                     <td className={`px-4 py-2.5 text-xs font-medium ${isWeekend ? 'text-orange-500' : 'text-gray-400'}`}>
                       {dayName}
                     </td>

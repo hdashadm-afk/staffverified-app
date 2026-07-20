@@ -24,6 +24,7 @@ export default function EmployeeRow({
 
   const [form, setForm] = useState({
     full_name: employee.full_name,
+    email: employee.email ?? '',
     position: employee.position ?? '',
     station_id: employee.station_id ?? '',
     daily_rate: employee.daily_rate.toString(),
@@ -49,6 +50,7 @@ export default function EmployeeRow({
       .from('employees')
       .update({
         full_name: form.full_name,
+        email: form.email || null,
         position: form.position || null,
         station_id: form.station_id || null,
         daily_rate: parseFloat(form.daily_rate) || 0,
@@ -84,11 +86,15 @@ export default function EmployeeRow({
   if (editing) {
     return (
       <tr className="bg-brand-blue-50/60">
-        <td colSpan={8} className="px-5 py-4">
+        <td colSpan={9} className="px-5 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div className="col-span-2">
               <label className={lbl}>Full name</label>
               <input value={form.full_name} onChange={ev => setForm(f => ({ ...f, full_name: ev.target.value }))} className={fld} />
+            </div>
+            <div className="col-span-2">
+              <label className={lbl}>Email (for payslip delivery)</label>
+              <input type="email" value={form.email} onChange={ev => setForm(f => ({ ...f, email: ev.target.value }))} className={fld} placeholder="employee@email.com" />
             </div>
             <div>
               <label className={lbl}>Position</label>
@@ -192,6 +198,9 @@ export default function EmployeeRow({
   return (
     <tr className={`hover:bg-gray-50 transition-colors ${!employee.is_active ? 'opacity-50' : ''}`}>
       <td className="px-5 py-3 font-medium text-gray-900">{employee.full_name}</td>
+      <td className="px-4 py-3 text-gray-600">
+        {employee.email ?? <span className="text-amber-600 text-xs">Missing</span>}
+      </td>
       <td className="px-4 py-3 text-gray-600">{employee.position ?? '—'}</td>
       <td className="px-4 py-3 text-gray-600">{employee.stations?.name ?? '—'}</td>
       <td className="px-4 py-3">

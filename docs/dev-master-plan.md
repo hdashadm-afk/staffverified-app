@@ -66,7 +66,7 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 | Area | Status | Notes |
 |---|---|---|
 | Self-service portal | ⬜ | No employee-facing role exists at all — current roles are all internal staff (ceo/cfo/ops_officer/owner/assistant/tl). |
-| Schedule entry UI | ✅ | `/schedule` page — set shift start/end per employee per day, same always-editable/single-save pattern as DTR. |
+| Schedule entry UI | ✅ | `/schedule` page — set shift start/end per employee per day, same always-editable/single-save pattern as DTR. Cutoff/Payday now labeled the same way as DTR (both already shared the same Thu–Wed week math via `lib/cutoff.ts`; also fixed a latent `toISOString()` date-shift bug DTR had already fixed). Per-day Station dropdown added (shown when org has 2+ stations), same pattern as DTR's — `schedules.station_id` existed in the schema but was always hardcoded to the employee's home station before this. **Still open:** the multi-week-per-cutoff case (a payroll cutoff spanning more than one Thu–Wed week, e.g. biweekly) isn't built — today's cutoff is weekly-only so Schedule only ever needs to show one week at a time; if payroll moves to biweekly, Schedule needs to render multiple consecutive weeks per cutoff. Also, the fixed station code list from the owner's spec (HC/HB/HT/HSJ/HD/HQ/HBANI/ADMIN/OPS) wasn't reconciled against the actual `stations` table — the dropdown just lists whatever stations already exist for the org. |
 | Industry-specific intake | ⬜ | No department/intake data model exists yet. |
 | Attachments/comments on intake | ⬜ | Depends on intake existing first. |
 | Feedback loop | ✅ | Report Issue (now "Kath") widget supports file/image attachments; admin inbox shows them via signed URLs. |
