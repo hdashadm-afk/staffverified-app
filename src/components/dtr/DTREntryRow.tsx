@@ -16,6 +16,10 @@ export interface DTRRowDraft {
   nsdOverride: number | null
   otOverrideReason: string
   nsdOverrideReason: string
+  // Station this entry's hours count against — defaults to the employee's
+  // home station, but staff sometimes float to cover another station for
+  // a day, and that's where their hours/pay should be attributed.
+  stationId: string
 }
 
 export default function DTREntryRow({
@@ -27,6 +31,7 @@ export default function DTREntryRow({
   otOverridden,
   nsdOverridden,
   canOverride,
+  stations,
   onChange,
   disabled = false,
 }: {
@@ -39,8 +44,10 @@ export default function DTREntryRow({
   /** Whether the currently-saved entry (if any) was already overridden — shown as a badge. */
   otOverridden: boolean
   nsdOverridden: boolean
-  /** Only Admin (owner) and HR (assistant) can edit OT/NSD directly — everyone else sees read-only values. */
+  /** HR (assistant) and Admin (ops_officer) can edit OT/NSD directly — everyone else sees read-only values. */
   canOverride: boolean
+  /** Org stations, for the per-day station reassignment dropdown. Omitted/empty hides the column. */
+  stations: { id: string; name: string }[]
   onChange: (patch: Partial<DTRRowDraft>) => void
   disabled?: boolean
 }) {
@@ -58,6 +65,21 @@ export default function DTREntryRow({
       <td className="px-5 py-2.5 text-gray-700 tabular-nums">
         {d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
       </td>
+      {stations.length > 1 && (
+        <td className="px-4 py-2">
+          <select
+            value={draft.stationId}
+            onChange={e => onChange({ stationId: e.target.value })}
+            disabled={disabled}
+            title="Station this day's hours count against — change if the employee floated to cover another station"
+            className="border border-gray-200 rounded px-1.5 py-1 text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 disabled:bg-gray-50 disabled:text-gray-400 max-w-[110px]"
+          >
+            {stations.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </td>
+      )}
       <td className={`px-4 py-2.5 text-xs font-medium ${isWeekend ? 'text-orange-500' : 'text-gray-400'}`}>
         {dayName}
       </td>
