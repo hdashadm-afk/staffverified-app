@@ -9,7 +9,8 @@ type Slip = Payslip & { employees?: { full_name: string } }
 
 const FIELDS: { key: keyof Pick<Payslip,
   'sss_contribution' | 'sss_loan' | 'philhealth_contribution' | 'hdmf_contribution' | 'pagibig_loan' |
-  'coop_loan' | 'coop_saving' | 'gas_shortage' | 'salary_adjustment' | 'bonus' | 'thirteenth_month_pay'
+  'coop_loan' | 'coop_saving' | 'gas_shortage' | 'salary_adjustment' | 'bonus' | 'thirteenth_month_pay' |
+  'tl_allowance' | 'gas_allowance' | 'other_allowance'
 >; label: string }[] = [
   { key: 'sss_contribution', label: 'SSS' },
   { key: 'sss_loan', label: 'SSS Loan' },
@@ -22,12 +23,15 @@ const FIELDS: { key: keyof Pick<Payslip,
   { key: 'salary_adjustment', label: 'Salary Adjustment (+/-)' },
   { key: 'bonus', label: 'Bonus' },
   { key: 'thirteenth_month_pay', label: '13th Month Pay' },
+  { key: 'tl_allowance', label: 'TL Allowance' },
+  { key: 'gas_allowance', label: 'Gas Allowance' },
+  { key: 'other_allowance', label: 'Other Allowance' },
 ]
 
 // Deductions: everything except the "additive" items (salary_adjustment can go
-// either way but is applied post-deduction, same as bonus/13th month, per the
-// weekly payroll calculation: Gross − deductions +/− Salary Adjustment +
-// Bonus + 13th Month Pay = Net Pay.
+// either way but is applied post-deduction, same as bonus/13th month/allowances,
+// per the weekly payroll calculation: Gross − deductions +/− Salary Adjustment +
+// Bonus + 13th Month Pay + TL/Gas/Other Allowance = Net Pay.
 const DEDUCTION_KEYS = ['sss_contribution', 'sss_loan', 'philhealth_contribution', 'hdmf_contribution', 'pagibig_loan', 'coop_loan', 'coop_saving', 'gas_shortage'] as const
 
 export default function PayslipAdjustModal({
@@ -56,7 +60,8 @@ export default function PayslipAdjustModal({
 
     const deductionsSum = DEDUCTION_KEYS.reduce((s, k) => s + num(k), 0)
     const totalDeductions = deductionsSum + slip.uniform_deduction + slip.withholding_tax
-    const netPay = slip.total_earnings - totalDeductions + num('salary_adjustment') + num('bonus') + num('thirteenth_month_pay')
+    const netPay = slip.total_earnings - totalDeductions + num('salary_adjustment') + num('bonus') +
+      num('thirteenth_month_pay') + num('tl_allowance') + num('gas_allowance') + num('other_allowance')
 
     const { error: updateError } = await supabase
       .from('payslips')
@@ -72,6 +77,9 @@ export default function PayslipAdjustModal({
         salary_adjustment: num('salary_adjustment'),
         bonus: num('bonus'),
         thirteenth_month_pay: num('thirteenth_month_pay'),
+        tl_allowance: num('tl_allowance'),
+        gas_allowance: num('gas_allowance'),
+        other_allowance: num('other_allowance'),
         total_deductions: Math.round(totalDeductions * 100) / 100,
         net_pay: Math.round(netPay * 100) / 100,
       })

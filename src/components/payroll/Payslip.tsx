@@ -25,6 +25,9 @@ type PayslipData = {
   salary_adjustment?: number
   bonus?: number
   thirteenth_month_pay?: number
+  tl_allowance?: number
+  gas_allowance?: number
+  other_allowance?: number
   total_deductions: number
   net_pay: number
   employees?: { full_name: string }
@@ -39,6 +42,15 @@ function payrollDate(start: string, end: string): string {
   const M = (d: Date) => d.toLocaleDateString('en-US', { month: 'long' }).toUpperCase()
   if (s.getMonth() === e.getMonth()) return `${M(s)} ${s.getDate()}-${e.getDate()}, ${e.getFullYear()}`
   return `${M(s)} ${s.getDate()}-${M(e)} ${e.getDate()}, ${e.getFullYear()}`
+}
+
+function Row({ label, value, red = false, bold = false }: { label: string; value: number; red?: boolean; bold?: boolean }) {
+  return (
+    <div className="flex justify-between border-t border-black px-2 py-[3px]">
+      <span className={bold ? 'font-bold' : ''}>{label}</span>
+      <span className={`tabular-nums ${red && value > 0 ? 'text-red-600' : ''} ${bold ? 'font-bold' : ''}`}>{peso(value)}</span>
+    </div>
+  )
 }
 
 export default function Payslip({
@@ -60,12 +72,11 @@ export default function Payslip({
 }) {
   const days = dailyRate > 0 ? (slip.basic_pay / dailyRate) : 0
 
-  const Row = ({ label, value, red = false, bold = false }: { label: string; value: number; red?: boolean; bold?: boolean }) => (
-    <div className="flex justify-between border-t border-black px-2 py-[3px]">
-      <span className={bold ? 'font-bold' : ''}>{label}</span>
-      <span className={`tabular-nums ${red && value > 0 ? 'text-red-600' : ''} ${bold ? 'font-bold' : ''}`}>{peso(value)}</span>
-    </div>
-  )
+  // Bonus/13th Month Pay/Allowances are earnings that increase gross pay —
+  // shown in the Earnings box, not netted separately like Salary Adjustment.
+  const additionalEarnings = (slip.bonus ?? 0) + (slip.thirteenth_month_pay ?? 0) +
+    (slip.tl_allowance ?? 0) + (slip.gas_allowance ?? 0) + (slip.other_allowance ?? 0)
+  const grossPay = slip.total_earnings + additionalEarnings
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-start sm:items-center justify-center p-4 overflow-auto">
@@ -125,7 +136,12 @@ export default function Payslip({
                 <Row label="NS Differential" value={slip.night_shift_diff} />
                 <Row label="Add Back" value={slip.add_back} />
                 <Row label="Allowances" value={slip.allowances} />
-                <Row label="Total Earnings" value={slip.total_earnings} bold />
+                <Row label="Bonus" value={slip.bonus ?? 0} />
+                <Row label="13th Month Pay" value={slip.thirteenth_month_pay ?? 0} />
+                <Row label="TL Allowance" value={slip.tl_allowance ?? 0} />
+                <Row label="Gas Allowance" value={slip.gas_allowance ?? 0} />
+                <Row label="Other Allowance" value={slip.other_allowance ?? 0} />
+                <Row label="Total Earnings" value={grossPay} bold />
               </div>
               <div>
                 <div className="px-2 py-[3px] font-bold">Deductions</div>
@@ -142,13 +158,11 @@ export default function Payslip({
               </div>
             </div>
 
-            {/* Salary Adjustment / Bonus / 13th Month Pay — applied after
-                deductions, not part of Gross Pay/Total Earnings above. */}
+            {/* Salary Adjustment (+/-) — a correction, not an earning, so it
+                stays out of Gross Pay/Total Earnings above. */}
             <div className="border-t border-black">
               <div className="px-2 py-[3px] font-bold">Adjustments</div>
               <Row label="Salary Adjustment" value={slip.salary_adjustment ?? 0} />
-              <Row label="Bonus" value={slip.bonus ?? 0} />
-              <Row label="13th Month Pay" value={slip.thirteenth_month_pay ?? 0} />
             </div>
 
             {/* Net / Gross */}
@@ -158,7 +172,7 @@ export default function Payslip({
             </div>
             <div className="flex justify-between border-t border-black px-2 py-[3px]">
               <span className="font-bold">Gross Pay</span>
-              <span className="font-bold tabular-nums">{peso(slip.total_earnings)}</span>
+              <span className="font-bold tabular-nums">{peso(grossPay)}</span>
             </div>
 
             {/* Footer */}

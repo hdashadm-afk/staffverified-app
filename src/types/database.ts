@@ -11,6 +11,7 @@ export type DeductionType =
   | 'coop_savings'
   | 'short' | 'salary_adjustment'
   | 'bonus' | 'thirteenth_month_pay'
+  | 'tl_allowance' | 'gas_allowance' | 'other_allowance'
 
 export interface Organization {
   id: string
@@ -186,6 +187,9 @@ export interface Payslip {
   salary_adjustment: number
   bonus: number
   thirteenth_month_pay: number
+  tl_allowance: number
+  gas_allowance: number
+  other_allowance: number
   total_deductions: number
   net_pay: number
   variance_amount: number
