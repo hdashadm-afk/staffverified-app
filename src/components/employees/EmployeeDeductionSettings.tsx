@@ -8,9 +8,10 @@ import { DeductionType, EmployeeDeductionSetting } from '@/types/database'
 
 type ItemState = { can_deduct: boolean; weekly_amount: string }
 
-const GROUPS: { title: string; items: { type: DeductionType; label: string }[] }[] = [
+const GROUPS: { title: string; kind: 'deduction' | 'earning'; items: { type: DeductionType; label: string }[] }[] = [
   {
     title: 'Statutory Contributions',
+    kind: 'deduction',
     items: [
       { type: 'sss', label: 'SSS' },
       { type: 'philhealth', label: 'PhilHealth' },
@@ -19,6 +20,7 @@ const GROUPS: { title: string; items: { type: DeductionType; label: string }[] }
   },
   {
     title: 'Loans',
+    kind: 'deduction',
     items: [
       { type: 'sss_loan', label: 'SSS Loan' },
       { type: 'pagibig_loan', label: 'Pag-IBIG Loan' },
@@ -27,10 +29,12 @@ const GROUPS: { title: string; items: { type: DeductionType; label: string }[] }
   },
   {
     title: 'Savings / Contributions',
+    kind: 'deduction',
     items: [{ type: 'coop_savings', label: 'Coop Savings' }],
   },
   {
     title: 'Other Adjustments',
+    kind: 'deduction',
     items: [
       { type: 'short', label: 'Short' },
       { type: 'salary_adjustment', label: 'Salary Adjustment' },
@@ -38,9 +42,13 @@ const GROUPS: { title: string; items: { type: DeductionType; label: string }[] }
   },
   {
     title: 'Additional Earnings',
+    kind: 'earning',
     items: [
       { type: 'bonus', label: 'Bonus' },
       { type: 'thirteenth_month_pay', label: '13th Month Pay' },
+      { type: 'tl_allowance', label: 'TL Allowance' },
+      { type: 'gas_allowance', label: 'Gas Allowance' },
+      { type: 'other_allowance', label: 'Other Allowance' },
     ],
   },
 ]
@@ -157,13 +165,15 @@ export default function EmployeeDeductionSettings({
                     <div className="space-y-3">
                       {group.items.map(({ type, label }) => {
                         const state = items[type]
+                        const onLabel = group.kind === 'earning' ? 'Included' : 'Can Deduct'
+                        const offLabel = group.kind === 'earning' ? 'Not Included' : 'Do Not Deduct'
                         return (
                           <div key={type} className="border border-gray-100 rounded-lg px-3 py-2.5">
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium text-gray-800">{label}</span>
                               <label className="flex items-center gap-2 cursor-pointer select-none">
                                 <span className={`text-xs font-medium ${state.can_deduct ? 'text-green-700' : 'text-gray-400'}`}>
-                                  {state.can_deduct ? 'Can Deduct' : 'Do Not Deduct'}
+                                  {state.can_deduct ? onLabel : offLabel}
                                 </span>
                                 <input
                                   type="checkbox"

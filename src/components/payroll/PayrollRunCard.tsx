@@ -96,11 +96,15 @@ export default function PayrollRunCard({
     salaryAdjustment: number
     bonus: number
     thirteenthMonthPay: number
+    tlAllowance: number
+    gasAllowance: number
+    otherAllowance: number
   }) {
     const totalDeductions =
       fields.sss + fields.sssLoan + fields.philhealth + fields.pagibig + fields.pagibigLoan +
       fields.coopLoan + fields.coopSaving + fields.short + fields.withholdingTax
-    const netPay = fields.totalEarnings - totalDeductions + fields.salaryAdjustment + fields.bonus + fields.thirteenthMonthPay
+    const netPay = fields.totalEarnings - totalDeductions + fields.salaryAdjustment + fields.bonus +
+      fields.thirteenthMonthPay + fields.tlAllowance + fields.gasAllowance + fields.otherAllowance
 
     const { error } = await supabase.from('payslips').upsert({
       org_id: orgId,
@@ -129,6 +133,9 @@ export default function PayrollRunCard({
       salary_adjustment: fields.salaryAdjustment,
       bonus: fields.bonus,
       thirteenth_month_pay: fields.thirteenthMonthPay,
+      tl_allowance: fields.tlAllowance,
+      gas_allowance: fields.gasAllowance,
+      other_allowance: fields.otherAllowance,
       total_deductions: Math.round(totalDeductions * 100) / 100,
       net_pay: Math.round(netPay * 100) / 100,
       variance_amount: 0,
@@ -211,6 +218,9 @@ export default function PayrollRunCard({
       const salaryAdjustment = settingAmount(deductionSettings, emp.id, 'salary_adjustment')
       const bonus = settingAmount(deductionSettings, emp.id, 'bonus')
       const thirteenthMonthPay = settingAmount(deductionSettings, emp.id, 'thirteenth_month_pay')
+      const tlAllowance = settingAmount(deductionSettings, emp.id, 'tl_allowance')
+      const gasAllowance = settingAmount(deductionSettings, emp.id, 'gas_allowance')
+      const otherAllowance = settingAmount(deductionSettings, emp.id, 'other_allowance')
 
       // Statutory contributions are pre-tax; loans, coop savings, short and
       // the other adjustments below are post-tax and don't reduce taxable income.
@@ -224,7 +234,7 @@ export default function PayrollRunCard({
         totalEarnings,
         sss, sssLoan, philhealth, pagibig, pagibigLoan, coopLoan, coopSaving, short,
         withholdingTax,
-        salaryAdjustment, bonus, thirteenthMonthPay,
+        salaryAdjustment, bonus, thirteenthMonthPay, tlAllowance, gasAllowance, otherAllowance,
       })
       if (upsertError) {
         setGenerating(false)
@@ -295,6 +305,7 @@ export default function PayrollRunCard({
         sss: 0, sssLoan: 0, philhealth: 0, pagibig: 0, pagibigLoan: 0, coopLoan: 0, coopSaving: 0, short: 0,
         withholdingTax,
         salaryAdjustment: 0, bonus: 0, thirteenthMonthPay: 0,
+        tlAllowance: 0, gasAllowance: 0, otherAllowance: 0,
       })
       if (upsertError) {
         setGenerating(false)
@@ -336,6 +347,7 @@ export default function PayrollRunCard({
         sss: 0, sssLoan: 0, philhealth: 0, pagibig: 0, pagibigLoan: 0, coopLoan: 0, coopSaving: 0, short: 0,
         withholdingTax,
         salaryAdjustment: 0, bonus: 0, thirteenthMonthPay: 0,
+        tlAllowance: 0, gasAllowance: 0, otherAllowance: 0,
       })
       if (upsertError) {
         setGenerating(false)
@@ -358,7 +370,8 @@ export default function PayrollRunCard({
     const headers = [
       'Employee', 'Basic', 'Holiday', 'OT', 'NSD', 'Allowances', 'Earnings',
       'SSS', 'SSS Loan', 'PhilHealth', 'Pag-IBIG', 'Pag-IBIG Loan', 'Coop Loan', 'Coop Savings', 'Short',
-      'WTax', 'Deductions', 'Salary Adjustment', 'Bonus', '13th Month Pay', 'Net Pay',
+      'WTax', 'Deductions', 'Salary Adjustment', 'Bonus', '13th Month Pay',
+      'TL Allowance', 'Gas Allowance', 'Other Allowance', 'Net Pay',
     ]
     const esc = (v: string | number) => {
       const s = String(v)
@@ -369,7 +382,8 @@ export default function PayrollRunCard({
       p.basic_pay, p.holiday_pay, p.overtime_pay, p.night_shift_diff, p.allowances,
       p.total_earnings, p.sss_contribution, p.sss_loan, p.philhealth_contribution, p.hdmf_contribution,
       p.pagibig_loan, p.coop_loan, p.coop_saving, p.gas_shortage,
-      p.withholding_tax, p.total_deductions, p.salary_adjustment, p.bonus, p.thirteenth_month_pay, p.net_pay,
+      p.withholding_tax, p.total_deductions, p.salary_adjustment, p.bonus, p.thirteenth_month_pay,
+      p.tl_allowance, p.gas_allowance, p.other_allowance, p.net_pay,
     ])
     const totalRow = ['TOTAL NET PAY', ...Array(headers.length - 2).fill(''), totalNetPay]
     const csv = [headers, ...body, totalRow].map(r => r.map(esc).join(',')).join('\r\n')
