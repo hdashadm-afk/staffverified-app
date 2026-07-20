@@ -23,26 +23,18 @@ production-real, not throwaway validation.
 
 Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 
-## Known bugs (open)
-
-- **Additional Earnings save fails in production** — saving TL
-  Allowance/Gas Allowance/Other Allowance on an employee's Weekly Payroll
-  Deductions & Adjustments fails with `new row for relation
-  "employee_deduction_settings" violates check constraint
-  "employee_deduction_settings_deduction_type_check"`. Root cause:
-  migration 018 (adds `tl_allowance`/`gas_allowance`/`other_allowance` to
-  the deduction-type check constraint + payslip columns) was merged and
-  deployed via Vercel (PR #16), but **Vercel only deploys the app code —
-  it does not run `supabase/migrations/*.sql`.** Those have to be applied
-  manually against the live Supabase DB (Studio SQL Editor or `supabase
-  db push`), and 018 was missed. Fix: run migration 018's SQL against
-  production, then retry the save — no redeploy needed. No CI step exists
-  in this repo to auto-apply migrations on merge, so this class of bug
-  (code ships, schema doesn't) can recur for any future migration until
-  that's addressed.
-
 ## Known bugs (fixed)
 
+- ~~Additional Earnings save fails in production~~ — **fixed.** Saving TL
+  Allowance/Gas Allowance/Other Allowance on an employee's Weekly Payroll
+  Deductions & Adjustments failed with a check-constraint violation
+  because migration 018 shipped in code (PR #16) but was never applied to
+  the live Supabase DB — Vercel deploys app code only, it doesn't run
+  `supabase/migrations/*.sql`. Migration 018 has now been applied to
+  production and the save works. No CI step exists in this repo to
+  auto-apply migrations on merge, so this class of bug (code ships,
+  schema doesn't) can recur for any future migration until that's
+  addressed.
 - ~~Employee add/edit broken in production~~ — **fixed.** Migration 009
   added `employment_type`, `sss_no`, `philhealth_no`, `pagibig_no`,
   `tin_no` to `employees`.
