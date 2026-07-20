@@ -187,3 +187,25 @@ export function summarizeCutoffEarnings(
     totalEarnings: basicPay + holidayPay + overtimePay + nsdPay - lateUndertimeDeduction,
   }
 }
+
+// Gross Pay as shown on the payslip: total_earnings (DTR-based) plus the
+// "Additional Earnings" items, which increase gross but are excluded from
+// total_earnings/taxable income (bonus and 13th month have their own tax
+// treatment, allowances are supplemental) — see Payslip.tsx and migration 018.
+export function payslipGrossPay(slip: {
+  total_earnings: number
+  bonus?: number | null
+  thirteenth_month_pay?: number | null
+  tl_allowance?: number | null
+  gas_allowance?: number | null
+  other_allowance?: number | null
+}): number {
+  return (
+    slip.total_earnings +
+    (slip.bonus ?? 0) +
+    (slip.thirteenth_month_pay ?? 0) +
+    (slip.tl_allowance ?? 0) +
+    (slip.gas_allowance ?? 0) +
+    (slip.other_allowance ?? 0)
+  )
+}

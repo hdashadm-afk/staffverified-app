@@ -1,6 +1,8 @@
 'use client'
 
 import { X, Printer } from 'lucide-react'
+import { payslipGrossPay } from '@/lib/payroll-math'
+import { formatPayrollCutoff } from '@/lib/cutoff'
 
 type PayslipData = {
   employee_id: string
@@ -35,15 +37,6 @@ type PayslipData = {
 
 const peso = (n: number) => (n ?? 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-// "JULY 2-8, 2026" (or cross-month "JULY 30-AUGUST 5, 2026")
-function payrollDate(start: string, end: string): string {
-  const s = new Date(start + 'T00:00:00')
-  const e = new Date(end + 'T00:00:00')
-  const M = (d: Date) => d.toLocaleDateString('en-US', { month: 'long' }).toUpperCase()
-  if (s.getMonth() === e.getMonth()) return `${M(s)} ${s.getDate()}-${e.getDate()}, ${e.getFullYear()}`
-  return `${M(s)} ${s.getDate()}-${M(e)} ${e.getDate()}, ${e.getFullYear()}`
-}
-
 function Row({ label, value, red = false, bold = false }: { label: string; value: number; red?: boolean; bold?: boolean }) {
   return (
     <div className="flex justify-between border-t border-black px-2 py-[3px]">
@@ -72,11 +65,7 @@ export default function Payslip({
 }) {
   const days = dailyRate > 0 ? (slip.basic_pay / dailyRate) : 0
 
-  // Bonus/13th Month Pay/Allowances are earnings that increase gross pay —
-  // shown in the Earnings box, not netted separately like Salary Adjustment.
-  const additionalEarnings = (slip.bonus ?? 0) + (slip.thirteenth_month_pay ?? 0) +
-    (slip.tl_allowance ?? 0) + (slip.gas_allowance ?? 0) + (slip.other_allowance ?? 0)
-  const grossPay = slip.total_earnings + additionalEarnings
+  const grossPay = payslipGrossPay(slip)
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-start sm:items-center justify-center p-4 overflow-auto">
@@ -118,7 +107,7 @@ export default function Payslip({
                 <div className="px-2 py-[3px]">Employee Classification: Non-Confidential</div>
               </div>
               <div>
-                <div className="flex justify-between px-2 py-[3px] border-b border-black"><span>Payroll date</span><span className="font-semibold">{payrollDate(cutoffStart, cutoffEnd)}</span></div>
+                <div className="flex justify-between px-2 py-[3px] border-b border-black"><span>Payroll date</span><span className="font-semibold">{formatPayrollCutoff(cutoffStart, cutoffEnd)}</span></div>
                 <div className="flex justify-between px-2 py-[3px] border-b border-black"><span>Rate:</span><span className="tabular-nums">{peso(dailyRate)}</span></div>
                 <div className="flex justify-between px-2 py-[3px]"><span>Days:</span><span className="tabular-nums">{days.toFixed(1)}</span></div>
               </div>

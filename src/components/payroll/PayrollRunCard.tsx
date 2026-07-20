@@ -10,7 +10,7 @@ import {
 } from '@/lib/contribution-tables'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, ChevronUp, Zap, Download, Sliders } from 'lucide-react'
+import { ChevronDown, ChevronUp, Zap, Download, Sliders, Mail, Loader2 } from 'lucide-react'
 import PayslipView from './Payslip'
 import PayslipAdjustModal from './PayslipAdjustModal'
 
@@ -53,6 +53,9 @@ export default function PayrollRunCard({
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [slipFor, setSlipFor] = useState<(Payslip & { employees: { full_name: string } }) | null>(null)
   const [slipToAdjust, setSlipToAdjust] = useState<(Payslip & { employees: { full_name: string } }) | null>(null)
+  const [sending, setSending] = useState(false)
+  const [sendResult, setSendResult] = useState<{ sent: string[]; skipped: string[]; failed: string[] } | null>(null)
+  const [sendError, setSendError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -396,6 +399,32 @@ export default function PayrollRunCard({
     URL.revokeObjectURL(url)
   }
 
+  // Emails every payslip in this run to the employee's email on file, skipping
+  // anyone without one, and marks the run completed — this is the "release."
+  async function sendPayslips() {
+    setSending(true)
+    setSendError(null)
+    setSendResult(null)
+    try {
+      const res = await fetch('/api/payroll/send-payslips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payrollRunId: run.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSendError(data.error ?? 'Failed to send payslips')
+        return
+      }
+      setSendResult(data)
+      router.refresh()
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : 'Network error')
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
     <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
       <div
@@ -518,7 +547,15 @@ export default function PayrollRunCard({
           )}
 
           {payslips.length > 0 && (
-            <div className="flex justify-end mb-3">
+            <div className="flex justify-end items-center gap-2 mb-3">
+              <button
+                onClick={sendPayslips}
+                disabled={sending}
+                className="flex items-center gap-2 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                {sending ? 'Sending…' : run.status === 'completed' ? 'Resend Payslips' : 'Send Payslips'}
+              </button>
               <button
                 onClick={exportExcel}
                 className="flex items-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
@@ -526,6 +563,22 @@ export default function PayrollRunCard({
                 <Download className="w-4 h-4" />
                 Export to Excel
               </button>
+            </div>
+          )}
+
+          {sendError && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3">{sendError}</p>
+          )}
+
+          {sendResult && (
+            <div className="text-xs bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 mb-3 space-y-1">
+              <p className="text-green-700">Sent to {sendResult.sent.length} employee{sendResult.sent.length === 1 ? '' : 's'}.</p>
+              {sendResult.skipped.length > 0 && (
+                <p className="text-amber-700">No email on file, skipped: {sendResult.skipped.join(', ')}.</p>
+              )}
+              {sendResult.failed.length > 0 && (
+                <p className="text-red-600">Failed to send: {sendResult.failed.join(', ')}.</p>
+              )}
             </div>
           )}
 

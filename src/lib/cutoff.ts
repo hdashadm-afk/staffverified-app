@@ -81,6 +81,15 @@ export function currentCutoff(date: Date = new Date()) {
   return { start, end, payday: payday(end) }
 }
 
+/** "JULY 2-8, 2026" (or cross-month "JULY 30-AUGUST 5, 2026") for payslip/email headers. */
+export function formatPayrollCutoff(start: string, end: string): string {
+  const s = parseISODate(start)
+  const e = parseISODate(end)
+  const M = (d: Date) => d.toLocaleDateString('en-US', { month: 'long' }).toUpperCase()
+  if (s.getMonth() === e.getMonth()) return `${M(s)} ${s.getDate()}-${e.getDate()}, ${e.getFullYear()}`
+  return `${M(s)} ${s.getDate()}-${M(e)} ${e.getDate()}, ${e.getFullYear()}`
+}
+
 /** True once today (Manila) has reached the cutoff's Payroll Date (payday). */
 export function isPastPayday(cutoffEndDate: string, today: Date = new Date()): boolean {
   return manilaTodayISO(today) >= payday(cutoffEndDate)
