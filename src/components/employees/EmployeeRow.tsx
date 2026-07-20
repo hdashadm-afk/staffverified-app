@@ -5,6 +5,7 @@ import { Employee, Position, Station } from '@/types/database'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Pencil, X, Check } from 'lucide-react'
+import EmployeeDeductionSettings from './EmployeeDeductionSettings'
 
 export default function EmployeeRow({
   employee,
@@ -38,7 +39,6 @@ export default function EmployeeRow({
     bank_account_no: employee.bank_account_no ?? '',
     bank_account_name: employee.bank_account_name ?? '',
     has_sil: employee.has_sil,
-    coop_saving_amount: employee.coop_saving_amount.toString(),
     is_active: employee.is_active,
   })
 
@@ -64,7 +64,6 @@ export default function EmployeeRow({
         bank_account_no: form.bank_account_no || null,
         bank_account_name: form.bank_account_name || null,
         has_sil: form.has_sil,
-        coop_saving_amount: parseFloat(form.coop_saving_amount) || 0,
         is_active: form.is_active,
       })
       .eq('id', employee.id)
@@ -126,11 +125,6 @@ export default function EmployeeRow({
                 <option value="12">12 Hours</option>
               </select>
             </div>
-            <div>
-              <label className={lbl}>Coop saving / cutoff (₱)</label>
-              <input type="number" min="0" value={form.coop_saving_amount} onChange={ev => setForm(f => ({ ...f, coop_saving_amount: ev.target.value }))} className={fld} />
-            </div>
-
             <div>
               <label className={lbl}>SSS No.</label>
               <input value={form.sss_no} onChange={ev => setForm(f => ({ ...f, sss_no: ev.target.value }))} className={fld} />
@@ -231,13 +225,16 @@ export default function EmployeeRow({
         </span>
       </td>
       <td className="px-4 py-3 text-right">
-        <button
-          onClick={() => { setError(null); setEditing(true) }}
-          className="text-gray-400 hover:text-gray-700 transition-colors"
-          title="Edit"
-        >
-          <Pencil className="w-4 h-4" />
-        </button>
+        <div className="flex items-center justify-end gap-3">
+          <EmployeeDeductionSettings employeeId={employee.id} orgId={employee.org_id} fullName={employee.full_name} />
+          <button
+            onClick={() => { setError(null); setEditing(true) }}
+            className="text-gray-400 hover:text-gray-700 transition-colors"
+            title="Edit"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+        </div>
       </td>
     </tr>
   )
