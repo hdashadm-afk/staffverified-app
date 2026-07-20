@@ -45,8 +45,9 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 | Time/attendance | ✅ | DTR + daily attendance (TL view) both work; regular/OT/NSD/holiday computed correctly; DTR grid is now always-editable with one Save (no more per-row edit toggle that blocked rows past the first). Late/undertime wired to `schedules` table, and a `/schedule` page now exists to actually populate it. |
 | Leave / PTO | ⬜ | Out of scope for this app per owner direction — `has_sil` remains a flag only, no request/approve/balance module. (A working version was built and then intentionally reverted.) |
 | Payroll calculations | ✅ | Gross computation (basic, OT, NSD, holiday pay) shared between DTR preview and payslip generation via `summarizeCutoffEarnings()`. |
-| PH statutory contributions | ✅ | SSS, PhilHealth, Pag-IBIG implemented with real 2025 bracket tables (`contribution-tables.ts`); monthly-salary conversion fixed to match actual weekly cutoffs (was `×2`, now `×52/12`). |
-| Payslips | ✅ | Full gross-to-net breakdown including BIR withholding tax. `sil_pay` field is back to unused/0 (leave sync reverted with the leave module). |
+| PH statutory contributions | ✅ | SSS, PhilHealth, Pag-IBIG bracket tables (`contribution-tables.ts`) still back the numbers, but Regular weekly payroll now sources amounts from each employee's saved deduction defaults (below) rather than computing live off the tables — the tables remain the source used to set those defaults and for the off-cycle/13th-month path. Monthly-salary conversion fixed to match actual weekly cutoffs (was `×2`, now `×52/12`). |
+| Employee payroll deductions & adjustments | ✅ | Each employee profile has an 11-item weekly deductions section (SSS/PhilHealth/Pag-IBIG, loans, coop savings, short/salary adjustment, bonus/13th month), each with a Can Deduct toggle (default off) and a default weekly ₱ amount — `EmployeeDeductionSettings.tsx`, migration 016. Supersedes the old flat `coop_saving_amount` field (backfilled into the new `coop_savings` type). |
+| Payslips | ✅ | Full gross-to-net breakdown including BIR withholding tax. Per-payslip **Adjust** action (`PayslipAdjustModal.tsx`, migration 017) lets an admin override an employee's deduction amounts for a single payroll period without touching their saved defaults. `sil_pay` field is back to unused/0 (leave sync reverted with the leave module). |
 | Off-cycle payroll runs | ✅ | New Payroll Run flow supports 13th Month Pay (auto-computed from year's basic pay, DOLE rule, ₱90k tax exemption), Bonus, and Adjustment (manual amount/reason per employee), alongside the existing Regular DTR-based run. |
 | Owner cockpit payroll views | 🟡 | Single-org dashboard exists; no cross-venture rollup because the app is single-tenant-per-org today — "multi-venture owner" concept isn't modeled at the data layer yet. |
 
@@ -77,7 +78,9 @@ Status legend: ✅ built · 🟡 partial/buggy · ⬜ not started
 4. ~~Schedule entry UI~~ — done.
 5. ~~Bank details field~~ — done.
 6. ~~Off-cycle payroll runs~~ — done.
-7. Self-service portal, industry intake, agentic workflows, cross-venture
+7. ~~Weekly payroll deductions & adjustments (employee-level defaults +
+   per-payslip override)~~ — done.
+8. Self-service portal, industry intake, agentic workflows, cross-venture
    owner cockpit — deferred; each is a bigger architectural lift (new
    auth model, new data model, or multi-tenant support) than what's been
    tackled so far and deserves its own scoping conversation first.
