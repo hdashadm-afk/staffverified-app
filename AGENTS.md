@@ -38,14 +38,13 @@ compliance needs first, connected into CEO's Space (Phase 1) as the
 daily-decision layer above it. Phase 2 has no build dependency on Phase 3
 (StationVerified/Ops) — don't block work here on that phase.
 
-**Rebrand note (2026-07-21):** the umbrella brand across the whole product
-family — this repo included — is now **Dipstify**, not Katiwala. Confirmed
-in `katiwala-owner-os-`'s `docs/DIPSTIFY_BRAND_GUIDE.md` and
-`docs/KATIWALA_PRODUCT_FAMILY.md`. `docs/design-system.md` here still says
-"Katiwala ecosystem design system" and this repo's screens are still on the
-pre-existing red theme — neither has been updated for Dipstify yet. Not
-done as part of this note, just flagged so the next session doesn't assume
-it's already handled.
+**Rebrand note (2026-07-21, superseded same day — see the "2026-07-21
+rebrand" note above):** originally flagged the palette/logo as not yet
+updated for Dipstify. That's now done (see above) — this note is kept
+only so the "umbrella brand is Dipstify, confirmed in
+`katiwala-owner-os-`'s `docs/DIPSTIFY_BRAND_GUIDE.md`/
+`docs/KATIWALA_PRODUCT_FAMILY.md`" context isn't lost. Still accurate:
+`docs/design-system.md` itself hasn't been rewritten yet.
 
 # Session-start operating preference — "Founder's Lens"
 
@@ -67,3 +66,18 @@ every decision still waiting on the founder, across every repo the
 session has touched, not a top-3. Opening line: **"Boss, here's your Lens
 today"** (or equivalent), then straight into the full table — not a
 re-explanation of what Founder's Lens is each time.
+
+# Instruction-delivery preference — tabular artifact checklists
+
+Confirmed by the founder 2026-07-21 (same rule now in `katiwala-owner-os-`'s
+`docs/MASTER_DIRECTION.md` §11): multi-step setup instructions that span
+more than one external site (e.g. Vercel + Supabase) go in a small
+published HTML artifact with a table — columns URL / Topic / Steps, one
+row per step, a checkbox per row (persisted via localStorage), and
+tap-to-copy chips for exact literal values (env var names, keys, secrets)
+instead of text to retype. Chat-paragraph step-by-step instructions were
+flagged as noisy and hard to follow on mobile — don't revert to that.
+Reuse the same artifact file/URL for the current task, redeploy with
+updated rows when the task changes. Chat replies stay short; the table
+carries the detail. Apply whenever a task has 3+ sequential steps across
+more than one external dashboard/site.
