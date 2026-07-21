@@ -6,10 +6,26 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Branding & design system
 
-All UI, branding, and product design work in this repo follows the Katiwala
-ecosystem design system: see `docs/design-system.md`. That doc is a standing
-reference, not yet applied — StaffVerified's current screens still use the
-pre-existing red theme; check that doc before styling anything new.
+All UI, branding, and product design work in this repo follows the Dipstify
+design system (see `katiwala-owner-os-`'s `docs/DIPSTIFY_BRAND_GUIDE.md`).
+`docs/design-system.md` in this repo is stale (still says "Katiwala
+ecosystem design system," not yet rewritten) — don't use it as the source
+of truth until it's updated.
+
+**2026-07-21 rebrand:** the app's actual live palette was blue (`--color-
+brand-blue-*` in `src/app/globals.css`), not red as an earlier note here
+claimed — that was inaccurate. Repointed the same CSS variables to
+Dipstify's near-black/steel-gray ink scale (`#141414` family) and added
+`--color-brand-yellow` (`#F5C400`) as the accent, so every component using
+`bg-brand-blue-600` etc. re-skinned without touching 24 files individually.
+Also swapped the logo (`Logo.tsx` now points at `/brand/dipstify-app-icon.
+png`) and the "Katiwala AI App" text label on the login page and sidebar to
+"Dipstify". Verified via Playwright screenshot of `/login` — clean,
+readable, good contrast. Not touched: `docs/design-system.md` itself
+(still says Katiwala, needs a full rewrite, not just a note) and any
+authenticated screens (dashboard, payroll, etc.) — no test credentials
+available this session to screenshot those; spot-check them once real
+Dipstify styling is in front of you.
 
 # Master direction
 
