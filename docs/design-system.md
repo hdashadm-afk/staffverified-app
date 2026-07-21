@@ -1,115 +1,124 @@
-# Katiwala Ecosystem Design System
+# Dipstify Design System
 
-Standing reference for all branding, UI, and product design across the ecosystem.
-Applies by default to every future screen, module, or mockup in this repo unless
-explicitly overridden. Source: owner master instruction, 2026-07-13.
+Standing reference for all branding, UI, and product design across the
+Dipstify product family. Applies by default to every future screen, module,
+or mockup in this repo unless explicitly overridden. Source: `katiwala-
+owner-os-`'s `docs/DIPSTIFY_BRAND_GUIDE.md` (2026-07-20), the standing
+master brand instruction — supersedes the earlier "Katiwala Ecosystem
+Design System" version of this doc.
 
 ## Ecosystem products (standardized names — never abbreviate)
 
-- Katiwala AI App — master trust/verification brand
-- OWDO — official name; **never** "ODO"
-- RideVerified
-- TitleVerified
-- CEOs Space
-- StaffVerified — this repo
-- StationVerified
-- CafeVerified
-- HotelVerified
+- **Dipstify** — public-facing master brand (`dipstify.com`); replaces
+  "Katiwala AI App" everywhere
+- **Owner's Lens** — top-level owner dashboard (`katiwala-owner-os-` repo)
+- **StaffVerified** — this repo, HR & Payroll
+- **PNLVerified** — P&L module (`pnlverified` repo)
+- **OpsVerified / StationVerified** — Ops module (`fuel-ops` repo)
+- OWDO — separate business, own name/logo, not part of the Dipstify family
 
 ## Brand architecture
 
-- One shared ecosystem — all products should feel like the same company.
-- Katiwala AI App is the master trust-oriented brand; the Verified products
-  (RideVerified, TitleVerified, StaffVerified, StationVerified, CafeVerified,
-  HotelVerified) inherit its trust/verification positioning.
-- OWDO keeps its own name/logo but shares the same design language.
-- Parent branding, where shown: "by Katiwala" or "A Katiwala Product".
-- Visual system stays consistent even when parent branding isn't shown.
+- One shared product family — every module should feel like the same
+  company, connected through Owner's Lens as the single front door.
+- Dipstify is the master brand; the Verified modules (StaffVerified,
+  PNLVerified, OpsVerified) inherit its identity but each keeps its own
+  repo, deployment, and database — see `katiwala-owner-os-`'s
+  `docs/OWNERS_LENS_MODULE_INTEGRATION.md` for why that's the intended
+  architecture, not a stopgap.
+- Visual system stays consistent even where a module's own name is shown
+  more prominently than "Dipstify."
 
-## Katiwala logo
+## Dipstify logo
 
-Asset sheet saved at `docs/brand/katiwala-logo-asset-sheet.png` (primary,
-reversed, app icon, favicon/icon-only variants).
+Asset sheet lives in `katiwala-owner-os-`'s `assets/brand/` (icon-only,
+app-icon, wordmark variants) — copied into this repo at
+`public/brand/dipstify-app-icon.png` / `dipstify-icon-only.png`.
 
 - Do not redesign, distort, rotate, stretch, recolor, or decorate (no
   gradients/shadows/bevels/glows/outlines) the logo.
-- Icon-only version for app icons, favicon, compact nav, profile icons, badges.
-- Blue logo on white/light backgrounds; white logo on blue/dark backgrounds.
-- Preserve clear space; never place on busy or low-contrast backgrounds.
-- **Note:** the asset sheet's swatch reads `#0A1D4D`, which differs from the
-  `Brand Blue #1E3A5F` specified in the written palette below. Flagging this —
-  not resolved automatically. Confirm which is the source of truth before it's
-  used pixel-for-pixel anywhere (favicon, splash, print).
-
-## OWDO logo
-
-Use OWDO's own approved logo as-is (no redesign/distortion/over-styling).
-Align to the ecosystem only via color, typography, spacing, and component
-behavior — not by forcing Katiwala branding onto it.
+- Primary wordmark: bold, industrial sans-serif, custom "I" shaped like a
+  dipstick — for YC deck, landing page, dashboard header, sales material.
+- Secondary icon: yellow-and-black dipstick-based mark — favicon, app
+  icon, compact avatar, small placements. This is what's used in this repo.
+- Industrial, precise, memorable, serious — not playful, not decorative,
+  no fuel-drop/flame/gas-pump clichés.
 
 ## Color palette
 
+Applied in this repo as of 2026-07-21 (`src/app/globals.css`,
+`--color-brand-blue-*` variable names kept for backward compatibility with
+existing Tailwind classes — values repointed to the scale below):
+
 Primary:
-- Brand Blue `#1E3A5F`
+- Near-black / ink `#141414` (was `brand-blue-600`, the primary
+  interactive color — buttons, active nav, focus states)
 - White `#FFFFFF`
+- Safety yellow `#F5C400` (`--color-brand-yellow`) — accent only, used as
+  a signal (highlights, emphasis), not as a dominant fill
 
 Neutrals (support only, when needed for readability/structure):
-- Ink `#0F172A`
-- Slate `#475569`
-- Border `#CBD5E1`
-- Surface Light `#F8FAFC`
+- Ink `#0F172A` (`--color-brand-ink`, unchanged)
+- Slate `#475569` (`--color-brand-slate`, unchanged)
+- Border `#CBD5E1` (`--color-brand-border`, unchanged)
+- Surface Light `#F8FAFC` (`--color-brand-surface`, unchanged)
 
 Rules:
-- Blue and white stay dominant everywhere.
+- Black/white/steel-gray stay dominant everywhere; yellow is a signal, not
+  decoration — avoid using it as a large background fill.
 - No extra accent colors without explicit approval.
-- Clean contrast, light surfaces, minimal visual noise.
-
-**Status in this repo:** StaffVerified currently uses a red primary
-(`red-600`/`red-700`/`red-50`, ~23 files) as its accent color, not the blue
-above. This doc records the target system; no rebrand has been applied yet —
-that's a separate, explicit task (see bottom of this file).
+- Clean contrast, light surfaces, minimal visual noise — should feel like
+  operational infrastructure software, not startup art. Avoid rainbow
+  palettes, gradients, neon, glow, or glassmorphism.
 
 ## Typography
 
-Apple-like discipline: clean, calm, precise, legible, minimal, modern.
+- **Inter Tight** — logo, headlines, and important brand moments
+- **Inter** — UI, body copy, buttons, labels, dashboard text (this repo's
+  `globals.css` body font-family, added 2026-07-21)
+- **JetBrains Mono** — IDs, logs, technical values, operational data only
 
-- SF Pro / San Francisco where available; otherwise closest clean system
-  sans-serif.
-- Consistent semantic hierarchy across all products:
-  Display/Hero, H1, H2, H3, Body, Body Small, Label, Caption, Button Text.
-- Regular/medium/semibold/bold only when needed; consistent line-height and
-  vertical rhythm; no ad hoc type styles; no playful/ornamental/condensed/
-  flashy fonts; no random sizes or weights.
+Apple-like discipline still applies: clean, calm, precise, legible,
+minimal, modern. Consistent semantic hierarchy (Display/Hero, H1, H2, H3,
+Body, Body Small, Label, Caption, Button Text); regular/medium/semibold/
+bold only when needed; no ad hoc type styles, no playful/ornamental/
+condensed/flashy fonts, no random sizes or weights.
 
 ## Visual style
 
-Feel: minimal, modern, trustworthy, verified, operational, premium-but-simple,
-B2B SaaS.
+Feel: minimal, modern, trustworthy, verified, operational,
+premium-but-simple, B2B SaaS — industrial rather than consumer-style.
 
 Prefer: flat design, strong spacing, rounded modern UI, clean line icons,
 light borders, uncluttered layouts, structured hierarchy, fast scanning.
 
-Avoid: gradients, glossy effects, bevels, heavy shadows, clutter, over-designed
-graphics, too many colors, inconsistent modules, unnecessary decoration.
+Avoid: gradients, glossy effects, bevels, heavy shadows, clutter,
+over-designed graphics, too many colors, inconsistent modules, unnecessary
+decoration.
 
 ## Shared app shell
 
-One shell across all products/modules: top header, left sidebar, page title,
-one primary CTA, KPI/summary card strip, filters/search row when relevant,
-main work area, detail pages with tabs, activity/notes/alerts/tasks area
-where relevant. Don't redesign the shell per product — only content, records,
-workflows, labels, metrics, actions change.
+One shell across all products/modules: top header, left sidebar, page
+title, one primary CTA, KPI/summary card strip, filters/search row when
+relevant, main work area, detail pages with tabs, activity/notes/alerts/
+tasks area where relevant. Don't redesign the shell per product — only
+content, records, workflows, labels, metrics, actions change. Per the
+brand guide's UI/UX rule: this is a rebrand, not a rebuild — same
+information architecture, same page flow, same interaction patterns, same
+component logic.
 
 ## Components
 
-- **Buttons** — Primary: blue bg, white text. Secondary: white bg, blue
-  border, blue text. Ghost: transparent bg, blue text.
+- **Buttons** — Primary: near-black bg, white text. Secondary: white bg,
+  ink border, ink text. Ghost: transparent bg, ink text. Yellow reserved
+  for signal moments (badges, highlights), not primary button fills.
 - **Cards** — white bg, clean border, minimal/no shadow, spacious.
-- **Forms** — clear labels, strong readability, blue focus state, minimal
+- **Forms** — clear labels, strong readability, ink focus state, minimal
   noise.
 - **Tables** — easy to scan, light dividers, good spacing, operational
   clarity first.
-- **Badges** — minimal, clear status meaning, blue/neutral logic first.
+- **Badges** — minimal, clear status meaning; semantic color (good/warn/
+  danger) stays separate from the yellow brand accent.
 - **Icons** — simple line icons only, consistent stroke weight.
 
 ## Module presentation structure
@@ -123,14 +132,22 @@ workflows, labels, metrics, actions change.
 
 ## StaffVerified positioning
 
-Verification operations workspace for staff records and approvals — part of
-the trust/verification family, should visually align with the Katiwala
-ecosystem once rebranded.
+HR & Payroll operations workspace — Phase 2 of the Dipstify product
+family, connected into Owner's Lens as the daily-decision layer above it.
 
-## Open item
+## Status in this repo
 
-This doc captures the target design system. It does **not** itself change
-any UI — StaffVerified's actual screens still use the pre-existing red theme.
-Applying this (swapping red → Brand Blue, adjusting typography/components/
-shell to match) across ~23 files is a distinct, visible rebrand of a live
-product and should be scoped and confirmed explicitly before starting.
+**2026-07-21 — applied.** The palette above and the Dipstify logo are live
+(`src/app/globals.css`, `Logo.tsx`, login page, sidebar — see PR #25).
+Earlier versions of this doc claimed StaffVerified was "still on a
+pre-existing red theme" — that was inaccurate; the actual prior palette
+was blue (`#1E3A5F` family), not red (the red-* Tailwind classes found in
+~24 files are semantic error/danger-state colors, a normal UI pattern, not
+the brand accent).
+
+**Not yet done:** authenticated screens (dashboard, payroll, employees,
+etc.) haven't been individually verified against this palette — the
+CSS-variable-based rebrand should have applied everywhere `bg-brand-blue-*`
+etc. classes are used, but no test credentials were available to
+screenshot those screens directly. Spot-check them against this doc next
+time you're logged in.
