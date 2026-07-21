@@ -60,7 +60,7 @@ export default function Sidebar({ profile }: { profile: any }) {
         <div className="flex items-center gap-2.5">
           <Logo size={34} />
           <div className="leading-tight">
-            <div className="text-[10px] font-medium text-gray-400 tracking-wide">Katiwala AI App</div>
+            <div className="text-[10px] font-medium text-gray-400 tracking-wide">Dipstify</div>
             <div className="font-bold text-gray-900 text-[15px] tracking-tight -mt-0.5">
               Staff<span className="text-brand-blue-600">Verified</span>
             </div>

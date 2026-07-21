@@ -11,17 +11,24 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Katiwala ecosystem design system — docs/design-system.md */
-  --color-brand-blue-50: #eef2f6;
-  --color-brand-blue-100: #dbe3ec;
-  --color-brand-blue-200: #b3c3d6;
-  --color-brand-blue-300: #82a0bc;
-  --color-brand-blue-400: #4d7699;
-  --color-brand-blue-500: #2c5478;
-  --color-brand-blue-600: #1e3a5f;
-  --color-brand-blue-700: #182f4c;
-  --color-brand-blue-800: #14263e;
-  --color-brand-blue-900: #101f33;
+  /* Dipstify design system — docs/DIPSTIFY_BRAND_GUIDE.md (katiwala-owner-os-).
+     Variable names kept as brand-blue-* on purpose: dozens of components
+     already reference these Tailwind classes (bg-brand-blue-600, etc.);
+     repointing the values here re-skins the whole app without touching
+     every file. Ramp is now a near-black/steel-gray ink scale instead of
+     blue, with brand-yellow added as the safety-yellow accent. */
+  --color-brand-blue-50: #f4f4f5;
+  --color-brand-blue-100: #e4e4e7;
+  --color-brand-blue-200: #c9c9ce;
+  --color-brand-blue-300: #9a9aa3;
+  --color-brand-blue-400: #6b6b75;
+  --color-brand-blue-500: #45454d;
+  --color-brand-blue-600: #141414;
+  --color-brand-blue-700: #101010;
+  --color-brand-blue-800: #0b0b0c;
+  --color-brand-blue-900: #08080a;
+  --color-brand-yellow: #F5C400;
+  --color-brand-yellow-soft: rgba(245, 196, 0, 0.14);
   --color-brand-ink: #0f172a;
   --color-brand-slate: #475569;
   --color-brand-border: #cbd5e1;
@@ -31,5 +38,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Inter", Arial, Helvetica, sans-serif;
 }
