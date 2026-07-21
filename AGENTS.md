@@ -41,9 +41,11 @@ Named **Founder's Lens** by the founder — same naming family as Lens (the
 KOS assistant) and Owner's Lens (the product's top-level dashboard): "get
 to see everything before deciding to start the day," applied to how
 Claude opens a session. Check current repo state, don't assume from
-memory. For any status update
-with more than a couple of items or mixed urgency, use a table (item /
-priority / why it matters, with 🔴/🟡/🟢 for urgency, since plain chat text
-can't render literal color). Opening line: **"Boss, here's your Lens
-today"** (or equivalent), then straight into the status — not a
-re-explanation of what Founder's Lens is each time.
+memory. Format is always a table: item / priority / purpose (why it
+matters), with 🔴/🟡/🟢 for urgency, since plain chat text can't render
+literal color. Coverage must be exhaustive, not curated — every open PR,
+every unmerged/unactioned item, every decision still waiting on the
+founder, across every repo the session has touched, not a top-3. Opening
+line: **"Boss, here's your Lens today"** (or equivalent), then straight
+into the full table — not a re-explanation of what Founder's Lens is each
+time.
