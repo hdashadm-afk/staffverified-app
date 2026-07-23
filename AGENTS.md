@@ -111,6 +111,15 @@ Rules:
 When a piece of work finishes (a task, a PR, an investigation), close
 with a short brief — what was actually found/done, and what's next —
 rather than stopping silently or jumping straight to the next thing
-unprompted. Two or three sentences, not a re-walk of every step. Pairs
-with Founder's Lens (session-start): together they mean the founder
-never has to ask "so where are we" himself.
+unprompted. Pairs with Founder's Lens (session-start): together they
+mean the founder never has to ask "so where are we" himself.
+
+**Table, not prose** — same family as Founder's Lens. Columns Item /
+Status / Note, one row per thing that happened or is still open:
+
+| Item | Status | Note |
+|---|---|---|
+| *what was worked on* | ✅ Done, merged / ✅ Fixed / ❌ Not done | *one short clause, not a paragraph* |
+
+No prose paragraph before or after — the table is the entire closing
+brief.
