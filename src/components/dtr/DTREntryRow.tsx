@@ -129,6 +129,9 @@ export default function DTREntryRow({
                   <RotateCcw className="w-3 h-3" />
                 </button>
               )}
+              {(draft.otOverride !== null || otOverridden) && (
+                <span className="text-[9px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">Overridden</span>
+              )}
             </div>
             {(draft.otOverride !== null || otOverridden) && (
               <input
@@ -172,6 +175,9 @@ export default function DTREntryRow({
                 >
                   <RotateCcw className="w-3 h-3" />
                 </button>
+              )}
+              {(draft.nsdOverride !== null || nsdOverridden) && (
+                <span className="text-[9px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 whitespace-nowrap">Overridden</span>
               )}
             </div>
             {(draft.nsdOverride !== null || nsdOverridden) && (
