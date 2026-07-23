@@ -121,7 +121,7 @@ export default function Payslip({
                 <Row label="Holiday" value={slip.holiday_pay} />
                 <Row label="SIL" value={slip.sil_pay} />
                 <Row label="Overtime" value={slip.overtime_pay} />
-                <Row label="Late/Undertime" value={slip.late_undertime_deduction} />
+                <Row label="Late/Undertime" value={slip.late_undertime_deduction} red />
                 <Row label="NS Differential" value={slip.night_shift_diff} />
                 <Row label="Add Back" value={slip.add_back} />
                 <Row label="Allowances" value={slip.allowances} />

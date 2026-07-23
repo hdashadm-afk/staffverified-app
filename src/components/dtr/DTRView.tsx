@@ -43,7 +43,8 @@ const OT_NSD_OVERRIDE_ROLES = ['owner', 'assistant', 'ops_officer']
 
 const emptyDraft: DTRRowDraft = {
   timeIn: '', timeOut: '', isHolidayRegular: false, isHolidaySpecial: false,
-  otOverride: null, nsdOverride: null, otOverrideReason: '', nsdOverrideReason: '', stationId: '',
+  otOverride: null, nsdOverride: null, lateOverride: null,
+  otOverrideReason: '', nsdOverrideReason: '', lateOverrideReason: '', stationId: '',
 }
 
 export default function DTRView({
@@ -151,8 +152,10 @@ export default function DTRView({
             isHolidaySpecial: e.is_holiday_special,
             otOverride: e.overtime_hours_overridden ? e.overtime_hours : null,
             nsdOverride: e.night_shift_hours_overridden ? e.night_shift_hours : null,
+            lateOverride: e.late_minutes_overridden ? e.late_minutes : null,
             otOverrideReason: '',
             nsdOverrideReason: '',
+            lateOverrideReason: '',
             stationId: e.station_id ?? employee?.station_id ?? '',
           }
         : { ...emptyDraft, stationId: employee?.station_id ?? '' }
@@ -177,7 +180,7 @@ export default function DTRView({
       org_id: string
       employee_id: string
       work_date: string
-      field: 'overtime_hours' | 'night_shift_hours'
+      field: 'overtime_hours' | 'night_shift_hours' | 'late_minutes'
       old_value: number
       new_value: number
       reason: string | null
@@ -188,19 +191,21 @@ export default function DTRView({
       .map(date => {
         const draft = drafts[date] ?? emptyDraft
         if (!draft.timeIn && !draft.timeOut && !draft.isHolidayRegular && !draft.isHolidaySpecial
-          && draft.otOverride === null && draft.nsdOverride === null) return null
+          && draft.otOverride === null && draft.nsdOverride === null && draft.lateOverride === null) return null
 
         const reg = computeRegularHours(draft.timeIn, draft.timeOut, regularHoursPerDay)
         const computedOt = computeOvertimeHours(draft.timeIn, draft.timeOut, regularHoursPerDay)
         const computedNsd = computeNightShiftHours(draft.timeIn, draft.timeOut)
         const schedule = scheduleMap[date]
-        const late = computeLateMinutes(draft.timeIn, schedule?.shift_start ?? null)
+        const computedLate = computeLateMinutes(draft.timeIn, schedule?.shift_start ?? null)
         const undertime = computeUndertimeMinutes(draft.timeOut, schedule?.shift_end ?? null)
 
         const otOverridden = canOverrideOtNsd && draft.otOverride !== null
         const nsdOverridden = canOverrideOtNsd && draft.nsdOverride !== null
+        const lateOverridden = canOverrideOtNsd && draft.lateOverride !== null
         const finalOt = otOverridden ? (draft.otOverride as number) : computedOt
         const finalNsd = nsdOverridden ? (draft.nsdOverride as number) : computedNsd
+        const finalLate = lateOverridden ? (draft.lateOverride as number) : computedLate
 
         const existing = entryMap[date]
         if (otOverridden && (!existing?.overtime_hours_overridden || existing.overtime_hours !== finalOt)) {
@@ -213,6 +218,12 @@ export default function DTRView({
           overrideLogRows.push({
             org_id: orgId, employee_id: selectedEmployee, work_date: date, field: 'night_shift_hours',
             old_value: computedNsd, new_value: finalNsd, reason: draft.nsdOverrideReason || null, changed_by: userId,
+          })
+        }
+        if (lateOverridden && (!existing?.late_minutes_overridden || existing.late_minutes !== finalLate)) {
+          overrideLogRows.push({
+            org_id: orgId, employee_id: selectedEmployee, work_date: date, field: 'late_minutes',
+            old_value: computedLate, new_value: finalLate, reason: draft.lateOverrideReason || null, changed_by: userId,
           })
         }
 
@@ -228,7 +239,8 @@ export default function DTRView({
           night_shift_hours: finalNsd,
           overtime_hours_overridden: otOverridden,
           night_shift_hours_overridden: nsdOverridden,
-          late_minutes: late,
+          late_minutes: finalLate,
+          late_minutes_overridden: lateOverridden,
           undertime_minutes: undertime,
           is_holiday_regular: draft.isHolidayRegular,
           is_holiday_special: draft.isHolidaySpecial,
@@ -293,23 +305,26 @@ export default function DTRView({
     const draft = drafts[date] ?? emptyDraft
     const ot = draft.otOverride ?? computeOvertimeHours(draft.timeIn, draft.timeOut, regularHoursPerDay)
     const nsd = draft.nsdOverride ?? computeNightShiftHours(draft.timeIn, draft.timeOut)
+    const late = draft.lateOverride ?? computeLateMinutes(draft.timeIn, scheduleMap[date]?.shift_start ?? null)
     return {
       regular: acc.regular + computeRegularHours(draft.timeIn, draft.timeOut, regularHoursPerDay),
       ot: acc.ot + ot,
       nsd: acc.nsd + nsd,
+      late: acc.late + late,
     }
-  }, { regular: 0, ot: 0, nsd: 0 })
+  }, { regular: 0, ot: 0, nsd: 0, late: 0 })
 
   const dailyRate = employee?.daily_rate ?? 0
   const earnings = summarizeCutoffEarnings(
     dates.map(date => {
       const draft = drafts[date] ?? emptyDraft
+      const schedule = scheduleMap[date]
       return {
         regular_hours: computeRegularHours(draft.timeIn, draft.timeOut, regularHoursPerDay),
         overtime_hours: draft.otOverride ?? computeOvertimeHours(draft.timeIn, draft.timeOut, regularHoursPerDay),
         night_shift_hours: draft.nsdOverride ?? computeNightShiftHours(draft.timeIn, draft.timeOut),
-        late_minutes: 0,
-        undertime_minutes: 0,
+        late_minutes: draft.lateOverride ?? computeLateMinutes(draft.timeIn, schedule?.shift_start ?? null),
+        undertime_minutes: computeUndertimeMinutes(draft.timeOut, schedule?.shift_end ?? null),
         is_holiday_regular: draft.isHolidayRegular,
         is_holiday_special: draft.isHolidaySpecial,
       }
@@ -430,6 +445,7 @@ export default function DTRView({
               <th className="text-right px-4 py-3 font-medium">Reg hrs</th>
               <th className="text-right px-4 py-3 font-medium">OT hrs</th>
               <th className="text-right px-4 py-3 font-medium">NSD hrs</th>
+              <th className="text-right px-4 py-3 font-medium">Late (min)</th>
               <th className="text-left px-4 py-3 font-medium">Flags</th>
             </tr>
           </thead>
@@ -437,6 +453,7 @@ export default function DTRView({
             {dates.map(date => {
               const draft = drafts[date] ?? emptyDraft
               const existing = entryMap[date]
+              const schedule = scheduleMap[date]
               return (
                 <DTREntryRow
                   key={date}
@@ -445,8 +462,10 @@ export default function DTRView({
                   regHrs={computeRegularHours(draft.timeIn, draft.timeOut, regularHoursPerDay)}
                   otHrs={computeOvertimeHours(draft.timeIn, draft.timeOut, regularHoursPerDay)}
                   nsdHrs={computeNightShiftHours(draft.timeIn, draft.timeOut)}
+                  lateMin={computeLateMinutes(draft.timeIn, schedule?.shift_start ?? null)}
                   otOverridden={existing?.overtime_hours_overridden ?? false}
                   nsdOverridden={existing?.night_shift_hours_overridden ?? false}
+                  lateOverridden={existing?.late_minutes_overridden ?? false}
                   canOverride={canOverrideOtNsd}
                   stations={stations}
                   onChange={patch => setDraft(date, patch)}
@@ -461,6 +480,7 @@ export default function DTRView({
               <td className="px-4 py-3 text-right">{totals.regular.toFixed(1)}</td>
               <td className="px-4 py-3 text-right">{totals.ot.toFixed(1)}</td>
               <td className="px-4 py-3 text-right">{totals.nsd.toFixed(1)}</td>
+              <td className="px-4 py-3 text-right">{totals.late.toFixed(0)}</td>
               <td />
             </tr>
           </tfoot>
@@ -469,7 +489,7 @@ export default function DTRView({
 
       {canOverrideOtNsd && (
         <p className="text-xs text-gray-400">
-          OT and NSD hours are auto-computed from Time In/Out. As HR or Admin you can type a different value to override it — use the ↺ icon to go back to the auto-computed value.
+          OT, NSD, and Late hours are auto-computed from Time In/Out against the approved schedule. As HR or Admin you can type a different value to override any of them — use the ↺ icon to go back to the auto-computed value.
         </p>
       )}
 
@@ -516,6 +536,12 @@ export default function DTRView({
             <span>NSD ({totals.nsd.toFixed(1)} hrs × 10%)</span>
             <span>₱{earnings.nsdPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
+          {earnings.lateUndertimeDeduction > 0 && (
+            <div className="flex justify-between text-red-600">
+              <span>Late/Undertime ({totals.late.toFixed(0)} min late)</span>
+              <span>-₱{earnings.lateUndertimeDeduction.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            </div>
+          )}
           <div className="flex justify-between text-brand-blue-900 font-semibold border-t border-brand-blue-200 pt-1.5 mt-1.5">
             <span>Total</span>
             <span>₱{earnings.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>

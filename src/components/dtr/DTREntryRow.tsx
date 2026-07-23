@@ -14,8 +14,10 @@ export interface DTRRowDraft {
   // OT/NSD are normally computed.
   otOverride: number | null
   nsdOverride: number | null
+  lateOverride: number | null
   otOverrideReason: string
   nsdOverrideReason: string
+  lateOverrideReason: string
   // Station this entry's hours count against — defaults to the employee's
   // home station, but staff sometimes float to cover another station for
   // a day, and that's where their hours/pay should be attributed.
@@ -28,8 +30,10 @@ export default function DTREntryRow({
   regHrs,
   otHrs,
   nsdHrs,
+  lateMin,
   otOverridden,
   nsdOverridden,
+  lateOverridden,
   canOverride,
   stations,
   onChange,
@@ -41,9 +45,12 @@ export default function DTREntryRow({
   regHrs: number
   otHrs: number
   nsdHrs: number
+  /** Auto-computed from Time In vs. the approved schedule's shift_start — minutes late, 0 if on time or no schedule. */
+  lateMin: number
   /** Whether the currently-saved entry (if any) was already overridden — shown as a badge. */
   otOverridden: boolean
   nsdOverridden: boolean
+  lateOverridden: boolean
   /** HR (assistant) and Admin (ops_officer) can edit OT/NSD directly — everyone else sees read-only values. */
   canOverride: boolean
   /** Org stations, for the per-day station reassignment dropdown. Omitted/empty hides the column. */
@@ -57,6 +64,7 @@ export default function DTREntryRow({
 
   const otValue = draft.otOverride ?? otHrs
   const nsdValue = draft.nsdOverride ?? nsdHrs
+  const lateValue = draft.lateOverride ?? lateMin
 
   const numFld = 'w-16 border border-gray-200 rounded px-1.5 py-1 text-xs text-right text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 disabled:bg-gray-50 disabled:text-gray-400'
 
@@ -189,6 +197,50 @@ export default function DTREntryRow({
           <div className="text-right tabular-nums text-gray-700 text-xs">
             {nsdValue > 0 ? nsdValue.toFixed(1) : '—'}
             {nsdOverridden && <span className="ml-1 text-[9px] text-amber-600 align-top">Overridden</span>}
+          </div>
+        )}
+      </td>
+      <td className="px-4 py-2">
+        {canOverride ? (
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={lateValue === 0 ? '' : lateValue}
+                placeholder="0"
+                onChange={e => onChange({ lateOverride: e.target.value === '' ? 0 : parseInt(e.target.value, 10) })}
+                disabled={disabled}
+                className={numFld}
+                title="Late minutes — computed from Time In vs. the approved schedule's start time, editable by Admin/HR"
+              />
+              {draft.lateOverride !== null && (
+                <button
+                  type="button"
+                  onClick={() => onChange({ lateOverride: null, lateOverrideReason: '' })}
+                  title="Reset to auto-computed"
+                  className="text-gray-400 hover:text-gray-700"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            {(draft.lateOverride !== null || lateOverridden) && (
+              <input
+                type="text"
+                value={draft.lateOverrideReason}
+                onChange={e => onChange({ lateOverrideReason: e.target.value })}
+                disabled={disabled}
+                placeholder="Reason (optional)"
+                className="w-28 border border-gray-100 rounded px-1.5 py-0.5 text-[10px] text-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-blue-600"
+              />
+            )}
+          </div>
+        ) : (
+          <div className="text-right tabular-nums text-gray-700 text-xs">
+            {lateValue > 0 ? lateValue : '—'}
+            {lateOverridden && <span className="ml-1 text-[9px] text-amber-600 align-top">Overridden</span>}
           </div>
         )}
       </td>

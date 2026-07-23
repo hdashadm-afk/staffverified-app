@@ -100,6 +100,7 @@ export interface DTREntry {
   overtime_hours_overridden: boolean
   night_shift_hours_overridden: boolean
   late_minutes: number
+  late_minutes_overridden: boolean
   undertime_minutes: number
   is_holiday_regular: boolean
   is_holiday_special: boolean
@@ -108,7 +109,7 @@ export interface DTREntry {
   created_at: string
 }
 
-export type DTROverrideField = 'overtime_hours' | 'night_shift_hours'
+export type DTROverrideField = 'overtime_hours' | 'night_shift_hours' | 'late_minutes'
 
 export interface DTROverrideLogEntry {
   id: string
