@@ -7,10 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Branding & design system
 
 All UI, branding, and product design work in this repo follows the Dipstify
-design system (see `katiwala-owner-os-`'s `docs/DIPSTIFY_BRAND_GUIDE.md`).
-`docs/design-system.md` in this repo is stale (still says "Katiwala
-ecosystem design system," not yet rewritten) — don't use it as the source
-of truth until it's updated.
+design system. `docs/design-system.md` in this repo is the up-to-date,
+rewritten reference (PR #28, 2026-07-21) — use it directly as the source of
+truth; it mirrors `katiwala-owner-os-`'s `docs/DIPSTIFY_BRAND_GUIDE.md`.
 
 **2026-07-21 rebrand:** the app's actual live palette was blue (`--color-
 brand-blue-*` in `src/app/globals.css`), not red as an earlier note here
@@ -43,8 +42,8 @@ rebrand" note above):** originally flagged the palette/logo as not yet
 updated for Dipstify. That's now done (see above) — this note is kept
 only so the "umbrella brand is Dipstify, confirmed in
 `katiwala-owner-os-`'s `docs/DIPSTIFY_BRAND_GUIDE.md`/
-`docs/KATIWALA_PRODUCT_FAMILY.md`" context isn't lost. Still accurate:
-`docs/design-system.md` itself hasn't been rewritten yet.
+`docs/KATIWALA_PRODUCT_FAMILY.md`" context isn't lost. `docs/design-
+system.md` itself was rewritten the same day (PR #28) — no longer a gap.
 
 # Session-start operating preference — "Founder's Lens"
 
