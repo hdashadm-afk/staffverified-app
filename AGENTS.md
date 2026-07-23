@@ -114,3 +114,30 @@ rather than stopping silently or jumping straight to the next thing
 unprompted. Two or three sentences, not a re-walk of every step. Pairs
 with Founder's Lens (session-start): together they mean the founder
 never has to ask "so where are we" himself.
+
+
+# Branch Triage Standard
+
+Confirmed by the founder, from a 24-branch pileup audit in `fuel-ops`:
+whenever a session audits a batch of unmerged branches/PRs (not a
+single-item review — this is for pileups), sort every item into exactly
+three buckets, then act only on the third:
+
+1. **Don't need — flag for a deeper check, don't delete yet.** Covers
+   anything superseded, already achieved elsewhere, or actively harmful
+   if merged (would regress a later fix). Deletion is irreversible for
+   real work, so this bucket is a hold state, not an action — a deeper
+   look comes before anything is actually deleted.
+2. **Need later — keep, no action.** Real, valid, not superseded, but
+   not needed for the current push (e.g. explicitly post-launch scope
+   per standing docs). Leave the branch alone.
+3. **Need now and safe — merge immediately.** Only items that are both
+   actually needed right now and low-risk get merged same-session. If
+   only part of a branch is safe (e.g. one real fix buried in an
+   otherwise-stale branch), extract and apply that part directly rather
+   than merging the whole thing.
+
+Report the triage as a table (Item / Decision / Action), one row per
+branch — the same Standard Instruction Form shape, applied to a decision
+list instead of a step list. Don't skip straight to merging or deleting
+a pileup without producing this table first.
