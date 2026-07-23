@@ -67,17 +67,50 @@ session has touched, not a top-3. Opening line: **"Boss, here's your Lens
 today"** (or equivalent), then straight into the full table — not a
 re-explanation of what Founder's Lens is each time.
 
-# Instruction-delivery preference — tabular artifact checklists
+# Instruction-delivery preference — Standard Instruction Form
 
-Confirmed by the founder 2026-07-21 (same rule now in `katiwala-owner-os-`'s
-`docs/MASTER_DIRECTION.md` §11): multi-step setup instructions that span
-more than one external site (e.g. Vercel + Supabase) go in a small
-published HTML artifact with a table — columns URL / Topic / Steps, one
-row per step, a checkbox per row (persisted via localStorage), and
-tap-to-copy chips for exact literal values (env var names, keys, secrets)
-instead of text to retype. Chat-paragraph step-by-step instructions were
-flagged as noisy and hard to follow on mobile — don't revert to that.
-Reuse the same artifact file/URL for the current task, redeploy with
-updated rows when the task changes. Chat replies stay short; the table
-carries the detail. Apply whenever a task has 3+ sequential steps across
-more than one external dashboard/site.
+Confirmed by the founder 2026-07-23, superseding the 2026-07-21 attempt
+(a published HTML artifact with checkboxes/tap-to-copy) — same rule now
+in `katiwala-owner-os-`'s `docs/MASTER_DIRECTION.md` §11 and mirrored in
+`fuel-ops`/`pnlverified`'s own `AGENTS.md`. The artifact version turned
+out to add more friction than it removed — a link/page to open instead
+of reacting immediately. **Do not build an HTML artifact or file for
+multi-step instructions.**
+
+Multi-step instructions go in a **plain markdown table, posted directly
+in the chat reply** — a one-line Objective, then three columns, Step /
+Where / How:
+
+**Objective:** *one line — what this accomplishes and why it matters*
+
+| Step | Where | How |
+|---|---|---|
+| 1 | *the site/dashboard* | *what to do, exact literal values inline as `code`* |
+
+Rules:
+- Always lead with the one-line Objective before the table.
+- No link, no file, no artifact — the objective + table is the entire
+  reply.
+- Number rows sequentially across the whole instruction set, even across
+  different topics/sites — don't restart numbering per topic.
+- Exact literal values (env var names, secrets, URLs, webhook event
+  names) go inline as `` `code` `` — never prose the founder has to
+  retype.
+- Where is the complete, exact address whenever known, not a vague
+  breadcrumb — use the real URL verbatim if a screenshot or prior
+  navigation already revealed it. Fall back to a breadcrumb only when no
+  exact URL is known yet.
+- Chat text outside the table stays to one or two sentences.
+- No persisted checkbox state (accepted tradeoff) — for a task spanning
+  multiple sessions, re-confirm progress rather than relying on memory.
+- Apply whenever a task has 3+ sequential steps, even within a single
+  site (not just across multiple sites).
+
+# Session-end preference — Closing brief
+
+When a piece of work finishes (a task, a PR, an investigation), close
+with a short brief — what was actually found/done, and what's next —
+rather than stopping silently or jumping straight to the next thing
+unprompted. Two or three sentences, not a re-walk of every step. Pairs
+with Founder's Lens (session-start): together they mean the founder
+never has to ask "so where are we" himself.
