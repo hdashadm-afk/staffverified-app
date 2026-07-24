@@ -21,7 +21,7 @@ export const MODULE_ACCESS: Record<string, Role[]> = {
   '/dashboard':  ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
   '/hours':      ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
   '/permits':    ['ceo', 'ops_officer', 'owner', 'assistant'],
-  '/dtr':        ['ceo', 'ops_officer', 'owner', 'assistant', 'tl', 'station_ops'],
+  '/dtr':        ['ceo', 'ops_officer', 'owner', 'assistant', 'tl'],
   '/schedule':   ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/employees':  ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/payroll':    ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
@@ -49,7 +49,7 @@ export function canAccess(path: string, role: string | null | undefined): boolea
 // Where a role lands after login / when hitting a page they can't access.
 export function landingFor(role: string | null | undefined): string {
   if (role === 'tl') return '/dtr'
-  if (role === 'station_ops') return '/dtr'
+  if (role === 'station_ops') return '/deliveries'
   if (role === 'ops_officer_delivery') return '/deliveries'
   if (role === 'cfo') return '/dashboard'
   return '/dashboard'
