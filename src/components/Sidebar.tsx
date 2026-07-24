@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { canAccess } from '@/lib/access'
+import { canAccess, roleLabel } from '@/lib/access'
 import Logo from '@/components/Logo'
 import {
   Users,
@@ -103,7 +103,7 @@ export default function Sidebar({ profile }: { profile: any }) {
         {profile && (
           <div className="px-3 mb-2">
             <div className="text-xs font-medium text-gray-700 truncate">{profile.full_name}</div>
-            <div className="text-xs text-gray-400 truncate capitalize">{profile.role}</div>
+            <div className="text-xs text-gray-400 truncate">{roleLabel(profile.role)}</div>
           </div>
         )}
         <button

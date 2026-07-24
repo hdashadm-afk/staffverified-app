@@ -34,7 +34,10 @@ type Turnover = {
   handoff_time: string
 }
 
-const SHIFT_TYPES = ['5am-3pm', '3pm-11pm', '11pm-5am', 'Day', 'Other']
+// Free text, not a fixed enum — shift patterns vary a lot per station
+// (5am-11pm as one long shift at HT/HBani, 6am-6pm at HC/HQ/HD, 3x8hr
+// elsewhere). These are just quick-pick starting points, fully editable.
+const SHIFT_TYPE_PRESETS = ['5am-11pm', '6am-6pm', '6am-2pm', '2pm-10pm', '10pm-6am']
 
 export default function ShiftLogView({
   orgId,
@@ -59,7 +62,7 @@ export default function ShiftLogView({
 
   const [stationId, setStationId] = useState(lockedStationId ?? stations[0]?.id ?? '')
   const [date, setDate] = useState(today)
-  const [shiftType, setShiftType] = useState(SHIFT_TYPES[0])
+  const [shiftType, setShiftType] = useState('')
   const [shiftLog, setShiftLog] = useState<ShiftLog | null>(null)
   const [readings, setReadings] = useState<Reading[]>([])
   const [turnovers, setTurnovers] = useState<Turnover[]>([])
@@ -205,17 +208,24 @@ export default function ShiftLogView({
         canManage ? (
           <div className="bg-white border border-gray-100 rounded-xl shadow-sm px-5 py-5 space-y-3">
             <div className="text-sm font-semibold text-gray-800">No shift open for this date</div>
+            <div className="flex flex-wrap gap-2">
+              {SHIFT_TYPE_PRESETS.map(t => (
+                <button key={t} type="button" onClick={() => setShiftType(t)}
+                  className={`text-xs rounded-full px-3 py-1 border ${shiftType === t ? 'bg-brand-blue-600 border-brand-blue-600 text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                  {t}
+                </button>
+              ))}
+            </div>
             <div className="flex items-center gap-3">
-              <select
+              <input
                 value={shiftType}
                 onChange={e => setShiftType(e.target.value)}
+                placeholder="Shift (e.g. 5am-11pm)"
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
-              >
-                {SHIFT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+              />
               <button
                 onClick={openShift}
-                disabled={!stationId}
+                disabled={!stationId || !shiftType.trim()}
                 className="inline-flex items-center gap-1.5 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50"
               >
                 <Unlock className="w-4 h-4" /> Open shift
