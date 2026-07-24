@@ -16,6 +16,7 @@ import { cutoffStart, cutoffEnd, payday, isPastPayday } from '@/lib/cutoff'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2, ChevronLeft, ChevronRight, Lock, Unlock } from 'lucide-react'
+import { fetchOpsOuttakeRange, matchOpsAttendance, OPS_STATION_CODE, OpsAttendanceEntry } from '@/lib/ops-outtake'
 
 function generateDates(start: string, end: string): string[] {
   const dates: string[] = []
@@ -74,6 +75,7 @@ export default function DTRView({
   const [savedAt, setSavedAt] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [reopening, setReopening] = useState(false)
+  const [opsAttendanceByDate, setOpsAttendanceByDate] = useState<Record<string, OpsAttendanceEntry[]>>({})
   const router = useRouter()
   const supabase = createClient()
 
@@ -133,6 +135,22 @@ export default function DTRView({
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEmployee, start, end])
+
+  // Ops's confirmed Daily Outtake attendance for this employee's station,
+  // read directly from fuel-ops (see lib/ops-outtake.ts) — a reference
+  // suggestion HR can apply per row, never auto-written into dtr_entries.
+  const opsStationCode = employee?.station_id
+    ? OPS_STATION_CODE[stations.find(s => s.id === employee.station_id)?.name ?? '']
+    : undefined
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      const byDate = opsStationCode ? await fetchOpsOuttakeRange(opsStationCode, start, end) : {}
+      if (!cancelled) setOpsAttendanceByDate(byDate)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [opsStationCode, start, end])
 
   const entryMap = Object.fromEntries(entries.map(e => [e.work_date, e]))
   const scheduleMap = Object.fromEntries(schedules.map(s => [s.work_date, s]))
@@ -454,6 +472,7 @@ export default function DTRView({
               const draft = drafts[date] ?? emptyDraft
               const existing = entryMap[date]
               const schedule = scheduleMap[date]
+              const opsMatch = employee ? matchOpsAttendance(employee.full_name, opsAttendanceByDate[date] ?? []) : null
               return (
                 <DTREntryRow
                   key={date}
@@ -468,6 +487,7 @@ export default function DTRView({
                   lateOverridden={existing?.late_minutes_overridden ?? false}
                   canOverride={canOverrideOtNsd}
                   stations={stations}
+                  opsSuggestion={opsMatch}
                   onChange={patch => setDraft(date, patch)}
                   disabled={locked}
                 />
