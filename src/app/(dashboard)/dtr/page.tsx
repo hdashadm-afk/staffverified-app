@@ -55,17 +55,20 @@ export default async function DTRPage() {
     .eq('id', profile!.org_id)
     .single()
 
-  const isTL = profile!.role === 'tl'
+  // Station-scoped attendance marking (mark who worked, floating pool)
+  // applies to anyone locked to a single station — TL and the
+  // Cashier/GA (station_ops) alike — not just TL.
+  const isStationScoped = profile!.role === 'tl' || profile!.role === 'station_ops'
   const tlStation = (stations ?? []).find(s => s.id === profile!.station_id)
 
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-gray-900">
-          {isTL ? 'Daily Attendance' : 'Daily Time Record'}
+          {isStationScoped ? 'Daily Attendance' : 'Daily Time Record'}
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          {isTL
+          {isStationScoped
             ? `Mark who worked at ${tlStation?.name ?? 'your station'} today — attendants float, so add whoever showed up`
             : 'Enter attendance for the current cutoff period'}
         </p>
@@ -75,7 +78,7 @@ export default async function DTRPage() {
         </p>
       </div>
 
-      {isTL ? (
+      {isStationScoped ? (
         <DailyAttendance
           employees={employees ?? []}
           entries={dtrEntries ?? []}

@@ -21,7 +21,7 @@ export const MODULE_ACCESS: Record<string, Role[]> = {
   '/dashboard':  ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
   '/hours':      ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
   '/permits':    ['ceo', 'ops_officer', 'owner', 'assistant'],
-  '/dtr':        ['ceo', 'ops_officer', 'owner', 'assistant', 'tl'],
+  '/dtr':        ['ceo', 'ops_officer', 'owner', 'assistant', 'tl', 'station_ops'],
   '/schedule':   ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/employees':  ['ceo', 'ops_officer', 'owner', 'assistant'],
   '/payroll':    ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
