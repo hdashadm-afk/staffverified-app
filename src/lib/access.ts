@@ -40,6 +40,11 @@ export const MODULE_ACCESS: Record<string, Role[]> = {
   // Matches deliveries/delivery_drops RLS: owner, station_ops, tl, ceo
   // manage org-wide; ops_officer_delivery scoped to their own station.
   '/deliveries':    ['ceo', 'ops_officer', 'owner', 'tl', 'station_ops', 'ops_officer_delivery'],
+  // Founder: Jeff and Arnold (both ops_officer_delivery) do deliveries,
+  // transfers, AND cash pickups alternately — same role covers all
+  // three (migration 026). Owners or Casey (accounting officer,
+  // 'assistant' role) can also step in when needed (migration 027).
+  '/cash-pickups':  ['ceo', 'ops_officer', 'owner', 'station_ops', 'ops_officer_delivery', 'assistant'],
 }
 
 export function canAccess(path: string, role: string | null | undefined): boolean {
