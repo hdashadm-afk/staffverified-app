@@ -1,6 +1,7 @@
 'use client'
 
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Fuel } from 'lucide-react'
+import { OpsAttendanceEntry } from '@/lib/ops-outtake'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -36,6 +37,7 @@ export default function DTREntryRow({
   lateOverridden,
   canOverride,
   stations,
+  opsSuggestion,
   onChange,
   disabled = false,
 }: {
@@ -55,6 +57,8 @@ export default function DTREntryRow({
   canOverride: boolean
   /** Org stations, for the per-day station reassignment dropdown. Omitted/empty hides the column. */
   stations: { id: string; name: string }[]
+  /** Ops's confirmed Daily Outtake attendance for this employee/date, if a confident name match exists — a suggestion to apply, never auto-written. */
+  opsSuggestion?: OpsAttendanceEntry | null
   onChange: (patch: Partial<DTRRowDraft>) => void
   disabled?: boolean
 }) {
@@ -108,6 +112,19 @@ export default function DTREntryRow({
           disabled={disabled}
           className="border border-gray-200 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-brand-blue-600 w-28 disabled:bg-gray-50 disabled:text-gray-400"
         />
+        {opsSuggestion?.time_in && opsSuggestion?.time_out
+          && (draft.timeIn !== opsSuggestion.time_in || draft.timeOut !== opsSuggestion.time_out) && (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange({ timeIn: opsSuggestion.time_in ?? '', timeOut: opsSuggestion.time_out ?? '' })}
+            title="From fuel-ops's confirmed Daily Outtake for this station/date"
+            className="mt-1 flex items-center gap-1 text-[10px] text-brand-blue-700 bg-brand-blue-50 border border-brand-blue-200 rounded px-1.5 py-0.5 hover:bg-brand-blue-100 disabled:opacity-50 whitespace-nowrap"
+          >
+            <Fuel className="w-2.5 h-2.5" />
+            Ops: {opsSuggestion.time_in}–{opsSuggestion.time_out}
+          </button>
+        )}
       </td>
       <td className="px-4 py-2 text-right tabular-nums text-gray-700 text-xs">
         {regHrs > 0 ? regHrs.toFixed(1) : '—'}
