@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   Gauge,
+  Truck,
 } from 'lucide-react'
 
 const NAV_META = [
@@ -32,6 +33,7 @@ const NAV_META = [
   { href: '/permits',    label: 'Compliance',   icon: FileCheck },
   { href: '/dtr',        label: 'DTR',          icon: CalendarDays },
   { href: '/shift-log',  label: 'Shift Log',    icon: Gauge },
+  { href: '/deliveries', label: 'Deliveries',   icon: Truck },
   { href: '/schedule',   label: 'Schedule',     icon: CalendarClock },
   { href: '/employees',  label: 'Employees',    icon: Users },
   { href: '/payroll',    label: 'Payroll',      icon: Banknote },
