@@ -23,7 +23,6 @@ import {
   CalendarClock,
   Menu,
   X,
-  Gauge,
   Truck,
   Wallet,
 } from 'lucide-react'
@@ -33,7 +32,6 @@ const NAV_META = [
   { href: '/hours',         label: 'Hours Budget', icon: Clock },
   { href: '/permits',       label: 'Compliance',   icon: FileCheck },
   { href: '/dtr',           label: 'DTR',          icon: CalendarDays },
-  { href: '/shift-log',     label: 'Shift Log',    icon: Gauge },
   { href: '/deliveries',    label: 'Deliveries',   icon: Truck },
   { href: '/cash-pickups',  label: 'Cash Pickups', icon: Wallet },
   { href: '/schedule',   label: 'Schedule',     icon: CalendarClock },
