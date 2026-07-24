@@ -131,9 +131,24 @@ export default function ShiftLogView({
     })()
   }, [readings, supabase, photoUrls])
 
-  async function openShift() {
+  // Founder: opening a shift and logging the first Beginning dipstick
+  // reading should be one combined step, not "open shift" then
+  // separately "add reading" — GA starts their shift by taking the
+  // reading, not by clicking an empty "open" button first.
+  const [openTankLabel, setOpenTankLabel] = useState('')
+  const [openReadingCm, setOpenReadingCm] = useState('')
+  const [openTempC, setOpenTempC] = useState('')
+  const [openWaterCm, setOpenWaterCm] = useState('')
+  const [openPhoto, setOpenPhoto] = useState<File | null>(null)
+  const [opening, setOpening] = useState(false)
+
+  async function openShiftWithReading() {
+    if (!shiftType.trim()) { setError('Shift is required.'); return }
+    if (!openTankLabel || openReadingCm === '') { setError('Tank and reading are required.'); return }
+    if (!openPhoto) { setError('Photo of the digital reading (with price showing) is required.'); return }
+    setOpening(true)
     setError('')
-    const { data, error: err } = await supabase
+    const { data: log, error: logErr } = await supabase
       .from('shift_logs')
       .insert({
         org_id: orgId,
@@ -145,8 +160,31 @@ export default function ShiftLogView({
       })
       .select()
       .single()
-    if (err) { setError(err.message); return }
-    setShiftLog(data)
+    if (logErr) { setError(logErr.message); setOpening(false); return }
+
+    const photoPath = `${orgId}/${stationId}/${log.id}/${Date.now()}-${openPhoto.name}`
+    const { error: uploadErr } = await supabase.storage.from('dipstick-photos').upload(photoPath, openPhoto)
+    if (uploadErr) { setError(uploadErr.message); setOpening(false); return }
+
+    const { error: readingErr } = await supabase.from('dipstick_readings').insert({
+      org_id: orgId,
+      station_id: stationId,
+      reading_date: date,
+      reading_type: 'beginning',
+      tank_label: openTankLabel,
+      reading_cm: Number(openReadingCm),
+      temp_c: openTempC === '' ? null : Number(openTempC),
+      water_cm: openWaterCm === '' ? null : Number(openWaterCm),
+      logged_by: userId,
+      shift_log_id: log.id,
+      photo_url: photoPath,
+    })
+    setOpening(false)
+    if (readingErr) { setError(readingErr.message); return }
+
+    setOpenTankLabel(''); setOpenReadingCm(''); setOpenTempC(''); setOpenWaterCm(''); setOpenPhoto(null)
+    setShiftLog(log)
+    load()
   }
 
   async function closeShift() {
@@ -207,7 +245,7 @@ export default function ShiftLogView({
       ) : !shiftLog ? (
         canManage ? (
           <div className="bg-white border border-gray-100 rounded-xl shadow-sm px-5 py-5 space-y-3">
-            <div className="text-sm font-semibold text-gray-800">No shift open for this date</div>
+            <div className="text-sm font-semibold text-gray-800">Open shift — Beginning reading</div>
             <div className="flex flex-wrap gap-2">
               {SHIFT_TYPE_PRESETS.map(t => (
                 <button key={t} type="button" onClick={() => setShiftType(t)}
@@ -216,21 +254,39 @@ export default function ShiftLogView({
                 </button>
               ))}
             </div>
+            <input
+              value={shiftType}
+              onChange={e => setShiftType(e.target.value)}
+              placeholder="Shift (e.g. 5am-11pm)"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <input placeholder="Tank (e.g. Diesel)" value={openTankLabel} onChange={e => setOpenTankLabel(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm col-span-2 md:col-span-1 focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
+              <input type="number" step="0.01" placeholder="Reading (cm)" value={openReadingCm} onChange={e => setOpenReadingCm(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
+              <input type="number" step="0.01" placeholder="Water (cm)" value={openWaterCm} onChange={e => setOpenWaterCm(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
+              <input type="number" step="0.1" placeholder="Temp (°C)" value={openTempC} onChange={e => setOpenTempC(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
+            </div>
             <div className="flex items-center gap-3">
-              <input
-                value={shiftType}
-                onChange={e => setShiftType(e.target.value)}
-                placeholder="Shift (e.g. 5am-11pm)"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue-600"
-              />
+              <label className="inline-flex items-center gap-2 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-gray-50">
+                <Camera className="w-4 h-4" />
+                {openPhoto ? openPhoto.name : 'Photo of digital display (with price) *'}
+                <input type="file" accept="image/*" capture="environment" className="hidden"
+                  onChange={e => setOpenPhoto(e.target.files?.[0] ?? null)} />
+              </label>
               <button
-                onClick={openShift}
-                disabled={!stationId || !shiftType.trim()}
-                className="inline-flex items-center gap-1.5 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50"
+                onClick={openShiftWithReading}
+                disabled={!stationId || opening}
+                className="ml-auto inline-flex items-center gap-1.5 bg-brand-blue-600 hover:bg-brand-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 disabled:opacity-50"
               >
-                <Unlock className="w-4 h-4" /> Open shift
+                {opening ? <Loader2 className="w-4 h-4 animate-spin" /> : <Unlock className="w-4 h-4" />}
+                Open shift & save reading
               </button>
             </div>
+            <p className="text-xs text-gray-400">More tanks? Add their Beginning readings below once the shift is open.</p>
           </div>
         ) : (
           <p className="text-sm text-gray-400">No shift open for this date.</p>
