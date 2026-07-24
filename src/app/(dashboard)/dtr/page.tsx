@@ -55,10 +55,8 @@ export default async function DTRPage() {
     .eq('id', profile!.org_id)
     .single()
 
-  // Station-scoped attendance marking (mark who worked, floating pool)
-  // applies to anyone locked to a single station — TL and the
-  // Cashier/GA (station_ops) alike — not just TL.
-  const isStationScoped = profile!.role === 'tl' || profile!.role === 'station_ops'
+  // Station-scoped attendance marking (mark who worked, floating pool) — TL only.
+  const isStationScoped = profile!.role === 'tl'
   const tlStation = (stations ?? []).find(s => s.id === profile!.station_id)
 
   return (
