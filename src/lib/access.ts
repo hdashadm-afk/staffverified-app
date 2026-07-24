@@ -2,11 +2,20 @@
 // Used by the Sidebar (nav visibility) and each page (server-side guard).
 
 // 'station_ops' = the GA (Gas Attendant) — a different person from the
-// TL, does the physical pump/tank readings. RLS for shift_logs and
-// dipstick_readings already expected this role name (scaffolded ahead
-// of the app code); kept the same name here rather than inventing a
-// new one.
+// TL, does the physical pump/tank readings. Founder: this is also the
+// cashier — same person/role, "cashier" is just what the business calls
+// it (general accountability for the station sits here). RLS for
+// shift_logs and dipstick_readings already expected the 'station_ops'
+// name (scaffolded ahead of the app code); kept it rather than
+// inventing a new one, roleLabel() below is what actually shows in the UI.
 export type Role = 'ceo' | 'cfo' | 'ops_officer' | 'owner' | 'assistant' | 'tl' | 'station_ops'
+
+export function roleLabel(role: string | null | undefined): string {
+  if (role === 'station_ops') return 'Cashier'
+  if (role === 'tl') return 'Team Lead'
+  if (role === 'ops_officer') return 'Ops Officer'
+  return role ? role.replace(/_/g, ' ') : ''
+}
 
 export const MODULE_ACCESS: Record<string, Role[]> = {
   '/dashboard':  ['ceo', 'cfo', 'ops_officer', 'owner', 'assistant'],
