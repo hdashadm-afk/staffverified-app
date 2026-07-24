@@ -38,6 +38,7 @@ export default function DTREntryRow({
   canOverride,
   stations,
   opsSuggestion,
+  opsIntegrationEnabled = false,
   onChange,
   disabled = false,
 }: {
@@ -59,6 +60,8 @@ export default function DTREntryRow({
   stations: { id: string; name: string }[]
   /** Ops's confirmed Daily Outtake attendance for this employee/date, if a confident name match exists — a suggestion to apply, never auto-written. */
   opsSuggestion?: OpsAttendanceEntry | null
+  /** Toggle-governance: the Ops reference always shows when opsSuggestion exists; this only controls whether it's a clickable apply action or plain read-only text. */
+  opsIntegrationEnabled?: boolean
   onChange: (patch: Partial<DTRRowDraft>) => void
   disabled?: boolean
 }) {
@@ -114,16 +117,26 @@ export default function DTREntryRow({
         />
         {opsSuggestion?.time_in && opsSuggestion?.time_out
           && (draft.timeIn !== opsSuggestion.time_in || draft.timeOut !== opsSuggestion.time_out) && (
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => onChange({ timeIn: opsSuggestion.time_in ?? '', timeOut: opsSuggestion.time_out ?? '' })}
-            title="From fuel-ops's confirmed Daily Outtake for this station/date"
-            className="mt-1 flex items-center gap-1 text-[10px] text-brand-blue-700 bg-brand-blue-50 border border-brand-blue-200 rounded px-1.5 py-0.5 hover:bg-brand-blue-100 disabled:opacity-50 whitespace-nowrap"
-          >
-            <Fuel className="w-2.5 h-2.5" />
-            Ops: {opsSuggestion.time_in}–{opsSuggestion.time_out}
-          </button>
+          opsIntegrationEnabled ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => onChange({ timeIn: opsSuggestion.time_in ?? '', timeOut: opsSuggestion.time_out ?? '' })}
+              title="From fuel-ops's confirmed Daily Outtake for this station/date"
+              className="mt-1 flex items-center gap-1 text-[10px] text-brand-blue-700 bg-brand-blue-50 border border-brand-blue-200 rounded px-1.5 py-0.5 hover:bg-brand-blue-100 disabled:opacity-50 whitespace-nowrap"
+            >
+              <Fuel className="w-2.5 h-2.5" />
+              Ops: {opsSuggestion.time_in}–{opsSuggestion.time_out}
+            </button>
+          ) : (
+            <div
+              title="Ops integration isn't activated yet — reference only, ask an Owner/Admin to activate it above to enable one-click apply"
+              className="mt-1 flex items-center gap-1 text-[10px] text-gray-500 bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 whitespace-nowrap"
+            >
+              <Fuel className="w-2.5 h-2.5" />
+              Ops: {opsSuggestion.time_in}–{opsSuggestion.time_out} (reference only)
+            </div>
+          )
         )}
       </td>
       <td className="px-4 py-2 text-right tabular-nums text-gray-700 text-xs">

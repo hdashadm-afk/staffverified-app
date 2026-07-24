@@ -51,9 +51,19 @@ export default async function DTRPage() {
 
   const { data: org } = await supabase
     .from('organizations')
-    .select('ot_multiplier, nsd_rate, holiday_regular_multiplier, holiday_special_multiplier')
+    .select('ot_multiplier, nsd_rate, holiday_regular_multiplier, holiday_special_multiplier, ops_integration_enabled, ops_integration_enabled_by, ops_integration_enabled_at')
     .eq('id', profile!.org_id)
     .single()
+
+  let opsIntegrationEnabledByName: string | null = null
+  if (org?.ops_integration_enabled_by) {
+    const { data: enabler } = await supabase
+      .from('user_profiles')
+      .select('full_name')
+      .eq('id', org.ops_integration_enabled_by)
+      .maybeSingle()
+    opsIntegrationEnabledByName = enabler?.full_name ?? null
+  }
 
   // Station-scoped attendance marking (mark who worked, floating pool) — TL only.
   const isStationScoped = profile!.role === 'tl'
@@ -94,6 +104,9 @@ export default async function DTRPage() {
           orgId={profile!.org_id}
           userId={profile!.id}
           role={profile!.role}
+          opsIntegrationEnabled={org?.ops_integration_enabled ?? false}
+          opsIntegrationEnabledBy={opsIntegrationEnabledByName}
+          opsIntegrationEnabledAt={org?.ops_integration_enabled_at ?? null}
         />
       )}
     </div>
