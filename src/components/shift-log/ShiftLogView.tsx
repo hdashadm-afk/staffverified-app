@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Camera, Check, Loader2, Lock, Unlock } from 'lucide-react'
+import { Camera, Check, Loader2, Lock, ShieldCheck, Unlock } from 'lucide-react'
 
 type Station = { id: string; name: string }
 type ShiftLog = {
@@ -13,10 +13,13 @@ type ShiftLog = {
   opened_by: string | null
   closed_by: string | null
   status: string
+  validated_by: string | null
+  validated_at: string | null
 }
 type Reading = {
   id: string
   tank_label: string
+  reading_type: 'beginning' | 'ending' | null
   reading_cm: number
   temp_c: number | null
   water_cm: number | null
@@ -154,6 +157,21 @@ export default function ShiftLogView({
     load()
   }
 
+  // TL reviews and validates the shift's readings — this is what
+  // "submits with his other reports" maps to. Flexible on purpose: if
+  // there's no TL on duty, the GA (station_ops) can validate too, so
+  // the day's report isn't blocked on TL availability.
+  async function validateShift() {
+    if (!shiftLog) return
+    setError('')
+    const { error: err } = await supabase
+      .from('shift_logs')
+      .update({ validated_by: userId, validated_at: new Date().toISOString() })
+      .eq('id', shiftLog.id)
+    if (err) { setError(err.message); return }
+    load()
+  }
+
   const stationName = stations.find(s => s.id === stationId)?.name ?? ''
 
   return (
@@ -213,15 +231,30 @@ export default function ShiftLogView({
             <div className="text-sm">
               <span className="font-medium text-gray-800">{shiftLog.shift_type}</span>
               <span className="text-gray-500"> — {shiftLog.status === 'open' ? 'Open' : 'Closed'}</span>
+              {shiftLog.validated_at && (
+                <span className="ml-2 inline-flex items-center gap-1 text-xs text-brand-blue-700 bg-brand-blue-50 rounded-full px-2 py-0.5">
+                  <ShieldCheck className="w-3 h-3" /> Validated {new Date(shiftLog.validated_at).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
             </div>
-            {shiftLog.status === 'open' && canClose && (
-              <button
-                onClick={closeShift}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
-              >
-                <Lock className="w-3.5 h-3.5" /> Close shift
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {shiftLog.status === 'closed' && !shiftLog.validated_by && canClose && (
+                <button
+                  onClick={validateShift}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-blue-600 hover:text-brand-blue-800"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" /> Validate & submit
+                </button>
+              )}
+              {shiftLog.status === 'open' && canClose && (
+                <button
+                  onClick={closeShift}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
+                >
+                  <Lock className="w-3.5 h-3.5" /> Close shift
+                </button>
+              )}
+            </div>
           </div>
 
           {canManage && shiftLog.status === 'open' && (
@@ -250,7 +283,14 @@ export default function ShiftLogView({
                       </a>
                     )}
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-800">{r.tank_label}</div>
+                      <div className="text-sm font-medium text-gray-800 flex items-center gap-2">
+                        {r.tank_label}
+                        {r.reading_type && (
+                          <span className={`text-[10px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5 ${r.reading_type === 'beginning' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                            {r.reading_type}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">
                         {r.reading_cm} cm
                         {r.water_cm != null && ` · water ${r.water_cm} cm`}
@@ -300,6 +340,7 @@ function ReadingForm({
   orgId: string; stationId: string; userId: string; date: string; shiftLogId: string
   supabase: ReturnType<typeof createClient>; onSaved: () => void
 }) {
+  const [readingType, setReadingType] = useState<'beginning' | 'ending'>('beginning')
   const [tankLabel, setTankLabel] = useState('')
   const [readingCm, setReadingCm] = useState('')
   const [tempC, setTempC] = useState('')
@@ -310,18 +351,17 @@ function ReadingForm({
 
   async function save() {
     if (!tankLabel || readingCm === '') { setErr('Tank and reading are required.'); return }
+    if (!photo) { setErr('Photo of the digital reading (with price showing) is required.'); return }
     setSaving(true)
     setErr('')
-    let photoPath: string | null = null
-    if (photo) {
-      photoPath = `${orgId}/${stationId}/${shiftLogId}/${Date.now()}-${photo.name}`
-      const { error: uploadErr } = await supabase.storage.from('dipstick-photos').upload(photoPath, photo)
-      if (uploadErr) { setErr(uploadErr.message); setSaving(false); return }
-    }
+    const photoPath = `${orgId}/${stationId}/${shiftLogId}/${Date.now()}-${photo.name}`
+    const { error: uploadErr } = await supabase.storage.from('dipstick-photos').upload(photoPath, photo)
+    if (uploadErr) { setErr(uploadErr.message); setSaving(false); return }
     const { error: insertErr } = await supabase.from('dipstick_readings').insert({
       org_id: orgId,
       station_id: stationId,
       reading_date: date,
+      reading_type: readingType,
       tank_label: tankLabel,
       reading_cm: Number(readingCm),
       temp_c: tempC === '' ? null : Number(tempC),
@@ -339,6 +379,14 @@ function ReadingForm({
   return (
     <div className="bg-white border border-gray-100 rounded-xl shadow-sm px-5 py-4 space-y-3">
       <div className="text-sm font-semibold text-gray-800">Add reading</div>
+      <div className="flex gap-2">
+        {(['beginning', 'ending'] as const).map(t => (
+          <button key={t} type="button" onClick={() => setReadingType(t)}
+            className={`text-xs font-semibold uppercase tracking-wide rounded-full px-3 py-1 border ${readingType === t ? 'bg-brand-blue-600 border-brand-blue-600 text-white' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+            {t}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <input placeholder="Tank (e.g. Diesel)" value={tankLabel} onChange={e => setTankLabel(e.target.value)}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm col-span-2 md:col-span-1 focus:outline-none focus:ring-2 focus:ring-brand-blue-600" />
@@ -352,7 +400,7 @@ function ReadingForm({
       <div className="flex items-center gap-3">
         <label className="inline-flex items-center gap-2 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-gray-50">
           <Camera className="w-4 h-4" />
-          {photo ? photo.name : 'Attach photo'}
+          {photo ? photo.name : 'Photo of digital display (with price) *'}
           <input type="file" accept="image/*" capture="environment" className="hidden"
             onChange={e => setPhoto(e.target.files?.[0] ?? null)} />
         </label>
