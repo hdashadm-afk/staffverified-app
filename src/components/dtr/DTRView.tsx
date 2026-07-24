@@ -55,6 +55,9 @@ export default function DTRView({
   orgId,
   userId,
   role,
+  opsIntegrationEnabled,
+  opsIntegrationEnabledBy,
+  opsIntegrationEnabledAt,
 }: {
   employees: Pick<Employee, 'id' | 'full_name' | 'daily_rate' | 'has_sil' | 'station_id' | 'regular_hours_per_day'>[]
   stations: Pick<Station, 'id' | 'name'>[]
@@ -62,6 +65,10 @@ export default function DTRView({
   orgId: string
   userId: string
   role: string | null | undefined
+  /** Founder's toggle-governance rule: the Ops reference always shows, but DTR's one-click "apply" action only works once an authorized person has explicitly activated this. */
+  opsIntegrationEnabled: boolean
+  opsIntegrationEnabledBy: string | null
+  opsIntegrationEnabledAt: string | null
 }) {
   const [selectedStation, setSelectedStation] = useState<string>('')
   const [selectedEmployee, setSelectedEmployee] = useState<string>(employees[0]?.id ?? '')
@@ -80,6 +87,29 @@ export default function DTRView({
   const supabase = createClient()
 
   const canOverrideOtNsd = OT_NSD_OVERRIDE_ROLES.includes(role ?? '')
+  const canActivateOps = REOPEN_ROLES.includes(role ?? '')
+  const [opsEnabled, setOpsEnabled] = useState(opsIntegrationEnabled)
+  const [opsEnabledBy, setOpsEnabledBy] = useState(opsIntegrationEnabledBy)
+  const [opsEnabledAt, setOpsEnabledAt] = useState(opsIntegrationEnabledAt)
+  const [activatingOps, setActivatingOps] = useState(false)
+
+  async function toggleOpsIntegration(next: boolean) {
+    setActivatingOps(true)
+    const { error } = await supabase
+      .from('organizations')
+      .update({
+        ops_integration_enabled: next,
+        ops_integration_enabled_by: next ? userId : null,
+        ops_integration_enabled_at: next ? new Date().toISOString() : null,
+      })
+      .eq('id', orgId)
+    if (!error) {
+      setOpsEnabled(next)
+      setOpsEnabledBy(next ? 'you' : null)
+      setOpsEnabledAt(next ? new Date().toISOString() : null)
+    }
+    setActivatingOps(false)
+  }
 
   const visibleEmployees = selectedStation
     ? employees.filter(e => e.station_id === selectedStation)
@@ -354,6 +384,25 @@ export default function DTRView({
 
   return (
     <div className="space-y-4">
+      {/* Ops integration status — the read-only "Ops: HH:MM" reference below always
+          shows regardless; this only gates the one-click apply action. */}
+      <div className={`flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm border ${opsEnabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+        <div className="text-gray-600">
+          {opsEnabled
+            ? <>✅ Ops integration active{opsEnabledBy ? ` — activated by ${opsEnabledBy}` : ''}{opsEnabledAt ? ` on ${new Date(opsEnabledAt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}` : ''}. The Ops chip below fills Time In/Out on click.</>
+            : <>Ops integration not yet activated — the Ops chip below still shows as a reference, but won&apos;t fill Time In/Out until activated.</>}
+        </div>
+        {canActivateOps && (
+          <button
+            onClick={() => toggleOpsIntegration(!opsEnabled)}
+            disabled={activatingOps}
+            className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg border disabled:opacity-50 ${opsEnabled ? 'border-gray-300 text-gray-600 hover:bg-gray-100' : 'border-green-300 text-green-700 bg-white hover:bg-green-50'}`}
+          >
+            {activatingOps ? 'Saving…' : opsEnabled ? 'Deactivate' : 'Activate'}
+          </button>
+        )}
+      </div>
+
       {/* Station + Employee selectors */}
       <div className="flex items-center gap-3 flex-wrap">
         {stations.length > 0 && (
@@ -488,6 +537,7 @@ export default function DTRView({
                   canOverride={canOverrideOtNsd}
                   stations={stations}
                   opsSuggestion={opsMatch}
+                  opsIntegrationEnabled={opsEnabled}
                   onChange={patch => setDraft(date, patch)}
                   disabled={locked}
                 />
